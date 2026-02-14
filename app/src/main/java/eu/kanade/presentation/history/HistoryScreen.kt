@@ -105,7 +105,7 @@ fun HistoryScreen(
                     label = { Text("Last only") },
                 )
             }
-            
+
             state.list.let {
                 if (it == null) {
                     LoadingScreen()

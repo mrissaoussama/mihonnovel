@@ -70,7 +70,7 @@ fun MassImportDialog(
                 try {
                     val inputStream = context.contentResolver.openInputStream(uri)
                     val content = inputStream?.bufferedReader()?.use { it.readText() } ?: return@let
-                    
+
                     // Add file content to pending URLs
                     pendingUrls = if (pendingUrls.isBlank()) {
                         content
@@ -87,10 +87,10 @@ fun MassImportDialog(
 
     // State to track which batch report to save
     var batchToSave by remember { mutableStateOf<MassImportJob.Batch?>(null) }
-    
+
     // State to track which batch to export URLs from
     var batchToExport by remember { mutableStateOf<MassImportJob.Batch?>(null) }
-    
+
     // File save launcher for saving reports
     val saveReportLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain"),
@@ -114,7 +114,7 @@ fun MassImportDialog(
             }
         }
     )
-    
+
     // File save launcher for exporting URLs
     val exportUrlsLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument("text/plain"),
@@ -156,9 +156,9 @@ fun MassImportDialog(
     var syncChapterList by remember { mutableStateOf(false) }
 
     val massImportNovels = remember { Injekt.get<MassImport>() }
-    
+
     val queue by MassImportJob.sharedQueue.collectAsState()
-    
+
     val getCategories = remember { Injekt.get<GetCategories>() }
     // Filter categories by content type (manga vs novel)
     val contentType = if (isNovelMode) Category.CONTENT_TYPE_NOVEL else Category.CONTENT_TYPE_MANGA
@@ -528,7 +528,7 @@ fun MassImportDialog(
                 .filter { it.isNotBlank() }
                 .joinToString("\n")
             val hasUrls = allUrlsText.isNotBlank()
-            
+
             TextButton(
                 onClick = {
                     // Run URL parsing and job enqueue off main thread
@@ -577,7 +577,7 @@ private fun BatchItem(
     onRequeue: () -> Unit,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    
+
     Card(
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
@@ -613,7 +613,7 @@ private fun BatchItem(
                         style = MaterialTheme.typography.labelSmall
                     )
                 }
-                
+
                 // Action buttons
                 Row {
                     // Expand/collapse details
@@ -627,7 +627,7 @@ private fun BatchItem(
                             modifier = Modifier.size(16.dp)
                         )
                     }
-                    
+
                     // Cancel button (only for pending/running)
                     if (batch.status == MassImportJob.BatchStatus.Pending || batch.status == MassImportJob.BatchStatus.Running) {
                         IconButton(
@@ -642,7 +642,7 @@ private fun BatchItem(
                             )
                         }
                     }
-                    
+
                     // Remove button (only for completed/cancelled)
                     if (batch.status == MassImportJob.BatchStatus.Completed || batch.status == MassImportJob.BatchStatus.Cancelled) {
                         // Requeue button (for cancelled batches with remaining URLs)
@@ -672,7 +672,7 @@ private fun BatchItem(
                     }
                 }
             }
-            
+
             // Progress bar for running
             if (batch.status == MassImportJob.BatchStatus.Running) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -681,7 +681,7 @@ private fun BatchItem(
                     modifier = Modifier.fillMaxWidth().height(4.dp),
                 )
             }
-            
+
             // Summary for completed
             if (batch.status == MassImportJob.BatchStatus.Completed || batch.status == MassImportJob.BatchStatus.Cancelled) {
                 Spacer(modifier = Modifier.height(4.dp))
@@ -708,13 +708,13 @@ private fun BatchItem(
                     }
                 }
             }
-            
+
             // Expanded details
             if (expanded) {
                 Spacer(modifier = Modifier.height(8.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 // Actions row - icon buttons only for compactness
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -728,7 +728,7 @@ private fun BatchItem(
                             modifier = Modifier.size(18.dp)
                         )
                     }
-                    
+
                     // Export URLs
                     IconButton(onClick = onExportUrls, modifier = Modifier.size(32.dp)) {
                         Icon(
@@ -737,7 +737,7 @@ private fun BatchItem(
                             modifier = Modifier.size(18.dp)
                         )
                     }
-                    
+
                     // Copy Errors (if any)
                     if (batch.errored > 0) {
                         IconButton(onClick = onCopyErrors, modifier = Modifier.size(32.dp)) {
@@ -749,7 +749,7 @@ private fun BatchItem(
                             )
                         }
                     }
-                    
+
                     // For completed batches: Copy Report, Save Report, Retry Errors
                     if (batch.status == MassImportJob.BatchStatus.Completed || batch.status == MassImportJob.BatchStatus.Cancelled) {
                         IconButton(onClick = onCopyReport, modifier = Modifier.size(32.dp)) {
@@ -759,7 +759,7 @@ private fun BatchItem(
                                 modifier = Modifier.size(18.dp)
                             )
                         }
-                        
+
                         IconButton(onClick = onSaveReport, modifier = Modifier.size(32.dp)) {
                             Icon(
                                 Icons.Outlined.Save,
@@ -768,7 +768,7 @@ private fun BatchItem(
                                 tint = MaterialTheme.colorScheme.primary
                             )
                         }
-                        
+
                         if (batch.errored > 0) {
                             IconButton(onClick = onReinsertErrors, modifier = Modifier.size(32.dp)) {
                                 Icon(
@@ -781,7 +781,7 @@ private fun BatchItem(
                         }
                     }
                 }
-                
+
                 // Show first few URLs as preview
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
@@ -804,7 +804,7 @@ private fun BatchItem(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-                
+
                 // Show errors if any
                 if (batch.erroredUrls.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(8.dp))

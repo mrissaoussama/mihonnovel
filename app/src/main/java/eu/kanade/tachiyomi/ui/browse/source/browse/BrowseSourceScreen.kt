@@ -19,9 +19,9 @@ import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.SnackbarDuration
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -46,9 +46,9 @@ import eu.kanade.domain.source.service.SourcePreferences
 import eu.kanade.presentation.browse.BrowseSourceContent
 import eu.kanade.presentation.browse.MissingSourceScreen
 import eu.kanade.presentation.browse.components.BrowseSourceToolbar
-import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.browse.components.RemoveMangaDialog
 import eu.kanade.presentation.category.components.ChangeCategoryDialog
+import eu.kanade.presentation.library.components.MassImportDialog
 import eu.kanade.presentation.manga.DuplicateMangaDialog
 import eu.kanade.presentation.util.AssistContentScreen
 import eu.kanade.presentation.util.Screen
@@ -97,7 +97,7 @@ data class BrowseSourceScreen(
         val state by screenModel.state.collectAsState()
 
         val navigator = LocalNavigator.currentOrThrow
-        
+
         // Back confirmation state
         val sourcePreferences = remember { Injekt.get<SourcePreferences>() }
         val confirmBackAfterPages by sourcePreferences.confirmBackAfterPages().changes().collectAsState(initial = 0)
@@ -105,7 +105,7 @@ data class BrowseSourceScreen(
         val skipCoverLoading by sourcePreferences.skipCoverLoading().changes().collectAsState(initial = false)
         val currentPage by screenModel.currentPage.collectAsState()
         var showBackConfirmDialog by remember { mutableStateOf(false) }
-        
+
         val navigateUp: () -> Unit = {
             when {
                 !state.isUserQuery && state.toolbarQuery != null -> screenModel.setToolbarQuery(null)
@@ -133,7 +133,7 @@ data class BrowseSourceScreen(
         var lastImportResult by remember { mutableStateOf<Triple<Int, Int, Int>?>(null) }
 
         val mangaList = screenModel.mangaPagerFlowFlow.collectAsLazyPagingItems()
-        
+
         // Auto-load pages when page range loading is active
         val targetEndPage by screenModel.targetEndPage.collectAsState()
         LaunchedEffect(currentPage, targetEndPage, mangaList.loadState.append) {
@@ -158,7 +158,7 @@ data class BrowseSourceScreen(
                 )
             }
         }
-        
+
         // Show snackbar when import completes
         LaunchedEffect(lastImportResult) {
             lastImportResult?.let { (added, skipped, errored) ->
@@ -175,7 +175,7 @@ data class BrowseSourceScreen(
             val url: String
             val name: String
             val id: Long
-            
+
             when (source) {
                 is HttpSource -> {
                     url = source.baseUrl
@@ -189,7 +189,7 @@ data class BrowseSourceScreen(
                 }
                 else -> return@f
             }
-            
+
             navigator.push(
                 WebViewScreen(
                     url = url,

@@ -11,8 +11,8 @@ import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.MangaRestorer
 import eu.kanade.tachiyomi.jsplugin.JsPluginManager
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.ensureActive
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
@@ -50,7 +50,11 @@ class LNReaderBackupImporter(
     private val getMangaByUrlAndSourceId: GetMangaByUrlAndSourceId = Injekt.get(),
 ) {
 
-    private val json = Json { ignoreUnknownKeys = true; coerceInputValues = true; isLenient = true }
+    private val json = Json {
+        ignoreUnknownKeys = true
+        coerceInputValues = true
+        isLenient = true
+    }
     private val errors = mutableListOf<Pair<Date, String>>()
 
     @Serializable
@@ -128,7 +132,9 @@ class LNReaderBackupImporter(
             // Step 1: Extract data only
             val (novels, categories, pluginZipBytes) = extractBackupData(uri)
 
-            logcat(LogPriority.INFO) { "LNReaderImport: Found ${novels.size} novels, ${categories.size} categories (options: $options)" }
+            logcat(LogPriority.INFO) {
+                "LNReaderImport: Found ${novels.size} novels, ${categories.size} categories (options: $options)"
+            }
 
             // Step 2: Restore categories FIRST
             val backupCategories = categories.map { lnCat ->
@@ -159,7 +165,9 @@ class LNReaderBackupImporter(
             missingPlugins.addAll(requiredPlugins - pluginIdToSourceId.keys)
             if (missingPlugins.isNotEmpty()) {
                 logcat(LogPriority.WARN) { "LNReaderImport: Missing plugins: ${missingPlugins.joinToString()}" }
-                errors.add(Date() to "Missing plugins (install these extensions first): ${missingPlugins.joinToString()}")
+                errors.add(
+                    Date() to "Missing plugins (install these extensions first): ${missingPlugins.joinToString()}",
+                )
             }
 
             // Build category name -> novel IDs mapping for assignment
@@ -195,7 +203,10 @@ class LNReaderBackupImporter(
                             )
 
                             val backupManga = convertNovel(
-                                novel, sourceId, novelIdToCategoryNames, backupCategories,
+                                novel,
+                                sourceId,
+                                novelIdToCategoryNames,
+                                backupCategories,
                                 includeChapters = options.restoreChapters,
                                 includeHistory = options.restoreHistory,
                                 includeCategories = options.restoreCategories,
@@ -205,14 +216,18 @@ class LNReaderBackupImporter(
                             val existingManga = getMangaByUrlAndSourceId.await(novel.path, sourceId)
                             if (existingManga != null && novel.isLocal == 0) {
                                 // Existing JS novel — skip metadata overwrite, only update chapters/history
-                                logcat(LogPriority.INFO) { "LNReaderImport: Novel '${novel.name}' already exists (id=${existingManga.id}), updating chapters only" }
+                                logcat(LogPriority.INFO) {
+                                    "LNReaderImport: Novel '${novel.name}' already exists (id=${existingManga.id}), updating chapters only"
+                                }
                                 mangaRestorer.restoreExistingChapters(existingManga, backupManga, backupCategories)
                                 skippedCount++
                             } else {
                                 mangaRestorer.restore(backupManga, backupCategories)
                             }
                             novelCount++
-                            logcat(LogPriority.DEBUG) { "LNReaderImport: Restored novel '${novel.name}' (${index + 1}/${novels.size})" }
+                            logcat(LogPriority.DEBUG) {
+                                "LNReaderImport: Restored novel '${novel.name}' (${index + 1}/${novels.size})"
+                            }
                         } catch (e: Exception) {
                             errors.add(Date() to "${novel.name} [${novel.pluginId}]: ${e.message}")
                         }
@@ -306,12 +321,16 @@ class LNReaderBackupImporter(
                                     kotlinx.coroutines.runBlocking {
                                         val installed = jsPluginManager.installPluginFromCode(pluginId, code)
                                         if (installed) {
-                                            logcat(LogPriority.INFO) { "LNReaderImport: Installed plugin '$pluginId' from backup" }
+                                            logcat(LogPriority.INFO) {
+                                                "LNReaderImport: Installed plugin '$pluginId' from backup"
+                                            }
                                         }
                                     }
                                 }
                             } catch (e: Exception) {
-                                logcat(LogPriority.WARN, e) { "LNReaderImport: Failed to install plugin '$pluginId' from backup" }
+                                logcat(LogPriority.WARN, e) {
+                                    "LNReaderImport: Failed to install plugin '$pluginId' from backup"
+                                }
                                 errors.add(Date() to "Failed to install plugin '$pluginId': ${e.message}")
                             }
                         }

@@ -100,18 +100,18 @@ class BrowseSourceScreenModel(
     val titleMaxLines by libraryPreferences.titleMaxLines().asState(screenModelScope)
 
     val source = sourceManager.getOrStub(sourceId)
-    
+
     // Current page number from paging source
     val currentPage: StateFlow<Int> = tachiyomi.data.source.BaseSourcePagingSource.currentPage
-    
+
     // Initial page for jump-to-page feature - triggers pager recreation when changed
     private val _initialPage = MutableStateFlow(1L)
     val initialPage: StateFlow<Long> = _initialPage.asStateFlow()
-    
+
     // Target end page for page range loading - when set, pages will auto-load until this page is reached
     private val _targetEndPage = MutableStateFlow<Int?>(null)
     val targetEndPage: StateFlow<Int?> = _targetEndPage.asStateFlow()
-    
+
     /**
      * Jump to a specific page. This recreates the pager starting from that page.
      * Note: Previous pages won't be loaded, so scrolling up will stop at the jump point.
@@ -122,7 +122,7 @@ class BrowseSourceScreenModel(
             _initialPage.value = page.toLong()
         }
     }
-    
+
     /**
      * Load a range of pages from startPage to endPage.
      * This sets the initial page and a target end page which signals the UI to continue loading.
@@ -133,7 +133,7 @@ class BrowseSourceScreenModel(
             jumpToPage(startPage)
         }
     }
-    
+
     /**
      * Clear the target end page (called when range loading is complete or cancelled).
      */
@@ -147,7 +147,7 @@ class BrowseSourceScreenModel(
 
     // Cached categories for fast access - loaded once and kept in memory
     private val _cachedCategories = MutableStateFlow<List<Category>>(emptyList())
-    
+
     // Remember last selected category IDs for re-use
     private var lastSelectedCategoryIds: List<Long> = emptyList()
 
@@ -159,7 +159,7 @@ class BrowseSourceScreenModel(
     init {
         // Load filter presets from storage
         refreshFilterPresets()
-        
+
         // Preload categories in background for fast access when adding favorites
         screenModelScope.launch {
             _cachedCategories.value = getCategories.subscribe()
@@ -178,7 +178,7 @@ class BrowseSourceScreenModel(
         if (source is CatalogueSource) {
             // Get initial filters from source
             var initialFilters = source.getFilterList()
-            
+
             // Apply default preset synchronously if enabled
             if (manageFilterPresets.getAutoApplyEnabled()) {
                 val presetState = manageFilterPresets.getDefaultPresetState(sourceId)
@@ -187,7 +187,7 @@ class BrowseSourceScreenModel(
                     logcat(LogPriority.INFO) { "BrowseSource: Default preset applied on init" }
                 }
             }
-            
+
             mutableState.update {
                 var query: String? = null
                 var listing = it.listing
@@ -220,21 +220,21 @@ class BrowseSourceScreenModel(
      *
      * Note: We use hashCode for comparison because FilterList.equals() always returns false
      * to force recomposition, but we only want new Pagers when filters actually change.
-     * 
+     *
      * Optimization: Instead of creating individual DB subscriptions per manga item,
      * we maintain a single cached flow of library manga for this source and do
      * in-memory lookups to update favorite status.
      */
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems().get()
     private fun normalizeUrl(url: String): String = url.trimEnd('/').substringBefore('#')
-    
+
     // Cached library manga for this source - single subscription instead of per-item
     private val libraryMangaForSource: StateFlow<Map<String, Manga>> = getFavoritesEntry.subscribe(sourceId)
-        .map { favorites -> 
+        .map { favorites ->
             favorites.associateBy { normalizeUrl(it.url) }
         }
         .stateIn(ioCoroutineScope, SharingStarted.Eagerly, emptyMap())
-    
+
     val mangaPagerFlowFlow = kotlinx.coroutines.flow.combine(
         state.map { Triple(it.listing.query, it.filters, it.filters.hashCode()) }
             .distinctUntilChanged { old, new -> old.first == new.first && old.third == new.third },
@@ -260,7 +260,7 @@ class BrowseSourceScreenModel(
                     // Use cached library lookup instead of individual DB subscription
                     // This StateFlow combines remote manga with library status from cache
                     libraryMangaForSource
-                        .map { libraryMap -> 
+                        .map { libraryMap ->
                             libraryMap[normalizedUrl] ?: normalizedManga
                         }
                         .stateIn(ioCoroutineScope)
@@ -286,7 +286,7 @@ class BrowseSourceScreenModel(
 
         // Get fresh filter list from source
         val freshFilters = source.getFilterList()
-        
+
         // Apply default preset if auto-apply is enabled
         if (manageFilterPresets.getAutoApplyEnabled()) {
             val presetState = manageFilterPresets.getDefaultPresetState(sourceId)
@@ -295,7 +295,7 @@ class BrowseSourceScreenModel(
                 logcat(LogPriority.INFO) { "resetFilters: Applied default preset" }
             }
         }
-        
+
         // Reset pendingFilters to the potentially preset-applied filters
         mutableState.update { it.copy(pendingFilters = freshFilters) }
     }
@@ -315,7 +315,7 @@ class BrowseSourceScreenModel(
             it.copy(pendingFilters = filters)
         }
     }
-    
+
     /**
      * Open the filter dialog and copy current applied filters to pendingFilters for editing.
      * Creates a fresh FilterList with copied state to avoid reference sharing issues.
@@ -326,7 +326,7 @@ class BrowseSourceScreenModel(
         val freshFilters = source.getFilterList()
         // Copy state from current filters to fresh filters
         copyFilterState(state.value.filters, freshFilters)
-        
+
         mutableState.update {
             it.copy(
                 pendingFilters = freshFilters, // Use fresh filters with copied state
@@ -334,17 +334,17 @@ class BrowseSourceScreenModel(
             )
         }
     }
-    
+
     /**
      * Copy filter states from source filters to destination filters.
      * This avoids reference sharing issues where modifying one FilterList affects another.
      */
     private fun copyFilterState(source: FilterList, destination: FilterList) {
         if (source.size != destination.size) return
-        
+
         source.forEachIndexed { index, srcFilter ->
             val dstFilter = destination[index]
-            
+
             when {
                 srcFilter is SourceModelFilter.CheckBox && dstFilter is SourceModelFilter.CheckBox -> {
                     dstFilter.state = srcFilter.state
@@ -388,10 +388,10 @@ class BrowseSourceScreenModel(
             ?: Listing.Search(query = null, filters = source.getFilterList())
 
         val newFilters = filters ?: input.filters
-        
+
         // Reset initial page to 1 when search/filters change
         _initialPage.value = 1L
-        
+
         mutableState.update {
             it.copy(
                 listing = input.copy(
@@ -437,7 +437,7 @@ class BrowseSourceScreenModel(
 
         // Reset initial page to 1 when genre search changes
         _initialPage.value = 1L
-        
+
         mutableState.update {
             val listing = if (genreExists) {
                 Listing.Search(query = null, filters = defaultFilters)
@@ -488,14 +488,14 @@ class BrowseSourceScreenModel(
             // Determine the appropriate content type based on source
             val isNovel = source.isNovelSource()
             val contentType = if (isNovel) Category.CONTENT_TYPE_NOVEL else Category.CONTENT_TYPE_MANGA
-            
+
             // Use cached categories for instant response, filtered by content type
             val allCategories = _cachedCategories.value.ifEmpty { getCategories() }
             // Filter categories: show content-type specific + universal (CONTENT_TYPE_ALL) categories
-            val categories = allCategories.filter { 
-                it.contentType == contentType || it.contentType == Category.CONTENT_TYPE_ALL 
+            val categories = allCategories.filter {
+                it.contentType == contentType || it.contentType == Category.CONTENT_TYPE_ALL
             }
-            
+
             val defaultCategoryId = libraryPreferences.defaultCategory().get()
             val defaultCategory = categories.find { it.id == defaultCategoryId.toLong() }
 

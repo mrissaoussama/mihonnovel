@@ -308,14 +308,17 @@ fun ChangeCategoryDialog(
                         onDismissRequest()
                         val addIds = selection.filter { current ->
                             val initial = initialById[current.value.id]
-                            val currentChecked = current is CheckboxState.State.Checked || current is CheckboxState.TriState.Include
-                            val initialChecked = initial is CheckboxState.State.Checked || initial is CheckboxState.TriState.Include
+                            val currentChecked =
+                                current is CheckboxState.State.Checked || current is CheckboxState.TriState.Include
+                            val initialChecked =
+                                initial is CheckboxState.State.Checked || initial is CheckboxState.TriState.Include
                             currentChecked && !initialChecked
                         }.map { it.value.id }
 
                         val removeIds = selection.filter { current ->
                             val initial = initialById[current.value.id]
-                            val initialChecked = initial is CheckboxState.State.Checked || initial is CheckboxState.TriState.Include
+                            val initialChecked =
+                                initial is CheckboxState.State.Checked || initial is CheckboxState.TriState.Include
                             val currentExcluded = current is CheckboxState.TriState.Exclude
                             val currentUnchecked = current is CheckboxState.State.None && initialChecked
                             currentExcluded || currentUnchecked

@@ -61,7 +61,9 @@ class AndroidSourceManager(
                 customSourceManager.customSources,
                 jsPluginManager.jsSources,
             ) { extensions, customSources, jsSources ->
-                logcat(LogPriority.INFO) { "AndroidSourceManager: combine() triggered - extensions=${extensions.size}, customSources=${customSources.size}, jsSources=${jsSources.size}" }
+                logcat(LogPriority.INFO) {
+                    "AndroidSourceManager: combine() triggered - extensions=${extensions.size}, customSources=${customSources.size}, jsSources=${jsSources.size}"
+                }
                 val mutableMap = ConcurrentHashMap<Long, Source>(
                     mapOf(
                         LocalSource.ID to LocalSource(
@@ -93,12 +95,18 @@ class AndroidSourceManager(
                     mutableMap[jsSource.id] = jsSource
                     // Store the full display name with "(JS)" marker for proper identification
                     registerStubSource(StubSource.fromWithDisplayName(jsSource, "${jsSource.name} (JS)"))
-                    logcat(LogPriority.DEBUG) { "AndroidSourceManager: Added JsSource id=${jsSource.id}, name=${jsSource.name}" }
+                    logcat(LogPriority.DEBUG) {
+                        "AndroidSourceManager: Added JsSource id=${jsSource.id}, name=${jsSource.name}"
+                    }
                 }
-                logcat(LogPriority.INFO) { "AndroidSourceManager: combine() returning map with ${mutableMap.size} sources" }
+                logcat(LogPriority.INFO) {
+                    "AndroidSourceManager: combine() returning map with ${mutableMap.size} sources"
+                }
                 mutableMap
             }.collectLatest { sources ->
-                logcat(LogPriority.INFO) { "AndroidSourceManager: collectLatest() updating sourcesMapFlow with ${sources.size} sources" }
+                logcat(LogPriority.INFO) {
+                    "AndroidSourceManager: collectLatest() updating sourcesMapFlow with ${sources.size} sources"
+                }
                 sourcesMapFlow.value = sources
                 _isInitialized.value = true
             }

@@ -18,7 +18,8 @@ object SitePatternLibrary {
         BOXNOVEL("BoxNovel", listOf("listing-chapters_wrap", "version-chap", "wp-manga-chapter")),
         RANOBES("Ranobes", listOf("r-fullstory-chapters", "r-toc", "r-body")),
         NOVELFULL("NovelFull", listOf("list-chapter", "chapter-item", "novel-info")),
-        CUSTOM("Custom/Unknown", emptyList());
+        CUSTOM("Custom/Unknown", emptyList()),
+        ;
 
         companion object {
             fun detect(html: String): SiteFramework {
@@ -342,7 +343,9 @@ object SitePatternLibrary {
                     (pattern?.detailsTags ?: emptyList())
             }
             SelectorWizardStep.CHAPTER_LIST -> pattern?.chapterList ?: emptyList()
-            SelectorWizardStep.CHAPTER_PAGE, SelectorWizardStep.CHAPTER_CONTENT -> pattern?.chapterContent ?: emptyList()
+            SelectorWizardStep.CHAPTER_PAGE, SelectorWizardStep.CHAPTER_CONTENT ->
+                pattern?.chapterContent
+                    ?: emptyList()
             SelectorWizardStep.PAGINATION -> pattern?.pagination ?: emptyList()
             SelectorWizardStep.SEARCH, SelectorWizardStep.SEARCH_URL_PATTERN -> pattern?.searchUrl ?: emptyList()
             else -> emptyList()

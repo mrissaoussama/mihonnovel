@@ -2,11 +2,11 @@ package eu.kanade.tachiyomi.data.cache
 
 import android.content.Context
 import eu.kanade.tachiyomi.ui.library.ExtensionInfo
-import tachiyomi.core.common.util.system.logcat
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
+import tachiyomi.core.common.util.system.logcat
 import java.io.File
 import java.io.IOException
 
@@ -49,7 +49,7 @@ class LibrarySettingsCache(private val context: Context) {
         try {
             val data = TagsCacheData(
                 tags = tags.map { TagData(it.first, it.second) },
-                noTagsCount = noTagsCount
+                noTagsCount = noTagsCount,
             )
             tagsFile.writeText(json.encodeToString(data))
         } catch (e: Exception) {
@@ -73,18 +73,18 @@ class LibrarySettingsCache(private val context: Context) {
     private data class ExtensionData(
         val id: Long,
         val name: String,
-        val isStub: Boolean = false
+        val isStub: Boolean = false,
     )
 
     @Serializable
     private data class TagData(
         val name: String,
-        val count: Int
+        val count: Int,
     )
 
     @Serializable
     private data class TagsCacheData(
         val tags: List<TagData>,
-        val noTagsCount: Int
+        val noTagsCount: Int,
     )
 }

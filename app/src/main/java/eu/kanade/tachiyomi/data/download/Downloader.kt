@@ -717,7 +717,9 @@ class Downloader(
                 ) -> copyImageFromCache(chapterCache.getImageFile(page.imageUrl!!), tmpDir, filename)
                 else -> {
                     val httpSource = download.source as? HttpSource
-                        ?: throw IllegalStateException("Image download requires HttpSource, got ${download.source::class.simpleName}")
+                        ?: throw IllegalStateException(
+                            "Image download requires HttpSource, got ${download.source::class.simpleName}",
+                        )
                     downloadImage(page, httpSource, tmpDir, filename)
                 }
             }

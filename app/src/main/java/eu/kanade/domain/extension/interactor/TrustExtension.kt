@@ -21,18 +21,18 @@ class TrustExtension(
     private val preferences: SourcePreferences,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
-    
+
     // Cached trusted fingerprints using StateFlow - automatically updates when repos change
     private val trustedFingerprints: StateFlow<Set<String>> = extensionRepoRepository.subscribeAll()
-        .map { repos -> 
+        .map { repos ->
             val fingerprints = repos.map { it.signingKeyFingerprint }.toHashSet()
             logcat(LogPriority.DEBUG) { "TrustExtension: Cached ${fingerprints.size} trusted fingerprints" }
             fingerprints
         }
         .stateIn(
             scope = scope,
-            started = SharingStarted.Eagerly,  // Start immediately to cache fingerprints at startup
-            initialValue = emptySet()
+            started = SharingStarted.Eagerly, // Start immediately to cache fingerprints at startup
+            initialValue = emptySet(),
         )
 
     /**
@@ -46,7 +46,9 @@ class TrustExtension(
             // Force a fresh load if StateFlow is empty
             extensionRepoRepository.subscribeAll().first()
         }
-        logcat(LogPriority.DEBUG) { "TrustExtension: Preload complete, ${trustedFingerprints.value.size} fingerprints cached" }
+        logcat(LogPriority.DEBUG) {
+            "TrustExtension: Preload complete, ${trustedFingerprints.value.size} fingerprints cached"
+        }
     }
 
     suspend fun isTrusted(pkgInfo: PackageInfo, fingerprints: List<String>): Boolean {

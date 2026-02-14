@@ -63,7 +63,7 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
                 scope.launch {
                     val pkgName = getPackageNameFromIntent(intent)
                     logcat(LogPriority.INFO) { "Extension REPLACED event received for: $pkgName" }
-                    
+
                     // Add retry mechanism for replaced packages
                     // Sometimes the package manager reports REPLACED before the new info is available
                     // This is particularly common with tsundoku novel extensions
@@ -72,7 +72,9 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
                     val maxRetries = 15
                     while (result is LoadResult.Error && retries < maxRetries) {
                         retries++
-                        logcat(LogPriority.WARN) { "Extension load failed for $pkgName after REPLACED, retrying ($retries/$maxRetries)..." }
+                        logcat(LogPriority.WARN) {
+                            "Extension load failed for $pkgName after REPLACED, retrying ($retries/$maxRetries)..."
+                        }
                         delay(2000L) // Wait 2 seconds between retries
                         result = getExtensionFromIntent(context, intent)
                     }
@@ -85,7 +87,9 @@ internal class ExtensionInstallReceiver(private val listener: Listener) : Broadc
                             logcat(LogPriority.WARN) { "Extension $pkgName is untrusted" }
                             listener.onExtensionUntrusted(result.extension)
                         }
-                        else -> logcat(LogPriority.ERROR) { "Failed to load extension $pkgName after REPLACED event (after $maxRetries retries)" }
+                        else -> logcat(LogPriority.ERROR) {
+                            "Failed to load extension $pkgName after REPLACED event (after $maxRetries retries)"
+                        }
                     }
                 }
             }

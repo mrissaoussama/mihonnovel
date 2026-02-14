@@ -176,7 +176,7 @@ Translation:"""
 
     private fun parseOllamaResponse(responseBody: String): String {
         val responses = mutableListOf<GenerateResponse>()
-        
+
         // Try parsing as single JSON object first
         try {
             val singleResponse = json.decodeFromString(GenerateResponse.serializer(), responseBody)

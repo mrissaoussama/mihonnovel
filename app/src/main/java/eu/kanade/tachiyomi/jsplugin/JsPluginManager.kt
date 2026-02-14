@@ -271,7 +271,9 @@ class JsPluginManager(
 
             val existing = _installedPlugins.value.find { it.plugin.id == plugin.id }
             if (existing != null && existing.installedVersion >= plugin.version) {
-                logcat(LogPriority.DEBUG) { "Plugin '${plugin.id}' v${existing.installedVersion} already installed (backup has v${plugin.version}), skipping" }
+                logcat(LogPriority.DEBUG) {
+                    "Plugin '${plugin.id}' v${existing.installedVersion} already installed (backup has v${plugin.version}), skipping"
+                }
                 return@withContext false
             }
 
@@ -383,7 +385,9 @@ class JsPluginManager(
             val allFiles = dir.listFiles()?.toList() ?: emptyList()
             val jsFiles = allFiles.filter { it.name?.endsWith(".js") == true }
             val jsonFiles = allFiles.filter { it.name?.endsWith(".json") == true }
-            logcat(LogPriority.DEBUG) { "Found ${jsFiles.size} .js files and ${jsonFiles.size} .json files in plugins directory" }
+            logcat(LogPriority.DEBUG) {
+                "Found ${jsFiles.size} .js files and ${jsonFiles.size} .json files in plugins directory"
+            }
             jsonFiles.forEach { f -> logcat(LogPriority.DEBUG) { "  JSON file: ${f.name}" } }
 
             val plugins = jsFiles.mapNotNull { file ->
@@ -395,19 +399,27 @@ class JsPluginManager(
                     }
                     val nameWithoutExtension = file.name?.substringBeforeLast(".") ?: return@mapNotNull null
                     val metadataFile = dir.findFile("$nameWithoutExtension.json")
-                    logcat(LogPriority.DEBUG) { "Looking for metadata: $nameWithoutExtension.json, found=${metadataFile != null}" }
+                    logcat(LogPriority.DEBUG) {
+                        "Looking for metadata: $nameWithoutExtension.json, found=${metadataFile != null}"
+                    }
                     val plugin = if (metadataFile != null && metadataFile.exists()) {
                         val metadataJson = metadataFile.openInputStream().bufferedReader().readText()
-                        logcat(LogPriority.DEBUG) { "Metadata content (len=${metadataJson.length}): ${metadataJson.take(100)}" }
+                        logcat(LogPriority.DEBUG) {
+                            "Metadata content (len=${metadataJson.length}): ${metadataJson.take(100)}"
+                        }
                         if (metadataJson.isNotBlank() && metadataJson.trim().startsWith("{")) {
                             logcat(LogPriority.DEBUG) { "Loading metadata for $nameWithoutExtension" }
                             json.decodeFromString<JsPlugin>(metadataJson)
                         } else {
-                            logcat(LogPriority.DEBUG) { "Metadata file empty for $nameWithoutExtension, extracting from code" }
+                            logcat(LogPriority.DEBUG) {
+                                "Metadata file empty for $nameWithoutExtension, extracting from code"
+                            }
                             extractPluginInfo(code, nameWithoutExtension)
                         }
                     } else {
-                        logcat(LogPriority.DEBUG) { "No metadata found for $nameWithoutExtension, extracting from code" }
+                        logcat(LogPriority.DEBUG) {
+                            "No metadata found for $nameWithoutExtension, extracting from code"
+                        }
                         extractPluginInfo(code, nameWithoutExtension)
                     }
 
@@ -488,12 +500,16 @@ class JsPluginManager(
         val sources = _installedPlugins.value.map { installedPlugin ->
             JsSource(installedPlugin)
         }
-        logcat(LogPriority.INFO) { "JsPluginManager: rebuildSources() - emitting ${sources.size} sources to jsSources StateFlow" }
+        logcat(LogPriority.INFO) {
+            "JsPluginManager: rebuildSources() - emitting ${sources.size} sources to jsSources StateFlow"
+        }
         sources.forEach { s ->
             logcat(LogPriority.DEBUG) { "  JsSource: id=${s.id}, name=${s.name}, lang=${s.lang}" }
         }
         _jsSources.value = sources
-        logcat(LogPriority.INFO) { "JsPluginManager: rebuildSources() - _jsSources.value updated, new count: ${_jsSources.value.size}" }
+        logcat(LogPriority.INFO) {
+            "JsPluginManager: rebuildSources() - _jsSources.value updated, new count: ${_jsSources.value.size}"
+        }
     }
 
     private fun loadRepositories() {
@@ -512,7 +528,9 @@ class JsPluginManager(
                     try {
                         allRepos.addAll(json.decodeFromString<List<JsPluginRepository>>(content))
                     } catch (e: Exception) {
-                        logcat(LogPriority.WARN) { "repositories.json has concatenated JSON, attempting to split and merge" }
+                        logcat(LogPriority.WARN) {
+                            "repositories.json has concatenated JSON, attempting to split and merge"
+                        }
                         val segments = content.split(Regex("""\]\s*\["""))
                         for ((i, segment) in segments.withIndex()) {
                             val fixed = when {
@@ -524,7 +542,9 @@ class JsPluginManager(
                             try {
                                 allRepos.addAll(json.decodeFromString<List<JsPluginRepository>>(fixed))
                             } catch (e2: Exception) {
-                                logcat(LogPriority.WARN) { "Skipping malformed JSON segment in repositories.json: ${e2.message}" }
+                                logcat(LogPriority.WARN) {
+                                    "Skipping malformed JSON segment in repositories.json: ${e2.message}"
+                                }
                             }
                         }
                     }
@@ -582,8 +602,8 @@ class JsPluginManager(
         val lowerQuery = query.lowercase()
         return _availablePlugins.value.filter { plugin ->
             plugin.name.lowercase().contains(lowerQuery) ||
-            plugin.site.lowercase().contains(lowerQuery) ||
-            plugin.id.lowercase().contains(lowerQuery)
+                plugin.site.lowercase().contains(lowerQuery) ||
+                plugin.id.lowercase().contains(lowerQuery)
         }
     }
 

@@ -46,7 +46,7 @@ fun DuplicateDetectionDialog(
     val clipboardManager = LocalClipboardManager.current
     val sourceManager = remember { Injekt.get<SourceManager>() }
     val getCategories = remember { Injekt.get<GetCategories>() }
-    
+
     AlertDialog(
         onDismissRequest = onDismissRequest,
         title = {
@@ -130,7 +130,7 @@ fun DuplicateDetectionDialog(
 private fun DuplicateGroupItem(group: LibraryScreenModel.DuplicateGroup, sourceManager: SourceManager) {
     val context = LocalContext.current
     val clipboardManager = LocalClipboardManager.current
-    
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -141,7 +141,7 @@ private fun DuplicateGroupItem(group: LibraryScreenModel.DuplicateGroup, sourceM
             val source = sourceManager.getOrStub(manga.source)
             val chapterCount = item.libraryManga.totalChapters
             val altTitles = manga.alternativeTitles.takeIf { it.isNotEmpty() }?.joinToString(", ")
-            
+
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,7 +159,7 @@ private fun DuplicateGroupItem(group: LibraryScreenModel.DuplicateGroup, sourceM
                         }
                         clipboardManager.setText(AnnotatedString(url))
                         context.toast("URL copied")
-                    }
+                    },
             ) {
                 // Title
                 Text(

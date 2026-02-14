@@ -123,14 +123,14 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
         includeStatus: Boolean,
     ) {
         logcat(LogPriority.INFO) { "performExport called with ${mangaIds.size} manga IDs, outputUri=$outputUri" }
-        
+
         val mangaList = mangaIds.mapNotNull { mangaRepository.getMangaById(it) }
         if (mangaList.isEmpty()) {
             logcat(LogPriority.ERROR) { "No manga found for IDs: $mangaIds" }
             showErrorNotification("No novels found to export")
             return
         }
-        
+
         logcat(LogPriority.INFO) { "Found ${mangaList.size} manga to export" }
 
         val tempDir = File(context.cacheDir, "epub_export_${System.currentTimeMillis()}")
@@ -182,7 +182,7 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                         )
 
                         val hasTranslation = chapter.id in translatedChapterIds
-                        
+
                         if (chapterIndex == 0) {
                             logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: isDownloaded=$isDownloaded, hasTranslation=$hasTranslation" }
                         }
@@ -222,13 +222,13 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                                     manga.title,
                                     source,
                                 )
-                                
+
                                 logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: chapterDir found=${chapterDirOrCbz != null}, exists=${chapterDirOrCbz?.exists()}, name=${chapterDirOrCbz?.name}" }
 
                                 if (chapterDirOrCbz != null) {
                                     // Check if it's a CBZ file
                                     val isCbz = chapterDirOrCbz.name?.endsWith(".cbz") == true
-                                    
+
                                     if (isCbz) {
                                         // Read content from CBZ archive
                                         logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: reading from CBZ archive" }
@@ -237,23 +237,23 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                                         // It's a directory, list files
                                         val allFiles = chapterDirOrCbz.listFiles() ?: emptyArray()
                                         logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: found ${allFiles.size} files in dir" }
-                                    
+
                                         val htmlFiles = allFiles.filter {
                                             it.isFile && it.name?.endsWith(".html") == true
                                         }.sortedBy { it.name }
-                                    
+
                                         // Also check for .txt files as fallback
                                         val txtFiles = allFiles.filter {
                                             it.isFile && it.name?.endsWith(".txt") == true
                                         }.sortedBy { it.name }
-                                    
+
                                         logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: htmlFiles=${htmlFiles.size}, txtFiles=${txtFiles.size}" }
                                         allFiles.take(5).forEach { file ->
                                             logcat(LogPriority.DEBUG) { "  - ${file.name}" }
                                         }
 
                                         val filesToRead = htmlFiles.ifEmpty { txtFiles }
-                                    
+
                                         if (filesToRead.isNotEmpty()) {
                                             val sb = StringBuilder()
                                             filesToRead.forEachIndexed { i, file ->
@@ -270,27 +270,27 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                                         }
                                     }
                                 }
-                                
+
                                 // If no content found, try CBZ archive in manga directory
                                 if (content == null) {
                                     val mangaDir = downloadProvider.findMangaDir(manga.title, source)
                                     if (mangaDir != null) {
-                                        val cbzFiles = mangaDir.listFiles()?.filter { 
-                                            it.isFile && it.name?.endsWith(".cbz") == true 
+                                        val cbzFiles = mangaDir.listFiles()?.filter {
+                                            it.isFile && it.name?.endsWith(".cbz") == true
                                         } ?: emptyList()
-                                        
+
                                         // Find CBZ file matching this chapter
                                         val chapterDirNames = downloadProvider.getValidChapterDirNames(
                                             chapter.name,
                                             chapter.scanlator,
                                             chapter.url,
                                         )
-                                        
+
                                         val matchingCbz = cbzFiles.find { cbzFile ->
                                             val cbzBaseName = cbzFile.name?.removeSuffix(".cbz") ?: ""
                                             chapterDirNames.any { it == cbzBaseName }
                                         }
-                                        
+
                                         if (matchingCbz != null) {
                                             logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: found CBZ archive ${matchingCbz.name}" }
                                             content = readContentFromCbz(matchingCbz.uri)
@@ -415,9 +415,9 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
 
             // Write to output
             val tempFiles = tempDir.listFiles()?.filter { it.name.endsWith(".epub") } ?: emptyList()
-            
+
             logcat(LogPriority.INFO) { "Export complete: ${tempFiles.size} EPUB files in temp dir, successCount=$successCount, skippedCount=$skippedCount" }
-            
+
             if (tempFiles.isEmpty()) {
                 logcat(LogPriority.ERROR) { "No EPUB files were created in temp dir" }
                 showErrorNotification("No novels could be exported. Check that chapters are downloaded.")
@@ -509,7 +509,7 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
     private fun sanitizeFilename(name: String): String {
         return name.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(200)
     }
-    
+
     /**
      * Read HTML/TXT content from a CBZ archive.
      */
@@ -523,28 +523,28 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                 logcat(LogPriority.WARN) { "CBZ: failed to open file descriptor for $cbzUri" }
                 return null
             }
-            
+
             pfd.use { descriptor ->
                 val archiveReader = ArchiveReader(descriptor)
                 archiveReader.use { reader ->
                     // First pass: collect names of content files
                     val contentFileNames = mutableListOf<String>()
                     var entryCount = 0
-                    
+
                     reader.useEntries { sequence ->
                         sequence.forEach { entry ->
                             entryCount++
                             val name = entry.name.lowercase()
                             logcat(LogPriority.DEBUG) { "CBZ: entry #$entryCount: ${entry.name}, isFile=${entry.isFile}" }
-                            
+
                             if (entry.isFile && (name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xhtml") || name.endsWith(".txt"))) {
                                 contentFileNames.add(entry.name)
                             }
                         }
                     }
-                    
+
                     logcat(LogPriority.DEBUG) { "CBZ: found ${contentFileNames.size} content files out of $entryCount entries" }
-                    
+
                     // Second pass: read content from each file using getInputStream
                     val entries = mutableListOf<Pair<String, String>>()
                     contentFileNames.forEach { fileName ->
@@ -563,9 +563,9 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                             logcat(LogPriority.ERROR, e) { "CBZ: failed to read entry $fileName" }
                         }
                     }
-                    
+
                     logcat(LogPriority.DEBUG) { "CBZ: successfully read ${entries.size} content files" }
-                    
+
                     // Sort entries by name and combine
                     val content = StringBuilder()
                     entries.sortedBy { it.first }.forEachIndexed { i, (_, text) ->
@@ -574,7 +574,7 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                             content.append("\n\n")
                         }
                     }
-                    
+
                     val result = content.toString().ifEmpty { null }
                     logcat(LogPriority.DEBUG) { "CBZ: final content length=${result?.length ?: 0}" }
                     result

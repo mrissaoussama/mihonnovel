@@ -3,8 +3,8 @@ package eu.kanade.tachiyomi.ui.reader.loader
 import android.content.Context
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
-import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.NovelSource
+import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import mihon.core.archive.archiveReader

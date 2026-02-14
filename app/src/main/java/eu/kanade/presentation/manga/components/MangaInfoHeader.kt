@@ -618,7 +618,7 @@ private fun ColumnScope.MangaContentInfo(
             )
         }
     }
-    
+
     // Categories display
     if (categories.isNotEmpty()) {
         Row(

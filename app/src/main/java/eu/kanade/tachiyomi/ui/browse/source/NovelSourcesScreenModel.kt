@@ -45,7 +45,9 @@ class NovelSourcesScreenModel(
     }
 
     private fun collectLatestSources(sources: List<Source>) {
-        logcat(LogPriority.INFO) { "NovelSourcesScreenModel: collectLatestSources() - received ${sources.size} sources" }
+        logcat(LogPriority.INFO) {
+            "NovelSourcesScreenModel: collectLatestSources() - received ${sources.size} sources"
+        }
         sources.take(5).forEach { s ->
             logcat(LogPriority.DEBUG) { "  Source: id=${s.id}, name=${s.name}, lang=${s.lang}" }
         }

@@ -175,7 +175,7 @@ object SettingsReaderScreen : SearchableSettings {
         val autoSplitEnabled by readerPreferences.novelAutoSplitText().collectAsState()
         val autoSplitWordCountPref = readerPreferences.novelAutoSplitWordCount()
         val autoSplitWordCount by autoSplitWordCountPref.collectAsState()
-        
+
         return Preference.PreferenceGroup(
             title = stringResource(MR.strings.pref_category_reading),
             preferenceItems = persistentListOf(

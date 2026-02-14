@@ -60,10 +60,10 @@ class UpdatesKeyUniquenessTest {
 
         val entries = listOf(
             UpdateEntry(1, 100, 1000),
-            UpdateEntry(1, 100, 2000),  // Same manga+chapter, different fetch time
+            UpdateEntry(1, 100, 2000), // Same manga+chapter, different fetch time
             UpdateEntry(1, 101, 1000),
             UpdateEntry(2, 100, 1000),
-            UpdateEntry(2, 100, 3000),  // Same manga+chapter, different fetch time
+            UpdateEntry(2, 100, 3000), // Same manga+chapter, different fetch time
             UpdateEntry(3, 200, 1000),
         )
 

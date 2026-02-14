@@ -300,12 +300,7 @@ data object NovelsTab : Tab {
                 )
             }
             is LibraryScreenModel.Dialog.RemoveChapters -> {
-                RemoveChaptersDialog(
-                    onDismissRequest = onDismissRequest,
-                    onConfirm = {
-                        screenModel.removeChaptersFromSelectedManga(dialog.manga)
-                    },
-                )
+
             }
             is LibraryScreenModel.Dialog.MarkReadConfirmation -> {
                 MarkReadConfirmationDialog(

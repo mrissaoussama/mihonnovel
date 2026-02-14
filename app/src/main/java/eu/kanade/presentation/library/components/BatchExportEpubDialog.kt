@@ -46,13 +46,13 @@ fun BatchExportEpubDialog(
     onExport: (Uri, EpubExportOptions) -> Unit,
 ) {
     val isSingleNovel = mangaList.size == 1
-    var filename by remember { 
+    var filename by remember {
         mutableStateOf(
             if (isSingleNovel) {
                 sanitizeFilename(mangaList.first().title) + ".epub"
             } else {
                 "novels_export.zip"
-            }
+            },
         )
     }
     var downloadedOnly by remember { mutableStateOf(false) }
@@ -62,18 +62,21 @@ fun BatchExportEpubDialog(
     var includeStatus by remember { mutableStateOf(false) }
 
     val mimeType = if (isSingleNovel) "application/epub+zip" else "application/zip"
-    
+
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.CreateDocument(mimeType),
     ) { uri ->
         if (uri != null) {
-            onExport(uri, EpubExportOptions(
-                downloadedOnly = downloadedOnly,
-                preferTranslated = preferTranslated,
-                includeChapterCount = includeChapterCount,
-                includeChapterRange = includeChapterRange,
-                includeStatus = includeStatus,
-            ))
+            onExport(
+                uri,
+                EpubExportOptions(
+                    downloadedOnly = downloadedOnly,
+                    preferTranslated = preferTranslated,
+                    includeChapterCount = includeChapterCount,
+                    includeChapterRange = includeChapterRange,
+                    includeStatus = includeStatus,
+                ),
+            )
             onDismissRequest()
         }
     }
@@ -128,13 +131,13 @@ fun BatchExportEpubDialog(
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(vertical = 4.dp),
                 )
-                
+
                 CheckboxItem(
                     label = "Downloaded chapters only",
                     checked = downloadedOnly,
                     onClick = { downloadedOnly = !downloadedOnly },
                 )
-                
+
                 CheckboxItem(
                     label = "Prefer translated chapters",
                     checked = preferTranslated,
@@ -142,25 +145,25 @@ fun BatchExportEpubDialog(
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
-                
+
                 Text(
                     text = "Filename Options",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(vertical = 4.dp),
                 )
-                
+
                 CheckboxItem(
                     label = "Include chapter count (e.g. [50ch])",
                     checked = includeChapterCount,
                     onClick = { includeChapterCount = !includeChapterCount },
                 )
-                
+
                 CheckboxItem(
                     label = "Include chapter range (e.g. [ch1-50])",
                     checked = includeChapterRange,
                     onClick = { includeChapterRange = !includeChapterRange },
                 )
-                
+
                 CheckboxItem(
                     label = "Include status (e.g. [Completed])",
                     checked = includeStatus,
@@ -176,7 +179,9 @@ fun BatchExportEpubDialog(
                         "Downloaded chapters will be used. Undownloaded chapters will be fetched from source."
                     } + if (preferTranslated) {
                         " Translated chapters will be used when available."
-                    } else "",
+                    } else {
+                        ""
+                    },
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

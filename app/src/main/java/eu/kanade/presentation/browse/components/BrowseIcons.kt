@@ -50,7 +50,7 @@ fun SourceIcon(
     modifier: Modifier = Modifier,
 ) {
     val icon = source.icon
-    
+
     // Check if actual source is a JsSource
     val actualSource = remember(source.id) {
         Injekt.get<SourceManager>().get(source.id)

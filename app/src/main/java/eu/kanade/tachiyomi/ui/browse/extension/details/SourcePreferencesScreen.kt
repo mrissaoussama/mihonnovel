@@ -158,7 +158,7 @@ class SourcePreferencesFragment : PreferenceFragmentCompat() {
                         currentSet + sourceId.toString()
                     } else {
                         currentSet - sourceId.toString()
-                    }
+                    },
                 )
                 true
             }

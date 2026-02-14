@@ -59,11 +59,11 @@ class SyncChaptersWithSource(
 
         val now = ZonedDateTime.now()
         val nowMillis = now.toInstant().toEpochMilli()
-        
+
         // Check if this source should have reversed chapter list
         val reversedSources = libraryPreferences.reversedChapterSources().get()
         val shouldReverse = source.id.toString() in reversedSources
-        
+
         // Apply reversal if configured for this source
         val orderedChapters = if (shouldReverse) rawSourceChapters.reversed() else rawSourceChapters
 

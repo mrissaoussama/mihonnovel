@@ -59,8 +59,8 @@ import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.source.local.metadata.fillMetadata
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
-import java.io.File
 import java.io.ByteArrayInputStream
+import java.io.File
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -164,7 +164,7 @@ fun ImportEpubDialog(
                                     val commonNames = listOf(
                                         "cover.jpg", "cover.jpeg", "cover.png",
                                         "OEBPS/cover.jpg", "OEBPS/cover.jpeg", "OEBPS/cover.png",
-                                        "Images/cover.jpg", "Images/cover.jpeg", "Images/cover.png"
+                                        "Images/cover.jpg", "Images/cover.jpeg", "Images/cover.png",
                                     )
                                     var stream: java.io.InputStream? = null
                                     for (name in commonNames) {
@@ -175,7 +175,7 @@ fun ImportEpubDialog(
                                 }
 
                                 coverStream?.use { stream ->
-                                    val coverFile = File.createTempFile("epub_cover_", ".${coverExt}", context.cacheDir)
+                                    val coverFile = File.createTempFile("epub_cover_", ".$coverExt", context.cacheDir)
                                     coverFile.outputStream().use { out ->
                                         stream.copyTo(out)
                                     }

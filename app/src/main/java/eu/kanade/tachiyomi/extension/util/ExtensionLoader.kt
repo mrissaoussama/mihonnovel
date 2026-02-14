@@ -124,7 +124,7 @@ internal object ExtensionLoader {
         } else {
             pkgManager.getInstalledPackages(PACKAGE_FLAGS)
         }
-        
+
         android.util.Log.d("ExtensionLoader", "Found ${installedPkgs.size} installed packages")
 
         // Log packages that might be extensions (for debugging)
@@ -139,7 +139,7 @@ internal object ExtensionLoader {
             .asSequence()
             .filter { isPackageAnExtension(it) }
             .map { ExtensionInfo(packageInfo = it, isShared = true) }
-        
+
         val sharedExtList = sharedExtPkgs.toList()
         android.util.Log.d("ExtensionLoader", "${sharedExtList.size} shared extensions found: ${sharedExtList.map { it.packageInfo.packageName }}")
 
@@ -160,7 +160,7 @@ internal object ExtensionLoader {
             ?.filter { isPackageAnExtension(it) }
             ?.map { ExtensionInfo(packageInfo = it, isShared = false) }
             ?: emptySequence()
-        
+
         val privateExtList = privateExtPkgs.toList()
         android.util.Log.d("ExtensionLoader", "${privateExtList.size} private extensions found")
 
@@ -174,7 +174,7 @@ internal object ExtensionLoader {
                 selectExtensionPackage(sharedPkg, privatePkg)
             }
             .toList()
-        
+
         android.util.Log.d("ExtensionLoader", "${extPkgs.size} total extensions to load")
 
         if (extPkgs.isEmpty()) return emptyList()
@@ -184,7 +184,7 @@ internal object ExtensionLoader {
             // Preload trusted fingerprints ONCE before loading all extensions
             // This prevents N database queries when loading N extensions
             trustExtension.preloadTrustedFingerprints()
-            
+
             val deferred = extPkgs.map {
                 async { loadExtension(context, it) }
             }
@@ -324,7 +324,7 @@ internal object ExtensionLoader {
             .flatMap { className ->
                 // Try the class name as-is first
                 val classesToTry = mutableListOf(className)
-                
+
                 // If the package uses app.tsundoku namespace, also try eu.kanade.tachiyomi namespace
                 // This handles extensions that were migrated to new package names but still have
                 // classes in the old namespace
@@ -332,7 +332,7 @@ internal object ExtensionLoader {
                     val fallbackClass = className.replace("app.tsundoku.extension.", "eu.kanade.tachiyomi.extension.")
                     classesToTry.add(fallbackClass)
                 }
-                
+
                 var lastError: Throwable? = null
                 for (classToTry in classesToTry) {
                     try {
@@ -350,7 +350,7 @@ internal object ExtensionLoader {
                         return LoadResult.Error
                     }
                 }
-                
+
                 logcat(LogPriority.ERROR, lastError) { "Extension load error: $extName - class not found in any namespace: $classesToTry" }
                 return LoadResult.Error
             }
@@ -412,8 +412,8 @@ internal object ExtensionLoader {
         val hasFeature = pkgInfo.reqFeatures.orEmpty().any { it.name == EXTENSION_FEATURE }
         if (pkgInfo.packageName.contains("extension", ignoreCase = true) ||
             pkgInfo.packageName.contains("mihon", ignoreCase = true)) {
-            android.util.Log.d("ExtensionLoader", 
-                "isPackageAnExtension: ${pkgInfo.packageName} - features: ${pkgInfo.reqFeatures?.map { it.name }}, hasFeature=$hasFeature" 
+            android.util.Log.d("ExtensionLoader",
+                "isPackageAnExtension: ${pkgInfo.packageName} - features: ${pkgInfo.reqFeatures?.map { it.name }}, hasFeature=$hasFeature"
             )
         }
         return hasFeature

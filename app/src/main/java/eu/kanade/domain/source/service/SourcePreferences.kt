@@ -81,7 +81,7 @@ class SourcePreferences(
     fun pageLoadDelay() = preferenceStore.getInt("page_load_delay", 0)
 
     fun showPageNumber() = preferenceStore.getBoolean("show_page_number", false)
-    
+
     fun skipCoverLoading() = preferenceStore.getBoolean("skip_cover_loading", false)
 
     fun confirmBackAfterPages() = preferenceStore.getInt("confirm_back_after_pages", 0)

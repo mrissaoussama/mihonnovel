@@ -64,7 +64,7 @@ class MangaBackupCreator(
                     mapper = backupChapterMapper,
                 )
             }
-            
+
             if (allChapters.isNotEmpty()) {
                 // Process chapters in smaller chunks to allow GC between them
                 val chapters = mutableListOf<BackupChapter>()

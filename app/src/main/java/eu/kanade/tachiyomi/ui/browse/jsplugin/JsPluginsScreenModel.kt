@@ -36,7 +36,7 @@ class JsPluginsScreenModel(
                 mutableState.value = newState
             }
         }
-        
+
         // Initial refresh
         screenModelScope.launch {
             jsPluginManager.refreshAvailablePlugins()
@@ -114,10 +114,10 @@ class JsPluginsScreenModel(
     fun getFilteredPlugins(): List<JsPluginItem> {
         val query = state.value.searchQuery?.lowercase()
         val installed = state.value.installedPlugins.associateBy { it.plugin.id }
-        
+
         return state.value.availablePlugins
             .filter { plugin ->
-                query == null || 
+                query == null ||
                 plugin.name.lowercase().contains(query) ||
                 plugin.site.lowercase().contains(query) ||
                 plugin.lang.lowercase().contains(query)

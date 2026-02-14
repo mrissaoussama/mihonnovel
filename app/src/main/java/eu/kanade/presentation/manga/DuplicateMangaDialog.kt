@@ -544,7 +544,11 @@ private fun SimilarNovelListItem(
         ) {
             BadgeGroup {
                 Badge(
-                    text = pluralStringResource(MR.plurals.manga_num_chapters, similar.chapterCount.toInt(), similar.chapterCount.toInt()),
+                    text = pluralStringResource(
+                        MR.plurals.manga_num_chapters,
+                        similar.chapterCount.toInt(),
+                        similar.chapterCount.toInt(),
+                    ),
                 )
                 if (source is StubSource) {
                     Badge(text = stringResource(MR.strings.not_installed))

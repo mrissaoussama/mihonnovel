@@ -39,7 +39,7 @@ class LocalNovelPageLoader(
         try {
             if (source is NovelSource) {
                 var text = source.fetchPageText(Page(page.index, page.url, page.imageUrl))
-                
+
                 // Apply auto-split if enabled
                 if (readerPreferences.novelAutoSplitText().get()) {
                     val wordCount = readerPreferences.novelAutoSplitWordCount().get()
@@ -47,7 +47,7 @@ class LocalNovelPageLoader(
                         text = TextSplitter.splitText(text, wordCount)
                     }
                 }
-                
+
                 page.text = text
                 page.status = Page.State.Ready
             } else {

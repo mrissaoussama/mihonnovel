@@ -102,47 +102,55 @@ class DuplicateDetectionScreenModel(
 
                 return when (sortMode) {
                     SortMode.NAME -> filtered.toSortedMap()
-                    SortMode.LATEST_ADDED -> filtered.entries
-                        .sortedByDescending { (_, novels) ->
-                            novels.maxOfOrNull { it.manga.dateAdded } ?: 0L
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.CHAPTER_COUNT_DESC -> filtered.entries
-                        .sortedByDescending { (_, novels) ->
-                            novels.sumOf { it.chapterCount }
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.CHAPTER_COUNT_ASC -> filtered.entries
-                        .sortedBy { (_, novels) ->
-                            novels.sumOf { it.chapterCount }
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.DOWNLOAD_COUNT_DESC -> filtered.entries
-                        .sortedByDescending { (_, novels) ->
-                            novels.sumOf { mangaDownloadCounts[it.manga.id] ?: 0 }
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.DOWNLOAD_COUNT_ASC -> filtered.entries
-                        .sortedBy { (_, novels) ->
-                            novels.sumOf { mangaDownloadCounts[it.manga.id] ?: 0 }
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.READ_COUNT_DESC -> filtered.entries
-                        .sortedByDescending { (_, novels) ->
-                            novels.sumOf { mangaReadCounts[it.manga.id] ?: 0 }
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.READ_COUNT_ASC -> filtered.entries
-                        .sortedBy { (_, novels) ->
-                            novels.sumOf { mangaReadCounts[it.manga.id] ?: 0 }
-                        }
-                        .associate { it.key to it.value }
-                    SortMode.PINNED_SOURCE -> filtered.entries
-                        .sortedByDescending { (_, novels) ->
-                            // Groups with more pinned source novels come first
-                            novels.count { it.manga.source in pinnedSourceIds }
-                        }
-                        .associate { it.key to it.value }
+                    SortMode.LATEST_ADDED ->
+                        filtered.entries
+                            .sortedByDescending { (_, novels) ->
+                                novels.maxOfOrNull { it.manga.dateAdded } ?: 0L
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.CHAPTER_COUNT_DESC ->
+                        filtered.entries
+                            .sortedByDescending { (_, novels) ->
+                                novels.sumOf { it.chapterCount }
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.CHAPTER_COUNT_ASC ->
+                        filtered.entries
+                            .sortedBy { (_, novels) ->
+                                novels.sumOf { it.chapterCount }
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.DOWNLOAD_COUNT_DESC ->
+                        filtered.entries
+                            .sortedByDescending { (_, novels) ->
+                                novels.sumOf { mangaDownloadCounts[it.manga.id] ?: 0 }
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.DOWNLOAD_COUNT_ASC ->
+                        filtered.entries
+                            .sortedBy { (_, novels) ->
+                                novels.sumOf { mangaDownloadCounts[it.manga.id] ?: 0 }
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.READ_COUNT_DESC ->
+                        filtered.entries
+                            .sortedByDescending { (_, novels) ->
+                                novels.sumOf { mangaReadCounts[it.manga.id] ?: 0 }
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.READ_COUNT_ASC ->
+                        filtered.entries
+                            .sortedBy { (_, novels) ->
+                                novels.sumOf { mangaReadCounts[it.manga.id] ?: 0 }
+                            }
+                            .associate { it.key to it.value }
+                    SortMode.PINNED_SOURCE ->
+                        filtered.entries
+                            .sortedByDescending { (_, novels) ->
+                                // Groups with more pinned source novels come first
+                                novels.count { it.manga.source in pinnedSourceIds }
+                            }
+                            .associate { it.key to it.value }
                 }
             }
 
@@ -206,15 +214,17 @@ class DuplicateDetectionScreenModel(
                     readCounts[mangaWithCount.manga.id] = mangaWithCount.readCount.toInt()
                 }
 
-                mutableState.update { it.copy(
-                    duplicateGroups = groups,
-                    mangaCategories = mangaCategoriesMap,
-                    novelSourceIds = novelSourceIds,
-                    mangaDownloadCounts = downloadCounts,
-                    mangaReadCounts = readCounts,
-                    pinnedSourceIds = pinnedSourceIds,
-                    isLoading = false
-                ) }
+                mutableState.update {
+                    it.copy(
+                        duplicateGroups = groups,
+                        mangaCategories = mangaCategoriesMap,
+                        novelSourceIds = novelSourceIds,
+                        mangaDownloadCounts = downloadCounts,
+                        mangaReadCounts = readCounts,
+                        pinnedSourceIds = pinnedSourceIds,
+                        isLoading = false,
+                    )
+                }
             } catch (e: Exception) {
                 mutableState.update { it.copy(duplicateGroups = emptyMap(), isLoading = false) }
             }

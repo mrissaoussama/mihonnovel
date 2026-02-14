@@ -88,28 +88,28 @@ class FontManagerScreen : Screen {
         val scope = rememberCoroutineScope()
         val screenModel = rememberScreenModel { FontManagerScreenModel() }
         val state by screenModel.state.collectAsState()
-        
+
         val snackbarHostState = remember { SnackbarHostState() }
-        
+
         var showAddFontSheet by remember { mutableStateOf(false) }
         var showGoogleFontsDialog by remember { mutableStateOf(false) }
         var fontToDelete by remember { mutableStateOf<FontInfo?>(null) }
-        
+
         val fontPickerLauncher = rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument()
+            contract = ActivityResultContracts.OpenDocument(),
         ) { uri: Uri? ->
             uri?.let {
                 screenModel.importFont(it)
             }
         }
-        
+
         LaunchedEffect(state.message) {
             state.message?.let { message ->
                 snackbarHostState.showSnackbar(message)
                 screenModel.clearMessage()
             }
         }
-        
+
         Scaffold(
             topBar = {
                 TopAppBar(
@@ -124,11 +124,11 @@ class FontManagerScreen : Screen {
             snackbarHost = { SnackbarHost(snackbarHostState) },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { showAddFontSheet = true }
+                    onClick = { showAddFontSheet = true },
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "Add Font")
                 }
-            }
+            },
         ) { paddingValues ->
             if (state.isLoading) {
                 Column(
@@ -159,7 +159,7 @@ class FontManagerScreen : Screen {
                             modifier = Modifier.padding(vertical = 8.dp),
                         )
                     }
-                    
+
                     items(state.systemFonts) { font ->
                         FontItem(
                             fontInfo = font,
@@ -168,7 +168,7 @@ class FontManagerScreen : Screen {
                             onDelete = null,
                         )
                     }
-                    
+
                     // Custom Fonts Section
                     if (state.customFonts.isNotEmpty()) {
                         item {
@@ -180,7 +180,7 @@ class FontManagerScreen : Screen {
                                 modifier = Modifier.padding(vertical = 8.dp),
                             )
                         }
-                        
+
                         items(state.customFonts) { font ->
                             FontItem(
                                 fontInfo = font,
@@ -190,7 +190,7 @@ class FontManagerScreen : Screen {
                             )
                         }
                     }
-                    
+
                     // Download Progress
                     state.downloadProgress?.let { progress ->
                         item {
@@ -199,7 +199,7 @@ class FontManagerScreen : Screen {
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Column(
-                                    modifier = Modifier.padding(16.dp)
+                                    modifier = Modifier.padding(16.dp),
                                 ) {
                                     Text(
                                         text = "Downloading font...",
@@ -217,7 +217,7 @@ class FontManagerScreen : Screen {
                 }
             }
         }
-        
+
         // Add Font Bottom Sheet
         if (showAddFontSheet) {
             ModalBottomSheet(
@@ -234,16 +234,18 @@ class FontManagerScreen : Screen {
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                     )
-                    
+
                     Spacer(modifier = Modifier.height(16.dp))
-                    
+
                     // Import from device
                     Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .clickable {
                                 showAddFontSheet = false
-                                fontPickerLauncher.launch(arrayOf("font/*", "application/x-font-ttf", "application/x-font-opentype"))
+                                fontPickerLauncher.launch(
+                                    arrayOf("font/*", "application/x-font-ttf", "application/x-font-opentype"),
+                                )
                             },
                         colors = CardDefaults.cardColors(
                             containerColor = MaterialTheme.colorScheme.surfaceVariant,
@@ -275,9 +277,9 @@ class FontManagerScreen : Screen {
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(8.dp))
-                    
+
                     // Download from Google Fonts
                     Card(
                         modifier = Modifier
@@ -316,26 +318,26 @@ class FontManagerScreen : Screen {
                             }
                         }
                     }
-                    
+
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             }
         }
-        
+
         // Google Fonts Dialog
         if (showGoogleFontsDialog) {
             GoogleFontsDialog(
                 googleFonts = state.googleFonts,
                 isSearching = state.isSearchingGoogleFonts,
                 onSearch = { screenModel.searchGoogleFonts(it) },
-                onDownload = { 
+                onDownload = {
                     screenModel.downloadGoogleFont(it.family)
                     showGoogleFontsDialog = false
                 },
                 onDismiss = { showGoogleFontsDialog = false },
             )
         }
-        
+
         // Delete Confirmation Dialog
         fontToDelete?.let { font ->
             AlertDialog(
@@ -347,7 +349,7 @@ class FontManagerScreen : Screen {
                         onClick = {
                             screenModel.deleteFont(font)
                             fontToDelete = null
-                        }
+                        },
                     ) {
                         Text("Delete")
                     }
@@ -402,7 +404,7 @@ private fun FontItem(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            
+
             if (isSelected) {
                 Icon(
                     Icons.Default.Check,
@@ -410,7 +412,7 @@ private fun FontItem(
                     tint = MaterialTheme.colorScheme.primary,
                 )
             }
-            
+
             if (onDelete != null) {
                 Spacer(modifier = Modifier.width(8.dp))
                 IconButton(onClick = onDelete) {
@@ -434,7 +436,7 @@ private fun GoogleFontsDialog(
     onDismiss: () -> Unit,
 ) {
     var searchQuery by remember { mutableStateOf("") }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Google Fonts") },
@@ -442,7 +444,7 @@ private fun GoogleFontsDialog(
             Column {
                 OutlinedTextField(
                     value = searchQuery,
-                    onValueChange = { 
+                    onValueChange = {
                         searchQuery = it
                         onSearch(it)
                     },
@@ -453,9 +455,9 @@ private fun GoogleFontsDialog(
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                     keyboardActions = KeyboardActions(onSearch = { onSearch(searchQuery) }),
                 )
-                
+
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 if (isSearching) {
                     Row(
                         modifier = Modifier.fillMaxWidth(),
@@ -532,15 +534,15 @@ class FontManagerScreenModel(
         loadFonts()
         loadGoogleFonts("")
     }
-    
+
     private fun loadFonts() {
         mutableState.update { it.copy(isLoading = true) }
-        
+
         kotlinx.coroutines.MainScope().launch {
             val systemFonts = fontManager.getSystemFonts()
             val customFonts = fontManager.getInstalledFonts()
             val currentFont = readerPreferences.novelFontFamily().get()
-            
+
             mutableState.update {
                 it.copy(
                     isLoading = false,
@@ -551,12 +553,12 @@ class FontManagerScreenModel(
             }
         }
     }
-    
+
     fun selectFont(font: FontInfo) {
         readerPreferences.novelFontFamily().set(font.path)
         mutableState.update { it.copy(selectedFontPath = font.path) }
     }
-    
+
     fun importFont(uri: android.net.Uri) {
         kotlinx.coroutines.MainScope().launch {
             val result = fontManager.importFont(uri)
@@ -567,11 +569,11 @@ class FontManagerScreenModel(
                 },
                 onFailure = { error ->
                     mutableState.update { it.copy(message = "Failed to import font: ${error.message}") }
-                }
+                },
             )
         }
     }
-    
+
     fun deleteFont(font: FontInfo) {
         kotlinx.coroutines.MainScope().launch {
             val success = fontManager.deleteFont(font)
@@ -588,10 +590,10 @@ class FontManagerScreenModel(
             }
         }
     }
-    
+
     fun searchGoogleFonts(query: String) {
         mutableState.update { it.copy(isSearchingGoogleFonts = true) }
-        
+
         kotlinx.coroutines.MainScope().launch {
             val fonts = fontManager.searchGoogleFonts(query)
             mutableState.update {
@@ -602,11 +604,11 @@ class FontManagerScreenModel(
             }
         }
     }
-    
+
     private fun loadGoogleFonts(query: String) {
         searchGoogleFonts(query)
     }
-    
+
     fun downloadGoogleFont(fontFamily: String) {
         kotlinx.coroutines.MainScope().launch {
             fontManager.downloadGoogleFont(fontFamily).collect { downloadState ->
@@ -615,17 +617,21 @@ class FontManagerScreenModel(
                         mutableState.update { it.copy(downloadProgress = downloadState.progress) }
                     }
                     is FontDownloadState.Success -> {
-                        mutableState.update { it.copy(downloadProgress = null, message = "Font \"${fontFamily}\" downloaded") }
+                        mutableState.update {
+                            it.copy(downloadProgress = null, message = "Font \"${fontFamily}\" downloaded")
+                        }
                         loadFonts()
                     }
                     is FontDownloadState.Error -> {
-                        mutableState.update { it.copy(downloadProgress = null, message = "Download failed: ${downloadState.message}") }
+                        mutableState.update {
+                            it.copy(downloadProgress = null, message = "Download failed: ${downloadState.message}")
+                        }
                     }
                 }
             }
         }
     }
-    
+
     fun clearMessage() {
         mutableState.update { it.copy(message = null) }
     }

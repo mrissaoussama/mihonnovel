@@ -94,15 +94,15 @@ class BackupCreator(
             }
 
             val nonFavoriteManga = if (options.readEntries) mangaRepository.getReadMangaNotInLibrary() else emptyList()
-            
+
             // Use getFavoritesEntry to get lightweight objects (IDs/Metadata) avoiding OOM
             // Description and other heavy fields are null here, we'll fetch them on-demand in batches
             val favorites = mangaRepository.getFavoritesEntry()
             val allManga = favorites + nonFavoriteManga
-            
+
             // Log library size for debugging OOM issues
             logcat(LogPriority.INFO) { "Backup: Processing ${allManga.size} manga entries" }
-            
+
             // Filter by manga/novel content type based on options
             val filteredManga = allManga.filter { manga ->
                 val isNovel = sourceManager.getOrStub(manga.source).isNovelSource()
@@ -113,9 +113,9 @@ class BackupCreator(
                     else -> false
                 }
             }
-            
+
             logcat(LogPriority.INFO) { "Backup: ${filteredManga.size} manga after filtering" }
-            
+
             // Use streaming protobuf serialization to avoid OOM on large libraries.
             // Instead of building one huge Backup object and serializing it all at once,
             // we serialize each BackupManga individually and write the raw protobuf bytes
@@ -124,27 +124,27 @@ class BackupCreator(
             val backupAppPrefs = backupAppPreferences(options)
             val backupExtensionRepos = backupExtensionRepos(options)
             val backupSourcePrefs = backupSourcePreferences(options)
-            
+
             // Stream-write protobuf directly to gzipped output to avoid holding full backup in memory
             val outputStream = file.openOutputStream()
             (outputStream as? FileOutputStream)?.channel?.truncate(0)
             val gzipOut = outputStream.sink().gzip().buffer()
-            
+
             // Track source IDs as we process manga for backupSources field
             val sourceIds = mutableSetOf<Long>()
             var batchCount = 0
             val totalBatches = (filteredManga.size + MANGA_BATCH_SIZE - 1) / MANGA_BATCH_SIZE
-            
+
             try {
                 // Field 1: backupManga (repeated) - stream each batch directly to output
                 filteredManga.chunked(MANGA_BATCH_SIZE).forEach { batch ->
                     // Fetch full details for incomplete objects (favorites from getFavoritesEntry)
-                    val fullBatch = batch.map { manga -> 
-                         if (manga.favorite && manga.description == null) { 
-                             mangaRepository.getMangaById(manga.id) 
-                         } else { 
-                             manga 
-                         } 
+                    val fullBatch = batch.map { manga ->
+                         if (manga.favorite && manga.description == null) {
+                             mangaRepository.getMangaById(manga.id)
+                         } else {
+                             manga
+                         }
                     }
 
                     val backupBatch = mangaBackupCreator.backupMangaStream(fullBatch, options).toList()
@@ -160,11 +160,11 @@ class BackupCreator(
                         logcat(LogPriority.DEBUG) { "Backup: Processed $batchCount/$totalBatches batches" }
                     }
                 }
-                
+
                 logcat(LogPriority.INFO) { "Backup: All manga streamed ($batchCount batches), writing metadata..." }
-                
+
                 val backupSources = sourcesBackupCreator.forSourceIds(sourceIds)
-                
+
                 // Field 2: backupCategories (repeated)
                 backupCategories.forEach { c ->
                     val bytes = parser.encodeToByteArray(BackupCategory.serializer(), c)
@@ -190,12 +190,12 @@ class BackupCreator(
                     val bytes = parser.encodeToByteArray(BackupExtensionRepos.serializer(), er)
                     writeProtoField(gzipOut.outputStream(), 106, bytes)
                 }
-                
+
                 gzipOut.flush()
             } finally {
                 gzipOut.close()
             }
-            
+
             val fileUri = file.uri
             logcat(LogPriority.INFO) { "Backup: Write complete, validating..." }
 

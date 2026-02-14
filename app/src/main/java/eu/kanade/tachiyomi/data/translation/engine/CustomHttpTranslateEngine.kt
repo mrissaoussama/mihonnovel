@@ -25,7 +25,7 @@ import uy.kohesive.injekt.api.get
 /**
  * Custom HTTP translation engine.
  * Allows users to configure their own translation API endpoint.
- * 
+ *
  * Supports configurable:
  * - API URL (POST endpoint)
  * - API Key (Authorization header)
@@ -139,7 +139,7 @@ class CustomHttpTranslateEngine(
         }
 
         val response = client.newCall(requestBuilder.build()).execute()
-        
+
         if (!response.isSuccessful) {
             val errorBody = response.body?.string() ?: "Unknown error"
             throw Exception("HTTP ${response.code}: $errorBody")
@@ -164,8 +164,9 @@ class CustomHttpTranslateEngine(
         targetLanguage: String,
     ): String {
         val textsJson = json.encodeToString(JsonArray.serializer(), JsonArray(texts.map { JsonPrimitive(it) }))
-        val singleText = texts.firstOrNull()?.let { json.encodeToString(JsonPrimitive.serializer(), JsonPrimitive(it)) } ?: "\"\""
-        
+        val singleText =
+            texts.firstOrNull()?.let { json.encodeToString(JsonPrimitive.serializer(), JsonPrimitive(it)) } ?: "\"\""
+
         return template
             .replace("{texts}", textsJson)
             .replace("{text}", singleText)
@@ -181,14 +182,14 @@ class CustomHttpTranslateEngine(
     private fun parseResponse(responseBody: String, path: String, expectedCount: Int): List<String> {
         val jsonElement = json.parseToJsonElement(responseBody)
         val result = navigateJsonPath(jsonElement, path)
-        
+
         return when (result) {
-            is JsonArray -> result.map { 
+            is JsonArray -> result.map {
                 when (it) {
                     is JsonPrimitive -> it.content
                     is JsonObject -> {
                         // Try common field names for text
-                        it["text"]?.jsonPrimitive?.content 
+                        it["text"]?.jsonPrimitive?.content
                             ?: it["translatedText"]?.jsonPrimitive?.content
                             ?: it["translation"]?.jsonPrimitive?.content
                             ?: it.toString()
@@ -211,30 +212,30 @@ class CustomHttpTranslateEngine(
      */
     private fun navigateJsonPath(element: JsonElement, path: String): JsonElement {
         if (path.isBlank()) return element
-        
+
         val parts = path.split(".")
         var current = element
-        
+
         for (part in parts) {
             // Check for array access: fieldName[0]
             val arrayMatch = Regex("""(.+)\[(\d+)\]""").matchEntire(part)
             if (arrayMatch != null) {
                 val fieldName = arrayMatch.groupValues[1]
                 val index = arrayMatch.groupValues[2].toInt()
-                
+
                 current = if (fieldName.isNotBlank()) {
                     current.jsonObject[fieldName] ?: throw Exception("Field '$fieldName' not found")
                 } else {
                     current
                 }
-                current = current.jsonArray.getOrNull(index) 
+                current = current.jsonArray.getOrNull(index)
                     ?: throw Exception("Array index $index out of bounds")
             } else {
-                current = current.jsonObject[part] 
+                current = current.jsonObject[part]
                     ?: throw Exception("Field '$part' not found in response")
             }
         }
-        
+
         return current
     }
 

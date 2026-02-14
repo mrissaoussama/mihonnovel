@@ -192,8 +192,6 @@ class App : Application(), DefaultLifecycleObserver, SingletonImageLoader.Factor
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR, e) { "Failed to ensure library cache integrity" }
                 }
-
-
             }
         }
     }

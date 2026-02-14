@@ -2,6 +2,7 @@ package eu.kanade.tachiyomi.data.track.novelupdates
 
 import android.graphics.Color
 import dev.icerock.moko.resources.StringResource
+import eu.kanade.domain.track.service.TrackPreferences
 import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.data.database.models.Track
 import eu.kanade.tachiyomi.data.track.BaseTracker
@@ -19,7 +20,6 @@ import okhttp3.Headers
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.injectLazy
-import eu.kanade.domain.track.service.TrackPreferences
 import tachiyomi.domain.track.model.Track as DomainTrack
 
 /**
@@ -417,14 +417,14 @@ class NovelUpdates(id: Long) : BaseTracker(id, "NovelUpdates") {
                 GET("$baseUrl/reading-list/", getAuthHeaders()),
             ).awaitSuccess()
             val document = response.asJsoup()
-            
+
             val lists = mutableListOf<Pair<String, String>>()
-            
+
             // Try menu lists first
             document.select("div#cssmenu li a").forEach { link ->
                 val href = link.attr("href")
                 val text = link.text().trim()
-                
+
                 if (href.contains("reading-list/?list=")) {
                     val listMatch = Regex("list=(\\d+)").find(href)
                     val listId = listMatch?.groupValues?.get(1)
@@ -433,19 +433,19 @@ class NovelUpdates(id: Long) : BaseTracker(id, "NovelUpdates") {
                     }
                 }
             }
-            
+
             // If no menu lists, try select dropdown
             if (lists.isEmpty()) {
                 document.select("div.sticon select.stmove option").forEach { option ->
                     val value = option.attr("value")
                     val text = option.text().trim()
-                    
+
                     if (value.isNotEmpty() && value != "---" && value != "Select..." && text.isNotEmpty()) {
                         lists.add(Pair(value, text))
                     }
                 }
             }
-            
+
             lists
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to get available reading lists" }

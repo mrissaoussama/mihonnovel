@@ -26,9 +26,9 @@ class GetExtensionLanguages(
                         ext.sources.map { it.lang }
                     }
                 }
-            
+
             val jsPluginLangs = installedJsPlugins.map { it.plugin.langCode() }
-            
+
             (extensionLangs + jsPluginLangs)
                 .distinct()
                 .sortedWith(
@@ -37,4 +37,3 @@ class GetExtensionLanguages(
         }
     }
 }
-

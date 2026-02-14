@@ -24,17 +24,17 @@ data class JsPlugin(
         /** Package name prefix for novel JS plugins - unique to tsundoku fork */
         const val PKG_PREFIX = "app.tsundoku.jsplugin."
     }
-    
+
     /**
      * Unique identifier combining plugin ID and repository URL for disambiguation
      */
     fun uniqueId(): String = "js:$id"
-    
+
     /**
      * Unique package name for this plugin - prevents conflicts with other forks
      */
     fun pkgName(): String = "${PKG_PREFIX}$id"
-    
+
     /**
      * Generate a stable Long ID for Source compatibility
      */
@@ -43,7 +43,7 @@ data class JsPlugin(
         val key = "${name.lowercase()}/$lang/js"
         return key.hashCode().toLong() and Long.MAX_VALUE
     }
-    
+
     /**
      * Normalized language code for grouping (e.g., "English" -> "en")
      */

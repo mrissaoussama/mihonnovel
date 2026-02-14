@@ -59,7 +59,7 @@ private val defaultContent: @Composable RowScope.(Source, String?) -> Unit = { s
     val isJsSource = remember(source.id) {
         Injekt.get<SourceManager>().get(source.id) is JsSource
     }
-    
+
     Column(
         modifier = Modifier
             .padding(horizontal = MaterialTheme.padding.medium)

@@ -11,7 +11,7 @@ import java.io.Closeable
 
 /**
  * JavaScript plugin runtime using QuickJS.
- * 
+ *
  * Based on iReader's architecture:
  * - JSLibraryProvider handles all API setup (fetch, cheerio, storage)
  * - Minimal runtime that just loads and executes plugins
@@ -23,7 +23,7 @@ class PluginRuntime(
     private val dispatcher: CoroutineDispatcher = Dispatchers.IO,
 ) {
     private val libraryProvider = JSLibraryProvider(pluginId)
-    
+
     /**
      * Execute plugin code and return an instance ready to call methods.
      * The QuickJS runtime is bound to the provided dispatcher to ensure
@@ -32,13 +32,13 @@ class PluginRuntime(
     suspend fun executePlugin(code: String): PluginInstance {
         val cleanCode = sanitizeCode(code)
         val runtime = QuickJs.create(dispatcher)
-        
+
         try {
             // Setup all native bindings and JS runtime via JSLibraryProvider
             libraryProvider.setup(runtime)
-            
+
             logcat(LogPriority.DEBUG) { "[$pluginId] Executing plugin code (${cleanCode.length} chars)" }
-            
+
             // Execute plugin code
             try {
                 runtime.evaluate<Any?>(code = cleanCode, filename = "$pluginId.js", asModule = false)
@@ -52,7 +52,7 @@ class PluginRuntime(
                 }
                 throw evalError
             }
-            
+
             // Extract plugin instance - LNReader plugins export a class that needs instantiation
             runtime.evaluate<Any?>(
                 code = """
@@ -69,14 +69,14 @@ class PluginRuntime(
                 filename = "loader.js",
                 asModule = false,
             )
-            
+
             return PluginInstance(this, runtime)
         } catch (e: Exception) {
             runtime.close()
             throw e
         }
     }
-    
+
     private fun sanitizeCode(code: String): String {
         var result = code
         // Remove BOM
@@ -89,7 +89,7 @@ class PluginRuntime(
         result = result.replace("\r\n", "\n").replace("\r", "\n")
         // Remove any trailing whitespace per line and overall
         result = result.trim()
-        
+
         // Log code stats for debugging syntax errors
         if (result.isNotEmpty()) {
             val preview = result.take(200).replace("\n", "\\n")
@@ -97,16 +97,18 @@ class PluginRuntime(
             val closeBraces = result.count { it == '}' }
             val openParens = result.count { it == '(' }
             val closeParens = result.count { it == ')' }
-            logcat(LogPriority.DEBUG) { "[$pluginId] Code length=${result.length}, braces={$openBraces/$closeBraces}, parens=($openParens/$closeParens)" }
+            logcat(LogPriority.DEBUG) {
+                "[$pluginId] Code length=${result.length}, braces={$openBraces/$closeBraces}, parens=($openParens/$closeParens)"
+            }
             logcat(LogPriority.DEBUG) { "[$pluginId] Code preview: $preview..." }
             // Log last 200 chars too
             val suffix = result.takeLast(200).replace("\n", "\\n")
             logcat(LogPriority.DEBUG) { "[$pluginId] Code suffix: ...$suffix" }
         }
-        
+
         return result
     }
-    
+
     /**
      * Wrap plugin code to handle 'this' context issues in transpiled TypeScript.
      * The __awaiter and __generator helpers use 'this' which is undefined at global scope.
@@ -120,7 +122,7 @@ class PluginRuntime(
             }).call(globalThis);
         """.trimIndent()
     }
-    
+
     fun cleanup() {
         libraryProvider.cleanup()
     }
@@ -133,16 +135,16 @@ class PluginInstance(
     private val runtime: PluginRuntime,
     private val quickJs: QuickJs,
 ) : Closeable {
-    
+
     suspend fun getId(): String? = getProperty("id") as? String
     suspend fun getName(): String? = getProperty("name") as? String
     suspend fun getVersion(): String? = getProperty("version") as? String
     suspend fun getSite(): String? = getProperty("site") as? String
-    
+
     private suspend fun getProperty(name: String): Any? = quickJs.evaluate<Any?>("plugin.$name")
-    
+
     suspend fun execute(script: String): Any? = quickJs.evaluate<Any?>(script)
-    
+
     override fun close() {
         quickJs.close()
         runtime.cleanup()

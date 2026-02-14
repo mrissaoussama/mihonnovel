@@ -182,7 +182,7 @@ class UpdateManga(
 
     /**
      * Translate manga title and/or tags based on translation preferences.
-     * 
+     *
      * If replaceTitle is enabled: translated title becomes the main title, original is added to alternative titles.
      * If saveTranslatedTitleAsAlternative is enabled: translated title is added to alternative titles.
      * If translateTags is enabled: translated tags are merged with original tags.
@@ -199,7 +199,7 @@ class UpdateManga(
     ): Boolean {
         val translationPreferences: TranslationPreferences = Injekt.get()
         val engineManager: TranslationEngineManager = Injekt.get()
-        
+
         if (!translationPreferences.translationEnabled().get()) {
             return false
         }

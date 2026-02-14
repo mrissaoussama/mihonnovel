@@ -473,11 +473,13 @@ private fun MangaScreenSmallImpl(
                         contentType = MangaScreenItem.DESCRIPTION_WITH_TAG,
                     ) {
                         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
-                        val sortMangaTags by libraryPreferences.sortMangaTags().changes().collectAsState(initial = false)
+                        val sortMangaTags by libraryPreferences.sortMangaTags().changes().collectAsState(
+                            initial = false,
+                        )
                         ExpandableMangaDescription(
                             defaultExpandState = state.isFromSource,
                             description = state.manga.description,
-                            tagsProvider = { 
+                            tagsProvider = {
                                 val tags = state.manga.genre
                                 if (sortMangaTags && tags != null) {
                                     tags.sortedBy { it.lowercase() }
@@ -733,11 +735,13 @@ fun MangaScreenLargeImpl(
                             onEditCategory = onEditCategoryClicked,
                         )
                         val libraryPreferences = remember { Injekt.get<LibraryPreferences>() }
-                        val sortMangaTags by libraryPreferences.sortMangaTags().changes().collectAsState(initial = false)
+                        val sortMangaTags by libraryPreferences.sortMangaTags().changes().collectAsState(
+                            initial = false,
+                        )
                         ExpandableMangaDescription(
                             defaultExpandState = true,
                             description = state.manga.description,
-                            tagsProvider = { 
+                            tagsProvider = {
                                 val tags = state.manga.genre
                                 if (sortMangaTags && tags != null) {
                                     tags.sortedBy { it.lowercase() }

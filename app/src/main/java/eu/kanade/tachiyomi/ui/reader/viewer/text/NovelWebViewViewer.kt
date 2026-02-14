@@ -397,7 +397,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
 
         // Generate font-face declaration for custom fonts
         // For custom fonts (URIs), copy to cache and use file:// URL
-        val (fontFaceDeclaration, effectiveFontFamily) = if (!useOriginalFonts && (fontFamily.startsWith("file://") || fontFamily.startsWith("content://"))) {
+        val (fontFaceDeclaration, effectiveFontFamily) = if (!useOriginalFonts &&
+            (fontFamily.startsWith("file://") || fontFamily.startsWith("content://"))
+        ) {
             try {
                 // Copy font to cache directory for WebView access
                 val fontUri = android.net.Uri.parse(fontFamily)
@@ -721,19 +723,41 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                 // Follow app theme - use actual Material theme colors
                 val typedValue = android.util.TypedValue()
                 val theme = activity.theme
-                val bgColor = if (theme.resolveAttribute(com.google.android.material.R.attr.colorSurface, typedValue, true)) {
+                val bgColor = if (theme.resolveAttribute(
+                        com.google.android.material.R.attr.colorSurface,
+                        typedValue,
+                        true,
+                    )
+                ) {
                     typedValue.data
                 } else {
                     val nightMode = activity.resources.configuration.uiMode and
                         android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                    if (nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) 0xFF121212.toInt() else 0xFFFFFFFF.toInt()
+                    if (nightMode ==
+                        android.content.res.Configuration.UI_MODE_NIGHT_YES
+                    ) {
+                        0xFF121212.toInt()
+                    } else {
+                        0xFFFFFFFF.toInt()
+                    }
                 }
-                val textColor = if (theme.resolveAttribute(com.google.android.material.R.attr.colorOnSurface, typedValue, true)) {
+                val textColor = if (theme.resolveAttribute(
+                        com.google.android.material.R.attr.colorOnSurface,
+                        typedValue,
+                        true,
+                    )
+                ) {
                     typedValue.data
                 } else {
                     val nightMode = activity.resources.configuration.uiMode and
                         android.content.res.Configuration.UI_MODE_NIGHT_MASK
-                    if (nightMode == android.content.res.Configuration.UI_MODE_NIGHT_YES) 0xFFE0E0E0.toInt() else 0xFF000000.toInt()
+                    if (nightMode ==
+                        android.content.res.Configuration.UI_MODE_NIGHT_YES
+                    ) {
+                        0xFFE0E0E0.toInt()
+                    } else {
+                        0xFF000000.toInt()
+                    }
                 }
                 bgColor to textColor
             }
@@ -1847,7 +1871,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR) { "TTS (WebView): Failed to create TextToSpeech instance: ${e.message}" }
                 activity.runOnUiThread {
-                    logcat(LogPriority.DEBUG) {"TTS engine not available. Please install a TTS engine from Google Play."}
+                    logcat(LogPriority.DEBUG) {
+                        "TTS engine not available. Please install a TTS engine from Google Play."
+                    }
                 }
             }
         }
@@ -1870,7 +1896,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                     startTts() // Retry now that it's initialized
                 } else {
                     activity.runOnUiThread {
-                        logcat(LogPriority.WARN) {"TTS not available. Please check your TTS settings."}
+                        logcat(LogPriority.WARN) { "TTS not available. Please check your TTS settings." }
                     }
                 }
             }

@@ -26,8 +26,8 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.notification.Notifications
 import eu.kanade.tachiyomi.source.NovelSource
 import eu.kanade.tachiyomi.source.model.SManga
-import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.source.model.UpdateStrategy
+import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.util.storage.getUriCompat
 import eu.kanade.tachiyomi.util.system.createFileInCacheDir
 import eu.kanade.tachiyomi.util.system.isConnectedToWifi
@@ -51,6 +51,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.chapter.model.NoChaptersException
+import tachiyomi.domain.download.service.NovelDownloadPreferences
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.model.LibraryMangaForUpdate
 import tachiyomi.domain.library.service.LibraryPreferences
@@ -65,10 +66,9 @@ import tachiyomi.domain.manga.interactor.FetchInterval
 import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
-import tachiyomi.domain.download.service.NovelDownloadPreferences
-import tachiyomi.domain.updates.repository.UpdatesRepository
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.domain.updates.repository.UpdatesRepository
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -189,7 +189,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val currentTime = System.currentTimeMillis()
 
         val libraryManga = getLibraryManga.awaitForUpdate()
-        
+
         val listToUpdate = if (categoryId != -1L) {
             libraryManga.filter { categoryId in it.categories }
         } else {
@@ -216,12 +216,16 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                     }
 
                     MANGA_HAS_UNREAD in restrictions && it.unreadCount != 0L -> {
-                        skippedUpdates.add(it.toManga() to context.stringResource(MR.strings.skipped_reason_not_caught_up))
+                        skippedUpdates.add(
+                            it.toManga() to context.stringResource(MR.strings.skipped_reason_not_caught_up),
+                        )
                         false
                     }
 
                     MANGA_NON_READ in restrictions && it.totalChapters > 0L && !it.hasStarted -> {
-                        skippedUpdates.add(it.toManga() to context.stringResource(MR.strings.skipped_reason_not_started))
+                        skippedUpdates.add(
+                            it.toManga() to context.stringResource(MR.strings.skipped_reason_not_started),
+                        )
                         false
                     }
 
@@ -232,7 +236,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                         false
                     }
 
-                   
                     // Explicitly define parameters to fix compiler ambiguity
                     skipUpdateTime > 0 && it.lastUpdate > 0 -> {
                         val daysSinceUpdate = (currentTime - it.lastUpdate) / (1000 * 60 * 60 * 24)
@@ -292,7 +295,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                     async {
                         val source = sourceManager.get(mangaInSource.first().manga.source)
                         val semaphore = if (source is NovelSource) novelSemaphore else defaultSemaphore
-                        
+
                         // Determine update throttling based on source type and overrides
                         val updateThrottlingMs = if (source is NovelSource && novelThrottleEnabled) {
                             val sourceId = source.id
@@ -450,7 +453,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 val file = context.createFileInCacheDir("tsundoku_update_errors.txt")
                 file.bufferedWriter().use { out ->
                     out.write(context.stringResource(MR.strings.library_errors_help, ERROR_LOG_HELP_URL) + "\n\n")
-                    
+
                     // Error file format:
                     // ! Error
                     //   # Source
@@ -476,7 +479,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                             }
                         }
                     }
-                    
+
                     // Add a summary section with just URLs for easy copy-paste/re-import
                     out.write("\n\n=== Failed URLs (for re-import) ===\n")
                     errors.forEach { (manga, _) ->

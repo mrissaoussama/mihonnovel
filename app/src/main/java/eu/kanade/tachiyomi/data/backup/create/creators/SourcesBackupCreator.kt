@@ -20,7 +20,7 @@ class SourcesBackupCreator(
             .map { it.toBackupSource() }
             .toList()
     }
-    
+
     fun forSourceIds(sourceIds: Set<Long>): List<BackupSource> {
         return sourceIds
             .map(sourceManager::getOrStub)

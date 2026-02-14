@@ -414,7 +414,7 @@ class UpdatesScreenModel(
     fun toggleGroupByNovel() {
         mutableState.update { it.copy(groupByNovel = !it.groupByNovel) }
     }
-    
+
     fun clearUpdatesCacheAll() {
         screenModelScope.launchIO {
             clearUpdatesCache.clearAll()

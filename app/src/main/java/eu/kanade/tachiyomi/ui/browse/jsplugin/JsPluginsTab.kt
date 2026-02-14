@@ -103,7 +103,7 @@ fun jsPluginsTab(
             if (showRepoDialog) {
                 ManageRepositoriesDialog(
                     repositories = state.repositories,
-                    onAddRepository = { name, url -> 
+                    onAddRepository = { name, url ->
                         screenModel.addRepository(name, url)
                     },
                     onRemoveRepository = screenModel::removeRepository,
@@ -129,7 +129,7 @@ private fun JsPluginsScreen(
     Box(modifier = Modifier.fillMaxSize()) {
         if (state.isLoading && plugins.isEmpty()) {
             CircularProgressIndicator(
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
             )
         } else if (plugins.isEmpty()) {
             EmptyScreen(
@@ -256,12 +256,12 @@ private fun JsPluginCard(
                         overflow = TextOverflow.Ellipsis,
                         modifier = Modifier.weight(1f, fill = false),
                     )
-                    
+
                     Spacer(Modifier.width(8.dp))
-                    
+
                     // JS badge
                     JsBadge()
-                    
+
                     if (hasUpdate) {
                         Spacer(Modifier.width(4.dp))
                         UpdateBadge()
@@ -396,7 +396,7 @@ private fun ManageRepositoriesDialog(
                                 overflow = TextOverflow.Ellipsis,
                             )
                         }
-                        
+
                         IconButton(onClick = { onRemoveRepository(repo) }) {
                             Icon(Icons.Outlined.Delete, "Remove")
                         }

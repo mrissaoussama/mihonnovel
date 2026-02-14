@@ -86,7 +86,7 @@ fun BrowseSourceToolbar(
                     )
                 }
             }
-            
+
             AppBarActions(
                 actions = persistentListOf<AppBar.AppBarAction>().builder()
                     .apply {
@@ -162,11 +162,11 @@ fun BrowseSourceToolbar(
         var pageInput by remember { mutableStateOf(currentPage.toString()) }
         var endPageInput by remember { mutableStateOf("") }
         var showRangeMode by remember { mutableStateOf(false) }
-        
+
         // Get current delay from preferences
         val sourcePreferences: eu.kanade.domain.source.service.SourcePreferences = remember { Injekt.get() }
         var currentDelay by remember { mutableIntStateOf(sourcePreferences.pageLoadDelay().get()) }
-        
+
         AlertDialog(
             onDismissRequest = { showPageJumpDialog = false },
             title = { Text(if (showRangeMode) "Load Page Range" else "Jump to Page") },
@@ -194,7 +194,7 @@ fun BrowseSourceToolbar(
                         ),
                         singleLine = true,
                     )
-                    
+
                     if (showRangeMode) {
                         Spacer(modifier = Modifier.height(8.dp))
                         OutlinedTextField(
@@ -222,7 +222,7 @@ fun BrowseSourceToolbar(
                             ),
                             singleLine = true,
                         )
-                        
+
                         // Pagination delay slider
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
@@ -236,14 +236,14 @@ fun BrowseSourceToolbar(
                             steps = 9,
                             modifier = Modifier.padding(horizontal = 8.dp),
                         )
-                        
+
                         Text(
                             text = "Delay between loading each page in the range",
                             style = MaterialTheme.typography.bodySmall,
                             modifier = Modifier.padding(top = 4.dp),
                         )
                     }
-                    
+
                     TextButton(
                         onClick = { showRangeMode = !showRangeMode },
                     ) {
