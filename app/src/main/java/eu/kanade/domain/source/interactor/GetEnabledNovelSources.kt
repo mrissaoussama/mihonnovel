@@ -33,7 +33,7 @@ class GetEnabledNovelSources(
                 .sortedWith(
                     // Local novel source always appears first
                     compareBy<Source> { if (it.isLocalNovel()) 0 else 1 }
-                        .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name }
+                        .thenBy(String.CASE_INSENSITIVE_ORDER) { it.name },
                 )
                 .flatMap {
                     val flag = if ("${it.id}" in pinnedSourceIds) Pins.pinned else Pins.unpinned

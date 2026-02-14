@@ -300,6 +300,7 @@ data object NovelsTab : Tab {
                 )
             }
             is LibraryScreenModel.Dialog.RemoveChapters -> {
+
             }
             is LibraryScreenModel.Dialog.MarkReadConfirmation -> {
                 MarkReadConfirmationDialog(

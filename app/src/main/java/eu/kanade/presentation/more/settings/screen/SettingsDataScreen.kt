@@ -237,7 +237,8 @@ object SettingsDataScreen : SearchableSettings {
                 onConfirm = { novels, chapters, categories, history, plugins ->
                     pendingLNReaderUri = null
                     LNReaderImportJob.start(
-                        context, uri,
+                        context,
+                        uri,
                         restoreNovels = novels,
                         restoreChapters = chapters,
                         restoreCategories = categories,
@@ -692,7 +693,9 @@ private fun LNReaderImportOptionsDialog(
         },
         confirmButton = {
             androidx.compose.material3.TextButton(
-                onClick = { onConfirm(restoreNovels, restoreChapters, restoreCategories, restoreHistory, restorePlugins) },
+                onClick = {
+                    onConfirm(restoreNovels, restoreChapters, restoreCategories, restoreHistory, restorePlugins)
+                },
                 enabled = restoreNovels || restoreCategories || restorePlugins,
             ) {
                 Text("Import")
