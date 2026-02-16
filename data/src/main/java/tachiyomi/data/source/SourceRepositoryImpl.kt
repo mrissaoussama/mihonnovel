@@ -14,6 +14,7 @@ import tachiyomi.domain.source.repository.SourcePagingSource
 import tachiyomi.domain.source.repository.SourceRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.source.model.Source as DomainSource
+import kotlin.time.Duration.Companion.seconds
 
 class SourceRepositoryImpl(
     private val sourceManager: SourceManager,
@@ -40,7 +41,7 @@ class SourceRepositoryImpl(
 
     override fun getSourcesWithFavoriteCount(): Flow<List<Pair<DomainSource, Long>>> {
         return combine(
-            handler.subscribeToList { mangasQueries.getSourceIdWithFavoriteCount() },
+            handler.subscribeToDebouncedList(2.seconds) { mangasQueries.getSourceIdWithFavoriteCount() },
             sourceManager.catalogueSources,
         ) { sourceIdWithFavoriteCount, _ -> sourceIdWithFavoriteCount }
             .map {
@@ -56,7 +57,7 @@ class SourceRepositoryImpl(
 
     override fun getSourcesWithNonLibraryManga(): Flow<List<SourceWithCount>> {
         val sourceIdWithNonLibraryManga =
-            handler.subscribeToList { mangasQueries.getSourceIdsWithNonLibraryManga() }
+            handler.subscribeToDebouncedList(2.seconds) { mangasQueries.getSourceIdsWithNonLibraryManga() }
         return sourceIdWithNonLibraryManga.map { sourceId ->
             sourceId.map { (sourceId, count) ->
                 val source = sourceManager.getOrStub(sourceId)

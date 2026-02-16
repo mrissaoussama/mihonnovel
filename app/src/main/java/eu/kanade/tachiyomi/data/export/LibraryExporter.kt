@@ -43,8 +43,9 @@ object LibraryExporter {
     ) {
         withContext(Dispatchers.IO) {
             context.contentResolver.openOutputStream(uri)?.use { outputStream ->
-                val csvData = generateCsvData(favorites, options, onProgress)
-                outputStream.write(csvData.toByteArray())
+                outputStream.bufferedWriter().use { writer ->
+                    writeCsvData(writer, favorites, options, onProgress)
+                }
             }
             onExportComplete()
         }
@@ -52,11 +53,12 @@ object LibraryExporter {
 
     private val escapeRequired = listOf("\r", "\n", "\"", ",")
 
-    private suspend fun generateCsvData(
+    private suspend fun writeCsvData(
+        writer: java.io.Writer,
         favorites: List<Manga>,
         options: ExportOptions,
         onProgress: (ExportProgress) -> Unit = {},
-    ): String {
+    ) {
         val sourceManager = Injekt.get<SourceManager>()
         val mangaRepo = Injekt.get<MangaRepository>()
         val getCategories = Injekt.get<tachiyomi.domain.category.interactor.GetCategories>()
@@ -85,8 +87,7 @@ object LibraryExporter {
         if (options.includeUrl) columns.add("URL")
         if (options.includeChapterCount) columns.add("Chapter Count")
 
-        val rows = mutableListOf<List<String?>>()
-        rows.add(columns)
+        writer.appendLine(columns.joinToString(","))
 
         val total = favorites.size
         favorites.forEachIndexed { index, manga ->
@@ -138,18 +139,17 @@ object LibraryExporter {
                 row.add(count)
             }
 
-            rows.add(row)
-        }
-
-        return rows.joinToString("\r\n") { columns ->
-            columns.joinToString(",") columns@{ column ->
-                if (column.isNullOrBlank()) return@columns ""
-                if (escapeRequired.any { column.contains(it) }) {
-                    column.replace("\"", "\"\"").let { "\"$it\"" }
-                } else {
-                    column
-                }
-            }
+            writer.appendLine(
+                row.joinToString(",") { column ->
+                    if (column.isNullOrBlank()) {
+                        ""
+                    } else if (escapeRequired.any { column.contains(it) }) {
+                        column.replace("\"", "\"\"").let { "\"$it\"" }
+                    } else {
+                        column
+                    }
+                },
+            )
         }
     }
 }

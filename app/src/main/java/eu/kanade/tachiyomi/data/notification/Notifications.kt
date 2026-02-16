@@ -90,6 +90,13 @@ object Notifications {
     const val ID_EPUB_EXPORT_PROGRESS = -701
     const val ID_EPUB_EXPORT_COMPLETE = -702
 
+    /**
+     * Notification channel and ids used by library CSV export.
+     */
+    const val CHANNEL_LIBRARY_EXPORT = "library_export_channel"
+    const val ID_LIBRARY_EXPORT_PROGRESS = -703
+    const val ID_LIBRARY_EXPORT_COMPLETE = -704
+
     private val deprecatedChannels = listOf(
         "downloader_channel",
         "downloader_complete_channel",
@@ -187,6 +194,10 @@ object Notifications {
                 },
                 buildNotificationChannel(CHANNEL_EPUB_EXPORT, IMPORTANCE_LOW) {
                     setName("EPUB Export")
+                    setShowBadge(false)
+                },
+                buildNotificationChannel(CHANNEL_LIBRARY_EXPORT, IMPORTANCE_LOW) {
+                    setName("Library Export")
                     setShowBadge(false)
                 },
             ),

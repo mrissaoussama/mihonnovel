@@ -54,6 +54,18 @@ interface MangaRepository {
 
     suspend fun getLibraryManga(): List<LibraryManga>
 
+    /**
+     * Get a single LibraryManga by ID from the library cache.
+     * Returns null if the manga is not in the library or cache is missing.
+     */
+    suspend fun getLibraryMangaById(mangaId: Long): LibraryManga?
+
+    /**
+     * Get multiple LibraryManga by IDs from the library cache.
+     * Only returns items that exist in the library cache.
+     */
+    suspend fun getLibraryMangaByIds(mangaIds: List<Long>): List<LibraryManga>
+
     suspend fun getLibraryMangaForUpdate(): List<LibraryMangaForUpdate>
 
     fun getLibraryMangaAsFlow(): Flow<List<LibraryManga>>
@@ -184,8 +196,9 @@ interface MangaRepository {
     suspend fun normalizeAllTags(): Int
 
     /**
-     * Check library cache integrity.
-     * @return Pair of (favoriteCount, cacheCount) - should be equal if cache is valid
+     * Check library aggregate integrity.
+     * With aggregates stored directly on the mangas table, this always reports valid.
+     * @return Pair of (favoriteCount, cacheCount) - always matching
      */
     suspend fun checkLibraryCacheIntegrity(): Pair<Long, Long>
 }

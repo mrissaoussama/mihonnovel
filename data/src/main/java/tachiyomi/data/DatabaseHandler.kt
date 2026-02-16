@@ -4,6 +4,7 @@ import androidx.paging.PagingSource
 import app.cash.sqldelight.ExecutableQuery
 import app.cash.sqldelight.Query
 import kotlinx.coroutines.flow.Flow
+import kotlin.time.Duration
 
 interface DatabaseHandler {
 
@@ -35,6 +36,16 @@ interface DatabaseHandler {
     ): T?
 
     fun <T : Any> subscribeToList(block: Database.() -> Query<T>): Flow<List<T>>
+
+    /**
+     * Like [subscribeToList] but debounces table-change notifications.
+     * The SQL query only re-executes after [window] of quiet, preventing
+     * cascading re-fires when triggers cause multiple table writes.
+     */
+    fun <T : Any> subscribeToDebouncedList(
+        window: Duration,
+        block: Database.() -> Query<T>,
+    ): Flow<List<T>>
 
     fun <T : Any> subscribeToOne(block: Database.() -> Query<T>): Flow<T>
 

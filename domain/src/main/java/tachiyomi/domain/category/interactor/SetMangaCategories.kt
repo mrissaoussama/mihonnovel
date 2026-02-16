@@ -17,9 +17,11 @@ class SetMangaCategories(
     suspend fun await(mangaId: Long, categoryIds: List<Long>, skipRefresh: Boolean = false) {
         try {
             mangaRepository.setMangaCategories(mangaId, categoryIds)
-            // Refresh library cache after category changes (unless skip requested)
             if (!skipRefresh) {
-                getLibraryManga.refresh()
+                getLibraryManga.setCategoriesForManga(
+                    mangaIds = listOf(mangaId),
+                    categoryIds = categoryIds,
+                )
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
@@ -33,9 +35,11 @@ class SetMangaCategories(
     suspend fun await(mangaIds: List<Long>, categoryIds: List<Long>, skipRefresh: Boolean = false) {
         try {
             mangaRepository.setMangasCategories(mangaIds, categoryIds)
-            // Refresh library cache after category changes (unless skip requested)
             if (!skipRefresh) {
-                getLibraryManga.refresh()
+                getLibraryManga.setCategoriesForManga(
+                    mangaIds = mangaIds,
+                    categoryIds = categoryIds,
+                )
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
@@ -50,9 +54,12 @@ class SetMangaCategories(
     suspend fun add(mangaIds: List<Long>, categoryIds: List<Long>, skipRefresh: Boolean = false) {
         try {
             mangaRepository.addMangasCategories(mangaIds, categoryIds)
-            // Refresh library cache after category changes (unless batch mode)
             if (!skipRefresh) {
-                getLibraryManga.refresh()
+                getLibraryManga.applyCategoryUpdates(
+                    mangaIds = mangaIds,
+                    addCategories = categoryIds,
+                    removeCategories = emptyList(),
+                )
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)
@@ -67,9 +74,12 @@ class SetMangaCategories(
     suspend fun remove(mangaIds: List<Long>, categoryIds: List<Long>, skipRefresh: Boolean = false) {
         try {
             mangaRepository.removeMangasCategories(mangaIds, categoryIds)
-            // Refresh library cache after category changes (unless batch mode)
             if (!skipRefresh) {
-                getLibraryManga.refresh()
+                getLibraryManga.applyCategoryUpdates(
+                    mangaIds = mangaIds,
+                    addCategories = emptyList(),
+                    removeCategories = categoryIds,
+                )
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e)

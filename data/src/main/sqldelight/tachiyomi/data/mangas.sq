@@ -30,7 +30,14 @@ CREATE TABLE mangas(
     version INTEGER NOT NULL DEFAULT 0,
     is_syncing INTEGER NOT NULL DEFAULT 0,
     notes TEXT NOT NULL DEFAULT "",
-    is_novel INTEGER AS Boolean NOT NULL DEFAULT 0
+    is_novel INTEGER AS Boolean NOT NULL DEFAULT 0,
+    -- Aggregate columns (maintained by triggers on chapters/history/mangas_categories)
+    total_count INTEGER NOT NULL DEFAULT 0,
+    read_count INTEGER NOT NULL DEFAULT 0,
+    latest_upload INTEGER NOT NULL DEFAULT 0,
+    chapter_fetched_at INTEGER NOT NULL DEFAULT 0,
+    last_read INTEGER NOT NULL DEFAULT 0,
+    bookmark_count INTEGER NOT NULL DEFAULT 0
 );
 
 CREATE INDEX library_favorite_index ON mangas(favorite) WHERE favorite = 1;
@@ -62,38 +69,6 @@ BEGIN
         new.description != old.description OR
         new.favorite != old.favorite
     );
-END;
-
--- updates_cache trigger: manga metadata changed (title, thumbnail, cover)
-CREATE TRIGGER updates_cache_manga_update
-AFTER UPDATE OF title, thumbnail_url, cover_last_modified ON mangas
-WHEN new.favorite = 1
-BEGIN
-    UPDATE updates_cache
-    SET manga_title = new.title,
-        thumbnail_url = new.thumbnail_url,
-        cover_last_modified = new.cover_last_modified
-    WHERE manga_id = new._id;
-END;
-
--- updates_cache trigger: manga unfavorited - remove its entries
-CREATE TRIGGER updates_cache_manga_unfavorite
-AFTER UPDATE OF favorite ON mangas
-WHEN new.favorite = 0 AND old.favorite != 0
-BEGIN
-    DELETE FROM updates_cache WHERE manga_id = new._id;
-END;
-
--- history_cache trigger: manga metadata changed
-CREATE TRIGGER history_cache_manga_update
-AFTER UPDATE OF title, thumbnail_url, cover_last_modified, favorite ON mangas
-BEGIN
-    UPDATE history_cache
-    SET manga_title = new.title,
-        manga_thumbnail_url = new.thumbnail_url,
-        manga_cover_last_modified = new.cover_last_modified,
-        manga_favorite = new.favorite
-    WHERE manga_id = new._id;
 END;
 
 getMangaById:
@@ -239,9 +214,9 @@ WHERE favorite = 1
 AND source = :sourceId;
 
 getDuplicateLibraryManga:
-SELECT M.*,
-  (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id) AS chapter_count,
-  (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id AND read = 1) AS read_count
+SELECT M._id, M.source, M.url, M.artist, M.author, M.description, M.genre, M.title, M.alternative_titles, M.status, M.thumbnail_url, M.favorite, M.last_update, M.next_update, M.initialized, M.viewer, M.chapter_flags, M.cover_last_modified, M.date_added, M.update_strategy, M.calculate_interval, M.last_modified_at, M.favorite_modified_at, M.version, M.is_syncing, M.notes, M.is_novel,
+  (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id) AS totalCount,
+  (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id AND read = 1) AS readCount
 FROM mangas M
 WHERE M.favorite = 1
 AND M._id != :id
@@ -521,3 +496,258 @@ insertNetworkManga {
     AND url = :url
     LIMIT 1;
 }
+
+-- ==== Library queries (aggregates stored directly on mangas table) ====
+
+libraryGrid:
+SELECT
+    M._id,
+    M.source,
+    M.url,
+    NULL AS artist,
+    NULL AS author,
+    NULL AS description,
+    M.genre,
+    M.title,
+    NULL AS alternative_titles,
+    M.status,
+    M.thumbnail_url,
+    M.favorite,
+    M.last_update,
+    M.next_update,
+    0 AS initialized,
+    0 AS viewer,
+    0 AS chapter_flags,
+    M.cover_last_modified,
+    M.date_added,
+    0 AS update_strategy,
+    M.calculate_interval,
+    0 AS last_modified_at,
+    NULL AS favorite_modified_at,
+    0 AS version,
+    0 AS is_syncing,
+    '' AS notes,
+    M.is_novel,
+    M.total_count AS totalCount,
+    CAST(M.read_count AS REAL) AS readCount,
+    M.latest_upload AS latestUpload,
+    M.chapter_fetched_at AS chapterFetchedAt,
+    M.last_read AS lastRead,
+    CAST(M.bookmark_count AS REAL) AS bookmarkCount,
+    coalesce(MC.categories, '0') AS categories
+FROM mangas M
+LEFT JOIN (
+    SELECT manga_id, group_concat(category_id) AS categories
+    FROM mangas_categories
+    GROUP BY manga_id
+) AS MC ON MC.manga_id = M._id
+WHERE M.favorite = 1;
+
+-- Fetch a single library item by manga ID
+libraryGridById:
+SELECT
+    M._id,
+    M.source,
+    M.url,
+    NULL AS artist,
+    NULL AS author,
+    NULL AS description,
+    M.genre,
+    M.title,
+    NULL AS alternative_titles,
+    M.status,
+    M.thumbnail_url,
+    M.favorite,
+    M.last_update,
+    M.next_update,
+    0 AS initialized,
+    0 AS viewer,
+    0 AS chapter_flags,
+    M.cover_last_modified,
+    M.date_added,
+    0 AS update_strategy,
+    M.calculate_interval,
+    0 AS last_modified_at,
+    NULL AS favorite_modified_at,
+    0 AS version,
+    0 AS is_syncing,
+    '' AS notes,
+    M.is_novel,
+    M.total_count AS totalCount,
+    CAST(M.read_count AS REAL) AS readCount,
+    M.latest_upload AS latestUpload,
+    M.chapter_fetched_at AS chapterFetchedAt,
+    M.last_read AS lastRead,
+    CAST(M.bookmark_count AS REAL) AS bookmarkCount,
+    coalesce(MC.categories, '0') AS categories
+FROM mangas M
+LEFT JOIN (
+    SELECT manga_id, group_concat(category_id) AS categories
+    FROM mangas_categories
+    WHERE manga_id = :mangaId
+    GROUP BY manga_id
+) AS MC ON MC.manga_id = M._id
+WHERE M._id = :mangaId AND M.favorite = 1;
+
+libraryGridByIds:
+SELECT
+    M._id,
+    M.source,
+    M.url,
+    NULL AS artist,
+    NULL AS author,
+    NULL AS description,
+    M.genre,
+    M.title,
+    NULL AS alternative_titles,
+    M.status,
+    M.thumbnail_url,
+    M.favorite,
+    M.last_update,
+    M.next_update,
+    0 AS initialized,
+    0 AS viewer,
+    0 AS chapter_flags,
+    M.cover_last_modified,
+    M.date_added,
+    0 AS update_strategy,
+    M.calculate_interval,
+    0 AS last_modified_at,
+    NULL AS favorite_modified_at,
+    0 AS version,
+    0 AS is_syncing,
+    '' AS notes,
+    M.is_novel,
+    M.total_count AS totalCount,
+    CAST(M.read_count AS REAL) AS readCount,
+    M.latest_upload AS latestUpload,
+    M.chapter_fetched_at AS chapterFetchedAt,
+    M.last_read AS lastRead,
+    CAST(M.bookmark_count AS REAL) AS bookmarkCount,
+    coalesce(MC.categories, '0') AS categories
+FROM mangas M
+LEFT JOIN (
+    SELECT manga_id, group_concat(category_id) AS categories
+    FROM mangas_categories
+    WHERE manga_id IN :mangaIds
+    GROUP BY manga_id
+) AS MC ON MC.manga_id = M._id
+WHERE M._id IN :mangaIds AND M.favorite = 1;
+
+libraryForUpdate:
+SELECT
+    M._id,
+    M.source,
+    M.url,
+    M.title,
+    M.status,
+    M.favorite,
+    M.last_update,
+    M.next_update,
+    M.update_strategy,
+    M.total_count AS totalCount,
+    CAST(M.read_count AS REAL) AS readCount,
+    coalesce(MC.categories, '0') AS categories
+FROM mangas M
+LEFT JOIN (
+    SELECT manga_id, group_concat(category_id) AS categories
+    FROM mangas_categories
+    GROUP BY manga_id
+) AS MC ON MC.manga_id = M._id
+WHERE M.favorite = 1;
+
+recomputeAggregatesForManga:
+UPDATE mangas
+SET
+    total_count = (
+        SELECT count(*)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = :mangaId AND excluded_scanlators.scanlator IS NULL
+    ),
+    read_count = (
+        SELECT coalesce(sum(chapters.read), 0)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = :mangaId AND excluded_scanlators.scanlator IS NULL
+    ),
+    latest_upload = (
+        SELECT coalesce(max(chapters.date_upload), 0)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = :mangaId AND excluded_scanlators.scanlator IS NULL
+    ),
+    chapter_fetched_at = (
+        SELECT coalesce(max(chapters.date_fetch), 0)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = :mangaId AND excluded_scanlators.scanlator IS NULL
+    ),
+    last_read = (
+        SELECT coalesce(max(history.last_read), 0)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        LEFT JOIN history ON chapters._id = history.chapter_id
+        WHERE chapters.manga_id = :mangaId AND excluded_scanlators.scanlator IS NULL
+    ),
+    bookmark_count = (
+        SELECT coalesce(sum(chapters.bookmark), 0)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = :mangaId AND excluded_scanlators.scanlator IS NULL
+    )
+WHERE _id = :mangaId;
+
+recomputeAllAggregates:
+UPDATE mangas
+SET
+    total_count = coalesce((
+        SELECT count(*)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
+    ), 0),
+    read_count = coalesce((
+        SELECT sum(chapters.read)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
+    ), 0),
+    latest_upload = coalesce((
+        SELECT max(chapters.date_upload)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
+    ), 0),
+    chapter_fetched_at = coalesce((
+        SELECT max(chapters.date_fetch)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
+    ), 0),
+    last_read = coalesce((
+        SELECT max(history.last_read)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        LEFT JOIN history ON chapters._id = history.chapter_id
+        WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
+    ), 0),
+    bookmark_count = coalesce((
+        SELECT sum(chapters.bookmark)
+        FROM chapters
+        LEFT JOIN excluded_scanlators ON chapters.manga_id = excluded_scanlators.manga_id
+            AND chapters.scanlator = excluded_scanlators.scanlator
+        WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
+    ), 0)
+WHERE favorite = 1;

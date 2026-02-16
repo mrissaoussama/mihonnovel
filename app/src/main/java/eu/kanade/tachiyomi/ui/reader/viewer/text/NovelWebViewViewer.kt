@@ -13,6 +13,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
 import eu.kanade.presentation.reader.settings.CodeSnippet
+import eu.kanade.presentation.reader.settings.RegexReplacement
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.ReaderActivity
 import eu.kanade.tachiyomi.ui.reader.loader.PageLoader
@@ -354,6 +355,15 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                     }
                     // Reload the page to apply media blocking
                     webView.reload()
+                }
+        }
+
+        // Observe regex replacements — requires full content reload
+        scope.launch {
+            preferences.novelRegexReplacements().changes()
+                .drop(1)
+                .collect {
+                    currentChapters?.let { setChapters(it) }
                 }
         }
     }
@@ -1223,6 +1233,9 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
             cleanContent = stripMediaTags(cleanContent)
         }
 
+        // Apply user's regex find & replace rules
+        cleanContent = applyRegexReplacements(cleanContent)
+
         val theme = preferences.novelTheme().get()
         val (themeBgColor, themeTextColor) = getThemeColors(theme)
         val bgColorHex = String.format("#%06X", 0xFFFFFF and themeBgColor)
@@ -1305,6 +1318,39 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
             .replace(Regex("<video[^>]*>[\\s\\S]*?</video>", RegexOption.IGNORE_CASE), "")
             .replace(Regex("<audio[^>]*>[\\s\\S]*?</audio>", RegexOption.IGNORE_CASE), "")
             .replace(Regex("<source[^>]*>", RegexOption.IGNORE_CASE), "")
+    }
+
+    /**
+     * Apply user-configured find & replace rules to content.
+     * Rules are stored as JSON in the novelRegexReplacements preference.
+     * Each enabled rule is applied in order — supports both plain text and regex patterns.
+     */
+    private fun applyRegexReplacements(content: String): String {
+        val rulesJson = preferences.novelRegexReplacements().get()
+        if (rulesJson.isBlank() || rulesJson == "[]") return content
+
+        val rules: List<RegexReplacement> = try {
+            kotlinx.serialization.json.Json.decodeFromString(rulesJson)
+        } catch (e: Exception) {
+            logcat(LogPriority.WARN) { "Failed to parse regex replacements: ${e.message}" }
+            return content
+        }
+
+        var result = content
+        for (rule in rules) {
+            if (!rule.enabled || rule.pattern.isBlank()) continue
+            try {
+                result = if (rule.isRegex) {
+                    val regex = Regex(rule.pattern)
+                    regex.replace(result, rule.replacement)
+                } else {
+                    result.replace(rule.pattern, rule.replacement)
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN) { "Regex replacement '${rule.title}' failed: ${e.message}" }
+            }
+        }
+        return result
     }
 
     /**

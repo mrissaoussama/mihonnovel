@@ -59,7 +59,7 @@ import eu.kanade.tachiyomi.data.backup.create.BackupCreateJob
 import eu.kanade.tachiyomi.data.backup.restore.BackupRestoreJob
 import eu.kanade.tachiyomi.data.backup.restore.LNReaderImportJob
 import eu.kanade.tachiyomi.data.cache.ChapterCache
-import eu.kanade.tachiyomi.data.export.LibraryExporter
+import eu.kanade.tachiyomi.data.export.LibraryExportJob
 import eu.kanade.tachiyomi.data.export.LibraryExporter.ExportOptions
 import eu.kanade.tachiyomi.util.system.DeviceUtil
 import eu.kanade.tachiyomi.util.system.toast
@@ -388,8 +388,6 @@ object SettingsDataScreen : SearchableSettings {
     @Composable
     private fun getExportGroup(): Preference.PreferenceGroup {
         var showDialog by remember { mutableStateOf(false) }
-        var showProgressDialog by remember { mutableStateOf(false) }
-        var exportProgress by remember { mutableStateOf(LibraryExporter.ExportProgress(0, 0)) }
         var exportOptions by remember {
             mutableStateOf(
                 ExportOptions(
@@ -402,42 +400,13 @@ object SettingsDataScreen : SearchableSettings {
 
         val context = LocalContext.current
         val scope = rememberCoroutineScope()
-        val getFavorites = remember { Injekt.get<GetFavorites>() }
-        var favorites by remember { mutableStateOf<List<Manga>>(emptyList()) }
-        LaunchedEffect(Unit) {
-            favorites = getFavorites.await()
-        }
 
         val saveFileLauncher = rememberLauncherForActivityResult(
             contract = ActivityResultContracts.CreateDocument("text/csv"),
         ) { uri ->
             uri?.let {
-                showProgressDialog = true
-                scope.launch {
-                    LibraryExporter.exportToCsv(
-                        context = context,
-                        uri = it,
-                        favorites = favorites,
-                        options = exportOptions,
-                        onProgress = { progress ->
-                            exportProgress = progress
-                        },
-                        onExportComplete = {
-                            scope.launch(Dispatchers.Main) {
-                                showProgressDialog = false
-                                context.toast(MR.strings.library_exported)
-                            }
-                        },
-                    )
-                }
+                LibraryExportJob.start(context, it, exportOptions)
             }
-        }
-
-        if (showProgressDialog) {
-            ExportProgressDialog(
-                progress = exportProgress,
-                onDismissRequest = { /* Can't dismiss while exporting */ },
-            )
         }
 
         if (showDialog) {
@@ -593,49 +562,6 @@ object SettingsDataScreen : SearchableSettings {
                     Text(text = stringResource(MR.strings.action_cancel))
                 }
             },
-        )
-    }
-
-    @Composable
-    private fun ExportProgressDialog(
-        progress: LibraryExporter.ExportProgress,
-        onDismissRequest: () -> Unit,
-    ) {
-        AlertDialog(
-            onDismissRequest = onDismissRequest,
-            title = {
-                Text(text = "Exporting Library")
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    if (progress.total > 0) {
-                        Text(
-                            text = "${progress.current} / ${progress.total}",
-                            style = MaterialTheme.typography.bodyLarge,
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        LinearProgressIndicator(
-                            progress = { progress.current.toFloat() / progress.total.toFloat() },
-                            modifier = Modifier.fillMaxWidth(),
-                        )
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(
-                            text = progress.currentTitle,
-                            style = MaterialTheme.typography.bodySmall,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
-                    } else {
-                        CircularProgressIndicator()
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Text(text = "Preparing...")
-                    }
-                }
-            },
-            confirmButton = {},
         )
     }
 }

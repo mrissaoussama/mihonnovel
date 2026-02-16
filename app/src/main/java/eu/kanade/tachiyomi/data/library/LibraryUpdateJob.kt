@@ -68,7 +68,6 @@ import tachiyomi.domain.manga.interactor.GetManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.model.SourceNotInstalledException
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.domain.updates.repository.UpdatesRepository
 import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -98,7 +97,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
     private val fetchInterval: FetchInterval = Injekt.get()
     private val filterChaptersForDownload: FilterChaptersForDownload = Injekt.get()
     private val novelDownloadPreferences: NovelDownloadPreferences = Injekt.get()
-    private val updatesRepository: UpdatesRepository = Injekt.get()
 
     private val notifier = LibraryUpdateNotifier(context)
 
@@ -130,12 +128,6 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         return withIOContext {
             try {
                 updateChapterList()
-                // Auto-trim updates cache to prevent bloat (keep only latest 2000 entries)
-                try {
-                    updatesRepository.clearUpdatesKeepLatest(2000L)
-                } catch (e: Exception) {
-                    logcat(LogPriority.WARN, e) { "Failed to trim updates cache" }
-                }
                 Result.success()
             } catch (e: Exception) {
                 if (e is CancellationException) {

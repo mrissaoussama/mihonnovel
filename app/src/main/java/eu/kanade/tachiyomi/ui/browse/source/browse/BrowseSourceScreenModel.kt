@@ -478,8 +478,11 @@ class BrowseSourceScreenModel(
 
             updateManga.await(new.toMangaUpdate())
 
-            // Refresh library cache so LibraryScreen picks up the change
-            getLibraryManga.refresh()
+            if (new.favorite) {
+                getLibraryManga.addToLibrary(new.id)
+            } else {
+                getLibraryManga.removeFromLibrary(new.id)
+            }
         }
     }
 

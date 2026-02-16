@@ -3,7 +3,6 @@ package eu.kanade.presentation.library.components
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -40,9 +39,11 @@ internal fun LibraryList(
         }
 
         items(
-            items = items,
+            count = items.size,
+            key = { index -> items[index].id },
             contentType = { "library_list_item" },
-        ) { libraryItem ->
+        ) { index ->
+            val libraryItem = items[index]
             val manga = libraryItem.libraryManga.manga
             MangaListItem(
                 isSelected = manga.id in selection,

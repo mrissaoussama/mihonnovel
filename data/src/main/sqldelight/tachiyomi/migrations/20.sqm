@@ -1,0 +1,8 @@
+
+DROP INDEX IF EXISTS chapters_date_fetch_desc_idx;
+DROP INDEX IF EXISTS chapters_read_date_fetch_idx;
+
+CREATE INDEX chapters_updates_read_idx ON chapters(read, date_fetch DESC, manga_id, date_upload);
+
+CREATE INDEX chapters_updates_all_idx ON chapters(date_fetch DESC, manga_id, date_upload);
+ANALYZE;

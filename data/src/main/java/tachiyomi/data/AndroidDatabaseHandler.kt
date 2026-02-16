@@ -11,7 +11,9 @@ import app.cash.sqldelight.db.SqlDriver
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.withContext
+import kotlin.time.Duration
 
 class AndroidDatabaseHandler(
     val db: Database,
@@ -65,6 +67,13 @@ class AndroidDatabaseHandler(
         return block(db).asFlow().mapToList(queryDispatcher)
     }
 
+    override fun <T : Any> subscribeToDebouncedList(
+        window: Duration,
+        block: Database.() -> Query<T>,
+    ): Flow<List<T>> {
+        return block(db).asFlow().debounce(window).mapToList(queryDispatcher)
+    }
+
     override fun <T : Any> subscribeToOne(block: Database.() -> Query<T>): Flow<T> {
         return block(db).asFlow().mapToOne(queryDispatcher)
     }
@@ -109,7 +118,7 @@ class AndroidDatabaseHandler(
     override suspend fun getDatabaseStats(): Map<String, Long> {
         return withContext(queryDispatcher) {
             val stats = mutableMapOf<String, Long>()
-            
+
             // Get page size
             driver.executeQuery(null, "PRAGMA page_size", { cursor ->
                 if (cursor.next().value) {
@@ -117,7 +126,7 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             // Get page count
             driver.executeQuery(null, "PRAGMA page_count", { cursor ->
                 if (cursor.next().value) {
@@ -125,7 +134,7 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             // Get freelist count (unused pages)
             driver.executeQuery(null, "PRAGMA freelist_count", { cursor ->
                 if (cursor.next().value) {
@@ -133,16 +142,16 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             // Calculate total size
             val pageSize = stats["page_size"] ?: 4096L
             val pageCount = stats["page_count"] ?: 0L
             stats["total_size_bytes"] = pageSize * pageCount
-            
+
             stats
         }
     }
-    
+
     /**
      * Get detailed database statistics including per-table and per-index sizes.
      * Useful for diagnosing what's consuming database space.
@@ -151,7 +160,7 @@ class AndroidDatabaseHandler(
         return withContext(queryDispatcher) {
             val result = mutableMapOf<String, Any>()
             var actualPageSize = 4096L
-            
+
             // Get page size first
             driver.executeQuery(null, "PRAGMA page_size", { cursor ->
                 if (cursor.next().value) {
@@ -160,7 +169,7 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             // Get overall stats
             driver.executeQuery(null, "PRAGMA page_count", { cursor ->
                 if (cursor.next().value) {
@@ -170,7 +179,7 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             driver.executeQuery(null, "PRAGMA freelist_count", { cursor ->
                 if (cursor.next().value) {
                     val count = cursor.getLong(0) ?: 0L
@@ -179,7 +188,7 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             // Get row counts per table
             val tableCounts = mutableMapOf<String, Long>()
             listOf("chapters", "mangas", "history", "library_cache", "categories", "mangas_categories", "manga_sync", "excluded_scanlators", "translated_chapters").forEach { table ->
@@ -195,13 +204,13 @@ class AndroidDatabaseHandler(
                 }
             }
             result["table_row_counts"] = tableCounts
-            
+
             // Estimate table sizes using dbstat if available (SQLite 3.31+)
             val tableSizes = mutableMapOf<String, Long>()
             val indexSizes = mutableMapOf<String, Long>()
             try {
-                driver.executeQuery(null, 
-                    "SELECT name, SUM(pgsize) as size FROM dbstat GROUP BY name ORDER BY size DESC", 
+                driver.executeQuery(null,
+                    "SELECT name, SUM(pgsize) as size FROM dbstat GROUP BY name ORDER BY size DESC",
                     { cursor ->
                         while (cursor.next().value) {
                             val name = cursor.getString(0) ?: continue
@@ -220,7 +229,7 @@ class AndroidDatabaseHandler(
                 // dbstat virtual table not available, skip detailed sizing
                 result["dbstat_available"] = false
             }
-            
+
             // Get WAL size info
             driver.executeQuery(null, "PRAGMA wal_checkpoint", { cursor ->
                 if (cursor.next().value) {
@@ -229,12 +238,12 @@ class AndroidDatabaseHandler(
                 }
                 app.cash.sqldelight.db.QueryResult.Unit
             }, 0, null)
-            
+
             // Average chapter data size estimate
             val chapterCount = tableCounts["chapters"] ?: 0L
             if (chapterCount > 0) {
-                driver.executeQuery(null, 
-                    "SELECT AVG(length(url) + length(name) + coalesce(length(scanlator), 0)) FROM chapters LIMIT 1000", 
+                driver.executeQuery(null,
+                    "SELECT AVG(length(url) + length(name) + coalesce(length(scanlator), 0)) FROM chapters LIMIT 1000",
                     { cursor ->
                         if (cursor.next().value) {
                             result["avg_chapter_text_bytes"] = cursor.getDouble(0) ?: 0.0
@@ -242,12 +251,12 @@ class AndroidDatabaseHandler(
                         app.cash.sqldelight.db.QueryResult.Unit
                     }, 0, null)
             }
-            
+
             // Average manga description size
             val mangaCount = tableCounts["mangas"] ?: 0L
             if (mangaCount > 0) {
-                driver.executeQuery(null, 
-                    "SELECT AVG(coalesce(length(description), 0)) FROM mangas", 
+                driver.executeQuery(null,
+                    "SELECT AVG(coalesce(length(description), 0)) FROM mangas",
                     { cursor ->
                         if (cursor.next().value) {
                             result["avg_manga_description_bytes"] = cursor.getDouble(0) ?: 0.0
@@ -255,7 +264,7 @@ class AndroidDatabaseHandler(
                         app.cash.sqldelight.db.QueryResult.Unit
                     }, 0, null)
             }
-            
+
             result
         }
     }

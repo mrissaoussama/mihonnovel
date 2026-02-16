@@ -65,6 +65,48 @@ object MangaMapper {
         isNovel = isNovel,
     )
 
+    fun mapMangaFull(
+        id: Long,
+        source: Long,
+        url: String,
+        artist: String?,
+        author: String?,
+        description: String?,
+        genre: List<String>?,
+        title: String,
+        alternativeTitles: List<String>?,
+        status: Long,
+        thumbnailUrl: String?,
+        favorite: Boolean,
+        lastUpdate: Long?,
+        nextUpdate: Long?,
+        initialized: Boolean,
+        viewerFlags: Long,
+        chapterFlags: Long,
+        coverLastModified: Long,
+        dateAdded: Long,
+        updateStrategy: UpdateStrategy,
+        calculateInterval: Long,
+        lastModifiedAt: Long,
+        favoriteModifiedAt: Long?,
+        version: Long,
+        @Suppress("UNUSED_PARAMETER")
+        isSyncing: Long,
+        notes: String,
+        isNovel: Boolean,
+        @Suppress("UNUSED_PARAMETER") totalCount: Long,
+        @Suppress("UNUSED_PARAMETER") readCount: Long,
+        @Suppress("UNUSED_PARAMETER") latestUpload: Long,
+        @Suppress("UNUSED_PARAMETER") chapterFetchedAt: Long,
+        @Suppress("UNUSED_PARAMETER") lastRead: Long,
+        @Suppress("UNUSED_PARAMETER") bookmarkCount: Long,
+    ): Manga = mapManga(
+        id, source, url, artist, author, description, genre, title, alternativeTitles,
+        status, thumbnailUrl, favorite, lastUpdate, nextUpdate, initialized, viewerFlags,
+        chapterFlags, coverLastModified, dateAdded, updateStrategy, calculateInterval,
+        lastModifiedAt, favoriteModifiedAt, version, 0, notes, isNovel,
+    )
+
     fun mapLibraryManga(
         id: Long,
         source: Long,

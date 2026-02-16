@@ -76,7 +76,7 @@ class AppModule(val app: Application) : InjektModule {
                     override fun onOpen(db: SupportSQLiteDatabase) {
                         super.onOpen(db)
                         setPragma(db, "foreign_keys = ON")
-                        setPragma(db, "journal_mode = WAL")
+                        db.enableWriteAheadLogging()
                         setPragma(db, "synchronous = NORMAL")
                     }
 

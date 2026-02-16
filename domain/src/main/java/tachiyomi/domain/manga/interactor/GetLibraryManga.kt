@@ -40,22 +40,8 @@ class GetLibraryManga(
 
     init {
         scope.launch {
-            val (favoriteCount, cacheCount) = mangaRepository.checkLibraryCacheIntegrity()
-            when {
-                cacheCount == 0L && favoriteCount > 0L -> {
-                    logcat(LogPriority.INFO) { "GetLibraryManga: Cache is empty ($favoriteCount favorites), performing full rebuild" }
-                    refreshInternal(force = true)
-                }
-                cacheCount != favoriteCount -> {
-                    logcat(LogPriority.INFO) { "GetLibraryManga: Cache mismatch (favorites=$favoriteCount, cached=$cacheCount), incremental refresh" }
-                    mangaRepository.refreshLibraryCacheIncremental()
-                    refreshInternal(force = false)
-                }
-                else -> {
-                    logcat(LogPriority.INFO) { "GetLibraryManga: Cache is valid ($cacheCount items), loading from cache" }
-                    refreshInternal(force = false)
-                }
-            }
+            logcat(LogPriority.INFO) { "GetLibraryManga: Loading library from mangas table" }
+            refreshInternal(force = false)
         }
     }
 
@@ -82,6 +68,10 @@ class GetLibraryManga(
      * Force a refresh of the library cache.
      */
     fun refresh() {
+        val stackTrace = Thread.currentThread().stackTrace
+            .drop(2).take(8)
+            .joinToString(" <- ") { "${it.className.substringAfterLast('.')}.${it.methodName}:${it.lineNumber}" }
+        logcat(LogPriority.WARN) { "GetLibraryManga.refresh() called! Stack: $stackTrace" }
         scope.launch {
             refreshInternal(force = false)
         }
@@ -104,6 +94,10 @@ class GetLibraryManga(
      * This is a suspend function that waits for the refresh to complete.
      */
     suspend fun refreshForced(): List<LibraryManga> {
+        val stackTrace = Thread.currentThread().stackTrace
+            .drop(2).take(8)
+            .joinToString(" <- ") { "${it.className.substringAfterLast('.')}.${it.methodName}:${it.lineNumber}" }
+        logcat(LogPriority.WARN) { "GetLibraryManga.refreshForced() called! Stack: $stackTrace" }
         refreshInternal(force = true)
         return _libraryState.value
     }
@@ -128,14 +122,44 @@ class GetLibraryManga(
         if (mangaIds.isEmpty()) return
         mutex.withLock {
             val idSet = mangaIds.toSet()
-            _libraryState.value = _libraryState.value.map { item ->
-                if (item.id !in idSet) return@map item
-
-                val updated = item.categories.toMutableSet()
-                addCategories.forEach { updated.add(it) }
-                removeCategories.forEach { updated.remove(it) }
-                item.copy(categories = updated.toList())
+            val current = _libraryState.value
+            val result = ArrayList<LibraryManga>(current.size)
+            var changed = false
+            for (item in current) {
+                if (item.id !in idSet) {
+                    result.add(item)
+                } else {
+                    val updated = item.categories.toMutableSet()
+                    addCategories.forEach { updated.add(it) }
+                    removeCategories.forEach { updated.remove(it) }
+                    result.add(item.copy(categories = updated.toList()))
+                    changed = true
+                }
             }
+            if (changed) _libraryState.value = result
+        }
+    }
+
+    /**
+     * Replace all categories for the given manga in-memory.
+     * Use for "set" operations where the full category list is replaced.
+     */
+    suspend fun setCategoriesForManga(mangaIds: List<Long>, categoryIds: List<Long>) {
+        if (mangaIds.isEmpty()) return
+        mutex.withLock {
+            val idSet = mangaIds.toSet()
+            val current = _libraryState.value
+            val result = ArrayList<LibraryManga>(current.size)
+            var changed = false
+            for (item in current) {
+                if (item.id !in idSet) {
+                    result.add(item)
+                } else {
+                    result.add(item.copy(categories = categoryIds))
+                    changed = true
+                }
+            }
+            if (changed) _libraryState.value = result
         }
     }
 
@@ -145,15 +169,23 @@ class GetLibraryManga(
      */
     suspend fun applyChapterUpdates(mangaId: Long, totalChapters: Long? = null, readCount: Long? = null, bookmarkCount: Long? = null, lastRead: Long? = null) {
         mutex.withLock {
-            _libraryState.value = _libraryState.value.map { item ->
-                if (item.id != mangaId) return@map item
-                item.copy(
-                    totalChapters = totalChapters ?: item.totalChapters,
-                    readCount = readCount ?: item.readCount,
-                    bookmarkCount = bookmarkCount ?: item.bookmarkCount,
-                    lastRead = lastRead ?: item.lastRead,
-                )
+            val current = _libraryState.value
+            val result = ArrayList<LibraryManga>(current.size)
+            var changed = false
+            for (item in current) {
+                if (item.id != mangaId) {
+                    result.add(item)
+                } else {
+                    result.add(item.copy(
+                        totalChapters = totalChapters ?: item.totalChapters,
+                        readCount = readCount ?: item.readCount,
+                        bookmarkCount = bookmarkCount ?: item.bookmarkCount,
+                        lastRead = lastRead ?: item.lastRead,
+                    ))
+                    changed = true
+                }
             }
+            if (changed) _libraryState.value = result
         }
     }
 
@@ -164,10 +196,19 @@ class GetLibraryManga(
     suspend fun applyBatchChapterUpdates(updates: Map<Long, LibraryManga.() -> LibraryManga>) {
         if (updates.isEmpty()) return
         mutex.withLock {
-            _libraryState.value = _libraryState.value.map { item ->
+            val current = _libraryState.value
+            val result = ArrayList<LibraryManga>(current.size)
+            var changed = false
+            for (item in current) {
                 val updater = updates[item.id]
-                if (updater != null) updater(item) else item
+                if (updater != null) {
+                    result.add(updater(item))
+                    changed = true
+                } else {
+                    result.add(item)
+                }
             }
+            if (changed) _libraryState.value = result
         }
     }
 
@@ -177,10 +218,101 @@ class GetLibraryManga(
      */
     suspend fun applyMangaDetailUpdate(mangaId: Long, updater: (tachiyomi.domain.manga.model.Manga) -> tachiyomi.domain.manga.model.Manga) {
         mutex.withLock {
-            _libraryState.value = _libraryState.value.map { item ->
-                if (item.id != mangaId) return@map item
-                item.copy(manga = updater(item.manga))
+            val current = _libraryState.value
+            val result = ArrayList<LibraryManga>(current.size)
+            var changed = false
+            for (item in current) {
+                if (item.id != mangaId) {
+                    result.add(item)
+                } else {
+                    result.add(item.copy(manga = updater(item.manga)))
+                    changed = true
+                }
             }
+            if (changed) _libraryState.value = result
+        }
+    }
+
+    /**
+     * Non-suspend version of applyMangaDetailUpdate for use in onDispose() callbacks
+     * where the calling scope is about to be cancelled.
+     */
+    fun applyMangaDetailUpdateSync(mangaId: Long, updater: (tachiyomi.domain.manga.model.Manga) -> tachiyomi.domain.manga.model.Manga) {
+        // Direct update without mutex since this is called from onDispose where ordering is guaranteed
+        val current = _libraryState.value
+        val result = ArrayList<LibraryManga>(current.size)
+        var changed = false
+        for (item in current) {
+            if (item.id != mangaId) {
+                result.add(item)
+            } else {
+                result.add(item.copy(manga = updater(item.manga)))
+                changed = true
+            }
+        }
+        if (changed) _libraryState.value = result
+    }
+
+    /**
+     * Add a single manga to the in-memory library list after it becomes a favorite.
+     * Fetches its LibraryManga data from the DB (requires library_cache row to exist).
+     */
+    suspend fun addToLibrary(mangaId: Long) {
+        mangaRepository.refreshLibraryCacheForManga(mangaId)
+        val libraryManga = mangaRepository.getLibraryMangaById(mangaId) ?: run {
+            logcat(LogPriority.WARN) { "GetLibraryManga.addToLibrary: Could not fetch LibraryManga for $mangaId, falling back to refresh" }
+            refresh()
+            return
+        }
+        mutex.withLock {
+            val existing = _libraryState.value.any { it.id == mangaId }
+            if (!existing) {
+                _libraryState.value = _libraryState.value + libraryManga
+            }
+        }
+    }
+
+    /**
+     * Add multiple manga to the in-memory library list in bulk.
+     * Much more efficient than calling addToLibrary individually for batch operations.
+     */
+    suspend fun addToLibraryBulk(mangaIds: List<Long>) {
+        if (mangaIds.isEmpty()) return
+        for (id in mangaIds) {
+            mangaRepository.refreshLibraryCacheForManga(id)
+        }
+        val newItems = mangaRepository.getLibraryMangaByIds(mangaIds)
+        if (newItems.isEmpty()) {
+            logcat(LogPriority.WARN) { "GetLibraryManga.addToLibraryBulk: Could not fetch any LibraryManga for ${mangaIds.size} ids, falling back to refresh" }
+            refresh()
+            return
+        }
+        mutex.withLock {
+            val existingIds = _libraryState.value.map { it.id }.toSet()
+            val toAdd = newItems.filter { it.id !in existingIds }
+            if (toAdd.isNotEmpty()) {
+                _libraryState.value = _libraryState.value + toAdd
+            }
+        }
+    }
+
+    /**
+     * Remove a single manga from the in-memory library list after it's unfavorited.
+     */
+    suspend fun removeFromLibrary(mangaId: Long) {
+        mutex.withLock {
+            _libraryState.value = _libraryState.value.filter { it.id != mangaId }
+        }
+    }
+
+    /**
+     * Remove multiple manga from the in-memory library list.
+     */
+    suspend fun removeFromLibrary(mangaIds: List<Long>) {
+        if (mangaIds.isEmpty()) return
+        val idSet = mangaIds.toSet()
+        mutex.withLock {
+            _libraryState.value = _libraryState.value.filter { it.id !in idSet }
         }
     }
 
@@ -193,8 +325,10 @@ class GetLibraryManga(
             }
 
             _isLoading.value = true
-            val caller = Thread.currentThread().stackTrace.getOrNull(3)?.let { "${it.className}.${it.methodName}" } ?: "unknown"
-            logcat(LogPriority.INFO) { "GetLibraryManga: Refreshing library cache (force=$force, caller=$caller)" }
+            val stackTrace = Thread.currentThread().stackTrace
+                .drop(2).take(10)
+                .joinToString("\n    ") { "${it.className.substringAfterLast('.')}.${it.methodName}(${it.fileName}:${it.lineNumber})" }
+            //logcat(LogPriority.WARN) { "GetLibraryManga: refreshInternal(force=$force) FULL STACK TRACE:\n    $stackTrace" }
 
             if (force) {
                 logcat(LogPriority.INFO) { "GetLibraryManga: Rebuilding library_cache table (forced)" }

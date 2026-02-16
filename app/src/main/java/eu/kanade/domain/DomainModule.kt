@@ -106,7 +106,6 @@ import tachiyomi.domain.track.repository.TrackRepository
 import tachiyomi.domain.translation.repository.TranslatedChapterRepository
 import tachiyomi.domain.updates.interactor.ClearUpdatesCache
 import tachiyomi.domain.updates.interactor.GetUpdates
-import tachiyomi.domain.updates.interactor.RefreshUpdatesCache
 import tachiyomi.domain.updates.repository.UpdatesRepository
 import uy.kohesive.injekt.api.InjektModule
 import uy.kohesive.injekt.api.InjektRegistrar

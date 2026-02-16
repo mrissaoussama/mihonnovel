@@ -16,11 +16,9 @@ class HistoryRepositoryImpl(
 ) : HistoryRepository {
 
     /**
-     * Maps cache table columns (last_read as Long) to HistoryWithRelations.
-     * The cache table stores last_read as INTEGER NOT NULL (Long),
-     * while the mapper expects Date?.
+     * Maps direct JOIN query columns to HistoryWithRelations.
      */
-    private fun mapCacheHistoryWithRelations(
+    private fun mapHistoryWithRelations(
         id: Long,
         mangaId: Long,
         chapterId: Long,
@@ -51,13 +49,13 @@ class HistoryRepositoryImpl(
 
     override fun getHistory(query: String): Flow<List<HistoryWithRelations>> {
         return handler.subscribeToList {
-            history_cacheQueries.getHistoryWithSearch(query, ::mapCacheHistoryWithRelations)
+            historyQueries.getHistoryWithRelations(query, ::mapHistoryWithRelations)
         }
     }
 
     override suspend fun getLastHistory(): HistoryWithRelations? {
         return handler.awaitOneOrNull {
-            history_cacheQueries.getLatestHistoryCache(::mapCacheHistoryWithRelations)
+            historyQueries.getLatestHistory(::mapHistoryWithRelations)
         }
     }
 
@@ -112,19 +110,6 @@ class HistoryRepositoryImpl(
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, throwable = e)
-        }
-    }
-
-    override suspend fun refreshHistoryCache() {
-        logcat(LogPriority.INFO) { "HistoryRepositoryImpl.refreshHistoryCache: Rebuilding history cache (limited to 1000)" }
-        try {
-            handler.await(inTransaction = true) {
-                history_cacheQueries.clearAll()
-                history_cacheQueries.rebuildHistoryCacheLimited()
-            }
-            logcat(LogPriority.INFO) { "HistoryRepositoryImpl.refreshHistoryCache: Cache rebuilt" }
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to rebuild history cache" }
         }
     }
 }

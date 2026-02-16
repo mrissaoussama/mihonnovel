@@ -1,0 +1,59 @@
+import kotlin.Boolean;
+
+-- Direct JOIN queries for updates (no cache table needed)
+
+CREATE INDEX IF NOT EXISTS chapters_updates_read_idx ON chapters(read, date_fetch DESC, manga_id, date_upload);
+CREATE INDEX IF NOT EXISTS chapters_updates_all_idx ON chapters(date_fetch DESC, manga_id, date_upload);
+
+-- Use FROM chapters driving table so SQLite scans the chapters index
+-- in date_fetch DESC order and can LIMIT-stop early.
+getRecentUpdates:
+SELECT
+    M._id AS mangaId,
+    M.title AS mangaTitle,
+    C._id AS chapterId,
+    C.name AS chapterName,
+    C.scanlator,
+    C.url AS chapterUrl,
+    C.read,
+    C.bookmark,
+    C.last_page_read,
+    M.source,
+    M.favorite,
+    M.thumbnail_url AS thumbnailUrl,
+    M.cover_last_modified AS coverLastModified,
+    C.date_upload AS dateUpload,
+    C.date_fetch AS dateFetch
+FROM chapters C
+INNER JOIN mangas M ON M._id = C.manga_id
+WHERE M.favorite = 1
+AND C.date_fetch > M.date_added
+AND C.date_upload > :after
+ORDER BY C.date_fetch DESC
+LIMIT :limit;
+
+getUpdatesByReadStatus:
+SELECT
+    M._id AS mangaId,
+    M.title AS mangaTitle,
+    C._id AS chapterId,
+    C.name AS chapterName,
+    C.scanlator,
+    C.url AS chapterUrl,
+    C.read,
+    C.bookmark,
+    C.last_page_read,
+    M.source,
+    M.favorite,
+    M.thumbnail_url AS thumbnailUrl,
+    M.cover_last_modified AS coverLastModified,
+    C.date_upload AS dateUpload,
+    C.date_fetch AS dateFetch
+FROM chapters C
+INNER JOIN mangas M ON M._id = C.manga_id
+WHERE C.read = :read
+AND C.date_upload > :after
+AND M.favorite = 1
+AND C.date_fetch > M.date_added
+ORDER BY C.date_fetch DESC
+LIMIT :limit;

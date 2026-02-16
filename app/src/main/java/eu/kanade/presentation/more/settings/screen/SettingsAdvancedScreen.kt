@@ -1184,11 +1184,7 @@ object SettingsAdvancedScreen : SearchableSettings {
                     title = stringResource(MR.strings.pref_disallow_non_ascii_filenames),
                     subtitle = stringResource(MR.strings.pref_disallow_non_ascii_filenames_details),
                 ),
-                Preference.PreferenceItem.SwitchPreference(
-                    preference = libraryPreferences.verifyCacheOnStartup(),
-                    title = "Verify cache on startup",
-                    subtitle = "Check library cache integrity on app startup. Disable for faster startup (cache may become stale).",
-                ),
+
             ),
         )
     }

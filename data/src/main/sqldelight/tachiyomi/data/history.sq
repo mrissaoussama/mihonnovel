@@ -13,33 +13,47 @@ CREATE INDEX history_history_chapter_id_index ON history(chapter_id);
 -- Performance index for libraryView
 CREATE INDEX history_chapter_last_read_index ON history(chapter_id, last_read);
 
--- history_cache trigger: history inserted
-CREATE TRIGGER history_cache_after_insert
-AFTER INSERT ON history
-BEGIN
-    INSERT OR REPLACE INTO history_cache (
-        _id, manga_id, chapter_id, manga_title, manga_thumbnail_url,
-        manga_source, manga_favorite, manga_cover_last_modified,
-        chapter_number, last_read, time_read
-    )
-    SELECT
-        new._id, mangas._id, chapters._id, mangas.title, mangas.thumbnail_url,
-        mangas.source, mangas.favorite, mangas.cover_last_modified,
-        chapters.chapter_number, CAST(new.last_read AS INTEGER), new.time_read
-    FROM chapters
-    JOIN mangas ON mangas._id = chapters.manga_id
-    WHERE chapters._id = new.chapter_id;
-END;
+getHistoryWithRelations:
+SELECT
+    history._id AS id,
+    mangas._id AS mangaId,
+    chapters._id AS chapterId,
+    mangas.title,
+    mangas.thumbnail_url AS thumbnailUrl,
+    mangas.source,
+    mangas.favorite,
+    mangas.cover_last_modified,
+    chapters.chapter_number AS chapterNumber,
+    ifnull(CAST(history.last_read AS INTEGER), 0) AS readAt,
+    history.time_read AS readDuration
+FROM history
+JOIN chapters ON chapters._id = history.chapter_id
+JOIN mangas ON mangas._id = chapters.manga_id
+WHERE history.last_read > 0
+AND lower(mangas.title) LIKE ('%' || :query || '%')
+ORDER BY history.last_read DESC
+LIMIT 1000;
 
--- history_cache trigger: history updated (last_read, time_read)
-CREATE TRIGGER history_cache_after_update
-AFTER UPDATE OF last_read, time_read ON history
-BEGIN
-    UPDATE history_cache
-    SET last_read = CAST(new.last_read AS INTEGER), time_read = new.time_read
-    WHERE _id = new._id;
-END;
-
+-- Direct JOIN query for latest history entry
+getLatestHistory:
+SELECT
+    history._id AS id,
+    mangas._id AS mangaId,
+    chapters._id AS chapterId,
+    mangas.title,
+    mangas.thumbnail_url AS thumbnailUrl,
+    mangas.source,
+    mangas.favorite,
+    mangas.cover_last_modified,
+    chapters.chapter_number AS chapterNumber,
+    ifnull(CAST(history.last_read AS INTEGER), 0) AS readAt,
+    history.time_read AS readDuration
+FROM history
+JOIN chapters ON chapters._id = history.chapter_id
+JOIN mangas ON mangas._id = chapters.manga_id
+WHERE history.last_read > 0
+ORDER BY history.last_read DESC
+LIMIT 1;
 
 getHistoryByMangaId:
 SELECT
@@ -106,3 +120,22 @@ countDistinctManga:
 SELECT COUNT(DISTINCT C.manga_id)
 FROM history H
 JOIN chapters C ON H.chapter_id = C._id;
+
+-- Trigger: history inserted or updated - update manga last_read aggregate
+CREATE TRIGGER manga_agg_history_upsert
+AFTER INSERT ON history
+BEGIN
+    UPDATE mangas SET
+        last_read = max(last_read, CAST(new.last_read AS INTEGER))
+    WHERE _id = (SELECT manga_id FROM chapters WHERE _id = new.chapter_id)
+    AND favorite = 1;
+END;
+
+CREATE TRIGGER manga_agg_history_update
+AFTER UPDATE OF last_read ON history
+BEGIN
+    UPDATE mangas SET
+        last_read = max(last_read, CAST(new.last_read AS INTEGER))
+    WHERE _id = (SELECT manga_id FROM chapters WHERE _id = new.chapter_id)
+    AND favorite = 1;
+END;

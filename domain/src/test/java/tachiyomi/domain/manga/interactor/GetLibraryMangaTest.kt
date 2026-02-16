@@ -264,10 +264,7 @@ class GetLibraryMangaTest {
 
 /**
  * Tests for [GetLibraryManga] initialization behavior.
- * The init block checks cache integrity and chooses between:
- * - Full rebuild when cache is empty
- * - Incremental refresh when cache count mismatches favorites
- * - Loading from cache when counts match
+ * The init block loads library data directly from the mangas table
  */
 class GetLibraryMangaInitTest {
 
@@ -313,9 +310,8 @@ class GetLibraryMangaInitTest {
         )
 
     @Test
-    fun `init performs full rebuild when cache is empty`() {
+    fun `init loads library without cache integrity check`() {
         val repo = mockk<MangaRepository>(relaxed = true)
-        coEvery { repo.checkLibraryCacheIntegrity() } returns Pair(5L, 0L)
         coEvery { repo.getLibraryManga() } returns listOf(createLibraryManga(1))
 
         val interactor = GetLibraryManga(repo)
@@ -325,45 +321,13 @@ class GetLibraryMangaInitTest {
             val result = interactor.subscribe().first()
             result shouldHaveSize 1
         }
-        coVerify(atLeast = 1) { repo.refreshLibraryCache() }
-    }
-
-    @Test
-    fun `init performs incremental refresh when cache mismatches`() {
-        val repo = mockk<MangaRepository>(relaxed = true)
-        coEvery { repo.checkLibraryCacheIntegrity() } returns Pair(5L, 3L)
-        coEvery { repo.getLibraryManga() } returns listOf(createLibraryManga(1))
-
-        val interactor = GetLibraryManga(repo)
-
-        runBlocking {
-            kotlinx.coroutines.delay(500)
-            interactor.subscribe().first() shouldHaveSize 1
-        }
-        coVerify(atLeast = 1) { repo.refreshLibraryCacheIncremental() }
-        coVerify(exactly = 0) { repo.refreshLibraryCache() }
-    }
-
-    @Test
-    fun `init just loads from cache when counts match`() {
-        val repo = mockk<MangaRepository>(relaxed = true)
-        coEvery { repo.checkLibraryCacheIntegrity() } returns Pair(5L, 5L)
-        coEvery { repo.getLibraryManga() } returns listOf(createLibraryManga(1), createLibraryManga(2))
-
-        val interactor = GetLibraryManga(repo)
-
-        runBlocking {
-            kotlinx.coroutines.delay(500)
-            interactor.subscribe().first() shouldHaveSize 2
-        }
         coVerify(exactly = 0) { repo.refreshLibraryCache() }
         coVerify(exactly = 0) { repo.refreshLibraryCacheIncremental() }
     }
 
     @Test
-    fun `init with zero favorites and zero cache does not rebuild`() {
+    fun `init with empty library loads empty list`() {
         val repo = mockk<MangaRepository>(relaxed = true)
-        coEvery { repo.checkLibraryCacheIntegrity() } returns Pair(0L, 0L)
         coEvery { repo.getLibraryManga() } returns emptyList()
 
         val interactor = GetLibraryManga(repo)

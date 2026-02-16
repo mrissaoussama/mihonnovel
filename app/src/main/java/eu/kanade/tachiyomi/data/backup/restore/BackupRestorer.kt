@@ -2,12 +2,13 @@ package eu.kanade.tachiyomi.data.backup.restore
 
 import android.content.Context
 import android.net.Uri
-import eu.kanade.tachiyomi.data.backup.BackupDecoder
 import eu.kanade.tachiyomi.data.backup.BackupNotifier
+import eu.kanade.tachiyomi.data.backup.BackupProtoReader
 import eu.kanade.tachiyomi.data.backup.models.BackupCategory
 import eu.kanade.tachiyomi.data.backup.models.BackupExtensionRepos
 import eu.kanade.tachiyomi.data.backup.models.BackupManga
 import eu.kanade.tachiyomi.data.backup.models.BackupPreference
+import eu.kanade.tachiyomi.data.backup.models.BackupSource
 import eu.kanade.tachiyomi.data.backup.models.BackupSourcePreferences
 import eu.kanade.tachiyomi.data.backup.restore.restorers.CategoriesRestorer
 import eu.kanade.tachiyomi.data.backup.restore.restorers.ExtensionRepoRestorer
@@ -18,8 +19,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
+import kotlinx.serialization.protobuf.ProtoBuf
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.i18n.MR
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -34,6 +39,8 @@ class BackupRestorer(
     private val preferenceRestorer: PreferenceRestorer = PreferenceRestorer(context),
     private val extensionRepoRestorer: ExtensionRepoRestorer = ExtensionRepoRestorer(),
     private val mangaRestorer: MangaRestorer = MangaRestorer(),
+    private val parser: ProtoBuf = Injekt.get(),
+    private val getLibraryManga: GetLibraryManga = Injekt.get(),
 ) {
 
     private var restoreAmount = 0
@@ -50,6 +57,13 @@ class BackupRestorer(
 
         restoreFromFile(uri, options)
 
+        if (options.libraryEntries || options.categories) {
+            try {
+                getLibraryManga.refreshForced()
+            } catch (_: Exception) {
+            }
+        }
+
         val time = System.currentTimeMillis() - startTime
 
         val logFile = writeErrorLog()
@@ -64,14 +78,13 @@ class BackupRestorer(
     }
 
     private suspend fun restoreFromFile(uri: Uri, options: RestoreOptions) {
-        val backup = BackupDecoder(context).decode(uri)
+        val summary = readBackupSummary(uri)
 
         // Store source mapping for error messages
-        val backupMaps = backup.backupSources
-        sourceMapping = backupMaps.associate { it.sourceId to it.name }
+        sourceMapping = summary.backupSources.associate { it.sourceId to it.name }
 
         if (options.libraryEntries) {
-            restoreAmount += backup.backupManga.size
+            restoreAmount += summary.mangaCount
         }
         if (options.categories) {
             restoreAmount += 1
@@ -80,7 +93,7 @@ class BackupRestorer(
             restoreAmount += 1
         }
         if (options.extensionRepoSettings) {
-            restoreAmount += backup.backupExtensionRepo.size
+            restoreAmount += summary.backupExtensionRepo.size
         }
         if (options.sourceSettings) {
             restoreAmount += 1
@@ -88,24 +101,87 @@ class BackupRestorer(
 
         coroutineScope {
             if (options.categories) {
-                restoreCategories(backup.backupCategories)
+                restoreCategories(summary.backupCategories)
             }
             if (options.appSettings) {
-                restoreAppPreferences(backup.backupPreferences, backup.backupCategories.takeIf { options.categories })
+                restoreAppPreferences(summary.backupPreferences, summary.backupCategories.takeIf { options.categories })
             }
             if (options.sourceSettings) {
-                restoreSourcePreferences(backup.backupSourcePreferences)
+                restoreSourcePreferences(summary.backupSourcePreferences)
             }
             if (options.libraryEntries) {
-                restoreManga(backup.backupManga, if (options.categories) backup.backupCategories else emptyList())
+                restoreMangaStream(uri, if (options.categories) summary.backupCategories else emptyList())
             }
             if (options.extensionRepoSettings) {
-                restoreExtensionRepos(backup.backupExtensionRepo)
+                restoreExtensionRepos(summary.backupExtensionRepo)
             }
 
             // TODO: optionally trigger online library + tracker update
         }
     }
+
+    private suspend fun readBackupSummary(uri: Uri): BackupSummary {
+        val backupCategories = mutableListOf<BackupCategory>()
+        val backupSources = mutableListOf<BackupSource>()
+        val backupPreferences = mutableListOf<BackupPreference>()
+        val backupSourcePreferences = mutableListOf<BackupSourcePreferences>()
+        val backupExtensionRepo = mutableListOf<BackupExtensionRepos>()
+        var mangaCount = 0
+
+        val reader = BackupProtoReader(context)
+        reader.read(uri) { fieldNumber, data ->
+            when (fieldNumber) {
+                1 -> mangaCount++
+                2 -> backupCategories.add(parser.decodeFromByteArray(BackupCategory.serializer(), data))
+                101 -> backupSources.add(parser.decodeFromByteArray(BackupSource.serializer(), data))
+                104 -> backupPreferences.add(parser.decodeFromByteArray(BackupPreference.serializer(), data))
+                105 -> backupSourcePreferences.add(
+                    parser.decodeFromByteArray(BackupSourcePreferences.serializer(), data),
+                )
+                106 -> backupExtensionRepo.add(parser.decodeFromByteArray(BackupExtensionRepos.serializer(), data))
+            }
+        }
+
+        return BackupSummary(
+            mangaCount = mangaCount,
+            backupCategories = backupCategories,
+            backupSources = backupSources,
+            backupPreferences = backupPreferences,
+            backupSourcePreferences = backupSourcePreferences,
+            backupExtensionRepo = backupExtensionRepo,
+        )
+    }
+
+    private fun CoroutineScope.restoreMangaStream(
+        uri: Uri,
+        backupCategories: List<BackupCategory>,
+    ) = launch {
+        val reader = BackupProtoReader(context)
+        reader.read(uri) { fieldNumber, data ->
+            if (fieldNumber != 1) return@read
+            ensureActive()
+
+            val backupManga = parser.decodeFromByteArray(BackupManga.serializer(), data)
+            try {
+                mangaRestorer.restore(backupManga, backupCategories)
+            } catch (e: Exception) {
+                val sourceName = sourceMapping[backupManga.source] ?: backupManga.source.toString()
+                errors.add(Date() to "${backupManga.title} [$sourceName]: ${e.message}")
+            }
+
+            restoreProgress += 1
+            notifier.showRestoreProgress(backupManga.title, restoreProgress, restoreAmount, isSync)
+        }
+    }
+
+    private data class BackupSummary(
+        val mangaCount: Int,
+        val backupCategories: List<BackupCategory>,
+        val backupSources: List<BackupSource>,
+        val backupPreferences: List<BackupPreference>,
+        val backupSourcePreferences: List<BackupSourcePreferences>,
+        val backupExtensionRepo: List<BackupExtensionRepos>,
+    )
 
     private fun CoroutineScope.restoreCategories(backupCategories: List<BackupCategory>) = launch {
         ensureActive()
@@ -118,26 +194,6 @@ class BackupRestorer(
             restoreAmount,
             isSync,
         )
-    }
-
-    private fun CoroutineScope.restoreManga(
-        backupMangas: List<BackupManga>,
-        backupCategories: List<BackupCategory>,
-    ) = launch {
-        mangaRestorer.sortByNew(backupMangas)
-            .forEach {
-                ensureActive()
-
-                try {
-                    mangaRestorer.restore(it, backupCategories)
-                } catch (e: Exception) {
-                    val sourceName = sourceMapping[it.source] ?: it.source.toString()
-                    errors.add(Date() to "${it.title} [$sourceName]: ${e.message}")
-                }
-
-                restoreProgress += 1
-                notifier.showRestoreProgress(it.title, restoreProgress, restoreAmount, isSync)
-            }
     }
 
     private fun CoroutineScope.restoreAppPreferences(

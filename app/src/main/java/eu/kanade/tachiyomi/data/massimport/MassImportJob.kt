@@ -75,6 +75,7 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
     private val setMangaCategories: SetMangaCategories = Injekt.get()
     private val syncChaptersWithSource: SyncChaptersWithSource = Injekt.get()
     private val refreshLibraryCache: RefreshLibraryCache = Injekt.get()
+    private val getLibraryManga: tachiyomi.domain.manga.interactor.GetLibraryManga = Injekt.get()
 
     private val notificationBuilder = context.notificationBuilder(Notifications.CHANNEL_MASS_IMPORT) {
         setSmallIcon(android.R.drawable.stat_sys_download)
@@ -101,10 +102,6 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
         return withIOContext {
             try {
                 performImport(urls, categoryId, addToLibrary, fetchDetails, fetchChapters, batchId)
-                // Full library cache refresh to update UI after bulk import
-                try {
-                    refreshLibraryCache.await()
-                } catch (_: Exception) {}
                 Result.success()
             } catch (e: Exception) {
                 if (e is CancellationException) {
@@ -450,6 +447,7 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
                             dateAdded = System.currentTimeMillis(),
                         ),
                     )
+                    getLibraryManga.addToLibrary(manga.id)
                     if (categoryId > 0L) {
                         setMangaCategories.await(manga.id, listOf(categoryId))
                     }
@@ -462,6 +460,7 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
                         dateAdded = System.currentTimeMillis(),
                     ),
                 )
+                getLibraryManga.addToLibrary(existingManga.id)
                 if (categoryId > 0L) {
                     setMangaCategories.await(existingManga.id, listOf(categoryId))
                 }
@@ -489,6 +488,9 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
                 ),
             )
 
+            // Update in-memory library list so UI shows the new entry immediately
+            getLibraryManga.addToLibrary(manga.id)
+
             if (categoryId > 0L) {
                 setMangaCategories.await(manga.id, listOf(categoryId))
             }
@@ -500,14 +502,6 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
                 } catch (e: Exception) {
                     logcat(LogPriority.WARN, e) { "Failed to sync chapters for $url" }
                 }
-            }
-
-            // Refresh library cache for this specific manga to update UI immediately
-            // without blocking the database with a massive full refresh
-            try {
-                refreshLibraryCache.awaitForManga(manga.id)
-            } catch (e: Exception) {
-                logcat(LogPriority.WARN, e) { "Failed to refresh cache for manga ${manga.id}" }
             }
         }
 

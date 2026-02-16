@@ -35,6 +35,7 @@ class LibraryPreferences(
     fun titleMaxLines() = preferenceStore.getInt("pref_library_title_max_lines", 2)
 
     fun lastUpdatedTimestamp() = preferenceStore.getLong(Preference.appStateKey("library_update_last_timestamp"), 0L)
+    fun lastUpdatesClearedTimestamp() = preferenceStore.getLong(Preference.appStateKey("updates_cleared_timestamp"), 0L)
     fun autoUpdateInterval() = preferenceStore.getInt("pref_library_update_interval_key", 0)
 
     fun autoUpdateDeviceRestrictions() = preferenceStore.getStringSet(
@@ -229,12 +230,7 @@ class LibraryPreferences(
      */
     fun autoRefreshLibrary() = preferenceStore.getBoolean("pref_auto_refresh_library", true)
 
-    /**
-     * Whether to verify library cache integrity on app startup.
-     * Disabling this speeds up startup but may result in stale cache data.
-     */
-    fun verifyCacheOnStartup() = preferenceStore.getBoolean("pref_verify_cache_on_startup", false)
-    // endregion
+     // endregion
 
     // region Swipe Actions
 

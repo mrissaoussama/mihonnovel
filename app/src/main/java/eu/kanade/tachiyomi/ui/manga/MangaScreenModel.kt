@@ -167,14 +167,11 @@ class MangaScreenModel(
     private val selectedChapterIds: HashSet<Long> = HashSet()
 
     override fun onDispose() {
-        super.onDispose()
         val currentManga = manga
         if (currentManga != null && currentManga.favorite) {
-            screenModelScope.launchIO {
-                getLibraryManga.applyMangaDetailUpdate(currentManga.id) { currentManga }
-            }
+            getLibraryManga.applyMangaDetailUpdateSync(currentManga.id) { currentManga }
         }
-        getLibraryManga.notifyChanged()
+        super.onDispose()
     }
 
     /**

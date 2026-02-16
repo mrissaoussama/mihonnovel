@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import logcat.LogPriority
@@ -109,6 +110,10 @@ class LibraryScreenModel(
 ) : StateScreenModel<LibraryScreenModel.State>(State()) {
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
+
+  private val itemCache = HashMap<Long, LibraryItem>()
+    private val itemCacheMangaRef = HashMap<Long, LibraryManga>()
+    private var itemCachePrefs: ItemPreferences? = null
 
     enum class LibraryType {
         All,
@@ -210,10 +215,13 @@ class LibraryScreenModel(
             state
                 .dropWhile { !it.libraryData.isInitialized }
                 .map { it.libraryData }
+                .distinctUntilChanged()
                 .map { data ->
+                    val favoritesById = HashMap<Long, LibraryItem>(data.favorites.size * 2)
+                    for (item in data.favorites) { favoritesById[item.id] = item }
                     data.favorites
                         .applyGrouping(data.categories, data.showSystemCategory)
-                        .applySort(data.favoritesById, data.tracksMap, data.loggedInTrackerIds)
+                        .applySort(favoritesById, data.tracksMap, data.loggedInTrackerIds)
                 }
                 .collectLatest {
                     mutableState.update { state ->
@@ -425,9 +433,15 @@ class LibraryScreenModel(
         trackMap: Map<Long, List<Track>>,
         loggedInTrackerIds: Set<Long>,
     ): Map<Category, List</* LibraryItem */ Long>> {
+        // Pre-compute lowercase titles to avoid creating new Strings on every comparison
+        val lowercaseTitles = HashMap<Long, String>(favoritesById.size * 2)
+        for ((id, item) in favoritesById) {
+            lowercaseTitles[id] = item.libraryManga.manga.title.lowercase()
+        }
+
         val sortAlphabetically: (LibraryItem, LibraryItem) -> Int = { manga1, manga2 ->
-            val title1 = manga1.libraryManga.manga.title.lowercase()
-            val title2 = manga2.libraryManga.manga.title.lowercase()
+            val title1 = lowercaseTitles[manga1.id] ?: manga1.libraryManga.manga.title.lowercase()
+            val title2 = lowercaseTitles[manga2.id] ?: manga2.libraryManga.manga.title.lowercase()
             title1.compareToWithCollator(title2)
         }
 
@@ -564,7 +578,7 @@ class LibraryScreenModel(
         return combine(
             getLibraryManga.subscribe(),
             getLibraryItemPreferencesFlow(),
-            downloadCache.changes,
+            downloadCache.changes.onStart { emit(Unit) },
         ) { libraryManga, preferences, _ ->
             if (!isNovelBackfillDone) {
                 isNovelBackfillDone = true
@@ -577,36 +591,62 @@ class LibraryScreenModel(
                 }
             }
 
-            libraryManga
-                .filter { item ->
-                    when (type) {
-                        LibraryType.All -> true
-                        LibraryType.Manga -> !item.manga.isNovel
-                        LibraryType.Novel -> item.manga.isNovel
-                    }
+            // If preferences or download cache changed, invalidate all cached items
+            val prefsChanged = itemCachePrefs != preferences
+            if (prefsChanged) {
+                itemCache.clear()
+                itemCacheMangaRef.clear()
+                itemCachePrefs = preferences
+            }
+
+            val result = ArrayList<LibraryItem>(libraryManga.size)
+            for (manga in libraryManga) {
+                // Filter by library type
+                when (type) {
+                    LibraryType.All -> {}
+                    LibraryType.Manga -> if (manga.manga.isNovel) continue
+                    LibraryType.Novel -> if (!manga.manga.isNovel) continue
                 }
-                .map { manga ->
-                  val dlCount = downloadManager.getDownloadCount(manga.manga).toLong()
-                    LibraryItem(
-                        libraryManga = manga,
-                        downloadCount = dlCount,
-                        unreadCount = if (preferences.unreadBadge) {
-                            manga.unreadCount
-                        } else {
-                            0
-                        },
-                        isLocal = if (preferences.localBadge) {
-                            manga.manga.isLocal()
-                        } else {
-                            false
-                        },
-                        sourceLanguage = if (preferences.languageBadge) {
-                            sourceManager.getOrStub(manga.manga.source).lang
-                        } else {
-                            ""
-                        },
-                    )
+
+                val cached = itemCache[manga.id]
+                val cachedRef = itemCacheMangaRef[manga.id]
+                if (cached != null && cachedRef === manga) {
+                    result.add(cached)
+                    continue
                 }
+
+                val dlCount = downloadManager.getDownloadCount(manga.manga).toLong()
+                val item = LibraryItem(
+                    libraryManga = manga,
+                    downloadCount = dlCount,
+                    unreadCount = if (preferences.unreadBadge) {
+                        manga.unreadCount
+                    } else {
+                        0
+                    },
+                    isLocal = if (preferences.localBadge) {
+                        manga.manga.isLocal()
+                    } else {
+                        false
+                    },
+                    sourceLanguage = if (preferences.languageBadge) {
+                        sourceManager.getOrStub(manga.manga.source).lang
+                    } else {
+                        ""
+                    },
+                )
+                itemCache[manga.id] = item
+                itemCacheMangaRef[manga.id] = manga
+                result.add(item)
+            }
+
+            if (itemCache.size > result.size + 100) {
+                val currentIds = result.mapTo(HashSet(result.size)) { it.libraryManga.id }
+                itemCache.keys.retainAll(currentIds)
+                itemCacheMangaRef.keys.retainAll(currentIds)
+            }
+
+            result
         }
     }
 
@@ -783,8 +823,9 @@ class LibraryScreenModel(
             }
 
             // Refresh library UI after modifications
-            if (deleteFromLibrary || deleteChapters || clearChaptersFromDb) {
-                getLibraryManga.refreshForced()
+            if (deleteFromLibrary) {
+            } else if (deleteChapters || clearChaptersFromDb) {
+                getLibraryManga.notifyChanged()
             }
         }
     }
@@ -1632,7 +1673,11 @@ class LibraryScreenModel(
         val tracksMap: Map</* Manga */ Long, List<Track>> = emptyMap(),
         val loggedInTrackerIds: Set<Long> = emptySet(),
     ) {
-        val favoritesById by lazy { favorites.associateBy { it.id } }
+        val favoritesById: Map<Long, LibraryItem> by lazy {
+            HashMap<Long, LibraryItem>(favorites.size * 2).also { map ->
+                for (item in favorites) map[item.id] = item
+            }
+        }
     }
 
     @Immutable

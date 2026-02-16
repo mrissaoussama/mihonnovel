@@ -4,6 +4,7 @@ import kotlinx.coroutines.flow.Flow
 import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.track.model.Track
 import tachiyomi.domain.track.repository.TrackRepository
+import kotlin.time.Duration.Companion.seconds
 
 class TrackRepositoryImpl(
     private val handler: DatabaseHandler,
@@ -20,7 +21,7 @@ class TrackRepositoryImpl(
     }
 
     override fun getTracksAsFlow(): Flow<List<Track>> {
-        return handler.subscribeToList {
+        return handler.subscribeToDebouncedList(1.seconds) {
             manga_syncQueries.getTracks(TrackMapper::mapTrack)
         }
     }

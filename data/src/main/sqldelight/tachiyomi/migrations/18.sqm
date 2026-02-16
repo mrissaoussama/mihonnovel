@@ -1,0 +1,29 @@
+-- Migration 18: Remove history_cache and updates_cache tables
+-- These are replaced by direct JOIN queries for better consistency and simpler architecture.
+
+-- Drop triggers from history table
+DROP TRIGGER IF EXISTS history_cache_after_insert;
+DROP TRIGGER IF EXISTS history_cache_after_update;
+
+-- Drop triggers from chapters table
+DROP TRIGGER IF EXISTS updates_cache_chapter_insert;
+DROP TRIGGER IF EXISTS updates_cache_chapter_update;
+
+-- Drop triggers from mangas table
+DROP TRIGGER IF EXISTS updates_cache_manga_update;
+DROP TRIGGER IF EXISTS updates_cache_manga_unfavorite;
+DROP TRIGGER IF EXISTS history_cache_manga_update;
+
+-- Drop indexes
+DROP INDEX IF EXISTS history_cache_last_read_idx;
+DROP INDEX IF EXISTS history_cache_manga_id_idx;
+DROP INDEX IF EXISTS updates_cache_date_fetch_idx;
+DROP INDEX IF EXISTS updates_cache_manga_id_idx;
+DROP INDEX IF EXISTS updates_cache_read_date_idx;
+
+-- Drop cache tables
+DROP TABLE IF EXISTS history_cache;
+DROP TABLE IF EXISTS updates_cache;
+
+-- Add performance index for updates queries (ORDER BY date_fetch DESC LIMIT)
+CREATE INDEX IF NOT EXISTS chapters_date_fetch_desc_idx ON chapters(date_fetch DESC);

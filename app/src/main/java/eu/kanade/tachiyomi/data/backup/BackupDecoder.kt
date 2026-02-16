@@ -5,6 +5,7 @@ import android.net.Uri
 import eu.kanade.tachiyomi.data.backup.models.Backup
 import kotlinx.serialization.SerializationException
 import kotlinx.serialization.protobuf.ProtoBuf
+import okio.Buffer
 import okio.buffer
 import okio.gzip
 import okio.source
@@ -28,24 +29,42 @@ class BackupDecoder(
             val peeked = source.peek().apply {
                 require(2)
             }
-            val id1id2 = peeked.readShort()
-            val backupString = when (id1id2.toInt()) {
+            val id1id2 = peeked.readShort().toInt()
+
+            val payloadSource = when (id1id2) {
                 0x1f8b -> source.gzip().buffer() // 0x1f8b is gzip magic bytes
                 MAGIC_JSON_SIGNATURE1, MAGIC_JSON_SIGNATURE2, MAGIC_JSON_SIGNATURE3 -> {
                     throw IOException(context.stringResource(MR.strings.invalid_backup_file_json))
                 }
                 else -> source
-            }.use { it.readByteArray() }
+            }
 
+            val backupBytes = payloadSource.use { readWithSizeLimit(it, MAX_BACKUP_BYTES) }
             try {
-                parser.decodeFromByteArray(Backup.serializer(), backupString)
+                parser.decodeFromByteArray(Backup.serializer(), backupBytes)
             } catch (_: SerializationException) {
                 throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
             }
         }
     }
 
+    private fun readWithSizeLimit(source: okio.BufferedSource, maxBytes: Long): ByteArray {
+        val buffer = Buffer()
+        var total = 0L
+        while (true) {
+            val read = source.read(buffer, READ_CHUNK_BYTES)
+            if (read == -1L) break
+            total += read
+            if (total > maxBytes) {
+                throw IOException(context.stringResource(MR.strings.invalid_backup_file_unknown))
+            }
+        }
+        return buffer.readByteArray()
+    }
+
     companion object {
+        private const val READ_CHUNK_BYTES = 8_192L
+        private const val MAX_BACKUP_BYTES = 256L * 1024L * 1024L
         private const val MAGIC_JSON_SIGNATURE1 = 0x7b7d // `{}`
         private const val MAGIC_JSON_SIGNATURE2 = 0x7b22 // `{"`
         private const val MAGIC_JSON_SIGNATURE3 = 0x7b0a // `{\n`

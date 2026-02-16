@@ -18,16 +18,20 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Code
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.FindReplace
 import androidx.compose.material.icons.outlined.Palette
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -83,6 +87,15 @@ data class CodeSnippet(
     val title: String,
     val code: String,
     val enabled: Boolean = true,
+)
+
+@Serializable
+data class RegexReplacement(
+    val title: String,
+    val pattern: String,
+    val replacement: String,
+    val enabled: Boolean = true,
+    val isRegex: Boolean = true,
 )
 
 private val novelThemes = listOf(
@@ -731,13 +744,9 @@ private fun ColumnScope.TranslationSettingsSection() {
 
 @Composable
 internal fun ColumnScope.NovelAdvancedTab(screenModel: ReaderSettingsScreenModel, renderingMode: String) {
+    RegexReplacementSection(screenModel)
+
     if (renderingMode != "webview") {
-        Text(
-            text = stringResource(MR.strings.novel_advanced_webview_only),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(16.dp),
-        )
         return
     }
 
@@ -1002,8 +1011,297 @@ private fun SnippetEditDialog(
 }
 
 /**
- * TTS (Text-to-Speech) settings section
+ * Regex find/replace section — available for both WebView and TextView modes.
+ * Rules are applied to chapter HTML content before rendering.
  */
+@Composable
+private fun ColumnScope.RegexReplacementSection(screenModel: ReaderSettingsScreenModel) {
+    val regexJson by screenModel.preferences.novelRegexReplacements().collectAsState()
+
+    var showAddDialog by remember { mutableStateOf(false) }
+    var editingRule by remember { mutableStateOf<Pair<Int, RegexReplacement>?>(null) }
+
+    val rules = remember(regexJson) {
+        try {
+            Json.decodeFromString<List<RegexReplacement>>(regexJson)
+        } catch (e: Exception) {
+            emptyList()
+        }
+    }
+
+    Column(modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.FindReplace,
+                    contentDescription = null,
+                    modifier = Modifier.padding(end = 8.dp),
+                )
+                Text(
+                    text = "Regex Find & Replace",
+                    style = MaterialTheme.typography.titleMedium,
+                )
+            }
+            IconButton(onClick = { showAddDialog = true }) {
+                Icon(Icons.Outlined.Add, contentDescription = "Add rule")
+            }
+        }
+
+        rules.forEachIndexed { index, rule ->
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(vertical = 4.dp)
+                    .clickable {
+                        val updated = rules.toMutableList().apply {
+                            this[index] = this[index].copy(enabled = !this[index].enabled)
+                        }
+                        screenModel.preferences.novelRegexReplacements().set(Json.encodeToString(updated))
+                    },
+            ) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = rule.title,
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = if (rule.enabled) {
+                                MaterialTheme.colorScheme.onSurface
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            },
+                        )
+                        Text(
+                            text = buildString {
+                                append(if (rule.isRegex) "regex" else "text")
+                                append(" • ")
+                                append(if (rule.enabled) "Enabled" else "Disabled")
+                            },
+                            style = MaterialTheme.typography.bodySmall,
+                            color = if (rule.enabled) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                            },
+                        )
+                        Text(
+                            text = "/${rule.pattern}/ → ${rule.replacement.ifEmpty { "(remove)" }}",
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                            overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                        )
+                    }
+                    Row {
+                        IconButton(onClick = { editingRule = index to rule }) {
+                            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                        }
+                        IconButton(onClick = {
+                            val updated = rules.toMutableList().apply { removeAt(index) }
+                            screenModel.preferences.novelRegexReplacements().set(Json.encodeToString(updated))
+                        }) {
+                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                        }
+                    }
+                }
+            }
+        }
+
+        if (rules.isEmpty()) {
+            Text(
+                text = "No rules added. Rules apply to chapter content before rendering.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        }
+    }
+
+    if (showAddDialog || editingRule != null) {
+        RegexEditDialog(
+            initialRule = editingRule?.second,
+            onDismiss = {
+                showAddDialog = false
+                editingRule = null
+            },
+            onConfirm = { rule ->
+                val updated = rules.toMutableList()
+                if (editingRule != null) {
+                    updated[editingRule!!.first] = rule
+                } else {
+                    updated.add(rule)
+                }
+                screenModel.preferences.novelRegexReplacements().set(Json.encodeToString(updated))
+                showAddDialog = false
+                editingRule = null
+            },
+        )
+    }
+}
+
+@Composable
+private fun RegexEditDialog(
+    initialRule: RegexReplacement?,
+    onDismiss: () -> Unit,
+    onConfirm: (RegexReplacement) -> Unit,
+) {
+    var title by remember { mutableStateOf(initialRule?.title ?: "") }
+    var pattern by remember { mutableStateOf(initialRule?.pattern ?: "") }
+    var replacement by remember { mutableStateOf(initialRule?.replacement ?: "") }
+    var isRegex by remember { mutableStateOf(initialRule?.isRegex ?: true) }
+    var testInput by remember { mutableStateOf("") }
+    var testOutput by remember { mutableStateOf<String?>(null) }
+    var testError by remember { mutableStateOf<String?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(if (initialRule != null) "Edit Rule" else "Add Find & Replace Rule")
+        },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                OutlinedTextField(
+                    value = title,
+                    onValueChange = { title = it },
+                    label = { Text("Title") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = pattern,
+                    onValueChange = {
+                        pattern = it
+                        testOutput = null
+                        testError = null
+                    },
+                    label = { Text(if (isRegex) "Regex Pattern" else "Find Text") },
+                    singleLine = false,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                OutlinedTextField(
+                    value = replacement,
+                    onValueChange = {
+                        replacement = it
+                        testOutput = null
+                    },
+                    label = { Text("Replace With (empty = remove)") },
+                    singleLine = false,
+                    maxLines = 3,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Checkbox(
+                        checked = isRegex,
+                        onCheckedChange = {
+                            isRegex = it
+                            testOutput = null
+                            testError = null
+                        },
+                    )
+                    Text("Use Regex", modifier = Modifier.padding(start = 4.dp))
+                }
+
+                // Test section
+                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                Text(
+                    text = "Test",
+                    style = MaterialTheme.typography.titleSmall,
+                )
+                OutlinedTextField(
+                    value = testInput,
+                    onValueChange = {
+                        testInput = it
+                        testOutput = null
+                        testError = null
+                    },
+                    label = { Text("Sample Input") },
+                    minLines = 2,
+                    maxLines = 4,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                )
+                TextButton(
+                    onClick = {
+                        if (pattern.isBlank()) {
+                            testError = "Pattern is empty"
+                            return@TextButton
+                        }
+                        try {
+                            testOutput = if (isRegex) {
+                                val regex = Regex(pattern)
+                                regex.replace(testInput, replacement)
+                            } else {
+                                testInput.replace(pattern, replacement)
+                            }
+                            testError = null
+                        } catch (e: Exception) {
+                            testError = e.message ?: "Invalid regex"
+                            testOutput = null
+                        }
+                    },
+                    modifier = Modifier.padding(top = 4.dp),
+                ) {
+                    Text("Run Test")
+                }
+                testOutput?.let {
+                    Text(
+                        text = "Output: $it",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+                testError?.let {
+                    Text(
+                        text = "Error: $it",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (title.isNotBlank() && pattern.isNotBlank()) {
+                        if (isRegex) {
+                            try {
+                                Regex(pattern)
+                            } catch (e: Exception) {
+                                testError = "Invalid regex: ${e.message}"
+                                return@TextButton
+                            }
+                        }
+                        onConfirm(
+                            RegexReplacement(title.trim(), pattern, replacement, initialRule?.enabled ?: true, isRegex),
+                        )
+                    }
+                },
+            ) {
+                Text(stringResource(MR.strings.action_save))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(MR.strings.action_cancel))
+            }
+        },
+    )
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenModel) {

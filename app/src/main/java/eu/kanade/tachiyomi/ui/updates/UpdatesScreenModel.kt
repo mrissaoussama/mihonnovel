@@ -109,7 +109,14 @@ class UpdatesScreenModel(
                 getUpdates.subscribe(limit).distinctUntilChanged(),
                 downloadCache.changes,
                 downloadManager.queueState,
-            ) { updates, _, _ -> updates }
+                libraryPreferences.lastUpdatesClearedTimestamp().changes(),
+            ) { updates, _, _, clearedAt ->
+                if (clearedAt > 0L) {
+                    updates.filter { it.dateFetch > clearedAt }
+                } else {
+                    updates
+                }
+            }
                 .catch {
                     logcat(LogPriority.ERROR, it)
                     _events.send(Event.InternalError)

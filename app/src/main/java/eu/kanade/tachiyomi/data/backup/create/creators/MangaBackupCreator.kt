@@ -58,9 +58,8 @@ class MangaBackupCreator(
             // Fetch chapters for this manga
             // Use chunked processing to limit memory usage for manga with many chapters
             val allChapters = handler.awaitList {
-                chaptersQueries.getChaptersByMangaId(
+                chaptersQueries.getChaptersByMangaIdUnfiltered(
                     mangaId = manga.id,
-                    applyScanlatorFilter = 0, // false
                     mapper = backupChapterMapper,
                 )
             }

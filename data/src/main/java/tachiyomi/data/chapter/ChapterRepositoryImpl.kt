@@ -90,7 +90,11 @@ class ChapterRepositoryImpl(
 
     override suspend fun getChapterByMangaId(mangaId: Long, applyScanlatorFilter: Boolean): List<Chapter> {
         return handler.awaitList {
-            chaptersQueries.getChaptersByMangaId(mangaId, applyScanlatorFilter.toLong(), ::mapChapter)
+            if (applyScanlatorFilter) {
+                chaptersQueries.getChaptersByMangaIdFiltered(mangaId, ::mapChapter)
+            } else {
+                chaptersQueries.getChaptersByMangaIdUnfiltered(mangaId, ::mapChapter)
+            }
         }
     }
 
@@ -126,7 +130,11 @@ class ChapterRepositoryImpl(
 
     override suspend fun getChapterByMangaIdAsFlow(mangaId: Long, applyScanlatorFilter: Boolean): Flow<List<Chapter>> {
         return handler.subscribeToList {
-            chaptersQueries.getChaptersByMangaId(mangaId, applyScanlatorFilter.toLong(), ::mapChapter)
+            if (applyScanlatorFilter) {
+                chaptersQueries.getChaptersByMangaIdFiltered(mangaId, ::mapChapter)
+            } else {
+                chaptersQueries.getChaptersByMangaIdUnfiltered(mangaId, ::mapChapter)
+            }
         }
     }
 
