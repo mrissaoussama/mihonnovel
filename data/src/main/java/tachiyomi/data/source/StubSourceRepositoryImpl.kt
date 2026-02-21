@@ -17,13 +17,14 @@ class StubSourceRepositoryImpl(
         return handler.awaitOneOrNull { sourcesQueries.findOne(id, ::mapStubSource) }
     }
 
-    override suspend fun upsertStubSource(id: Long, lang: String, name: String) {
-        handler.await { sourcesQueries.upsert(id, lang, name) }
+    override suspend fun upsertStubSource(id: Long, lang: String, name: String, isNovel: Boolean) {
+        handler.await { sourcesQueries.upsert(id, lang, name, isNovel) }
     }
 
     private fun mapStubSource(
         id: Long,
         lang: String,
         name: String,
-    ): StubSource = StubSource(id = id, lang = lang, name = name)
+        isNovel: Boolean,
+    ): StubSource = StubSource(id = id, lang = lang, name = name, isNovelSource = isNovel)
 }

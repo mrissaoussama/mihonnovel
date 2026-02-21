@@ -8,5 +8,5 @@ interface StubSourceRepository {
 
     suspend fun getStubSource(id: Long): StubSource?
 
-    suspend fun upsertStubSource(id: Long, lang: String, name: String)
+    suspend fun upsertStubSource(id: Long, lang: String, name: String, isNovel: Boolean = false)
 }

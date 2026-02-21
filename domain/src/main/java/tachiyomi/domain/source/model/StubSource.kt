@@ -9,6 +9,7 @@ class StubSource(
     override val id: Long,
     override val lang: String,
     override val name: String,
+    override val isNovelSource: Boolean = false,
 ) : Source {
 
     private val isInvalid: Boolean = name.isBlank() || lang.isBlank()
@@ -26,14 +27,24 @@ class StubSource(
 
     companion object {
         fun from(source: Source): StubSource {
-            return StubSource(id = source.id, lang = source.lang, name = source.name)
+            return StubSource(
+                id = source.id,
+                lang = source.lang,
+                name = source.name,
+                isNovelSource = source.isNovelSource,
+            )
         }
         
         /**
          * Create a StubSource that preserves the full display name (including markers like "(JS)")
          */
         fun fromWithDisplayName(source: Source, displayName: String): StubSource {
-            return StubSource(id = source.id, lang = source.lang, name = displayName)
+            return StubSource(
+                id = source.id,
+                lang = source.lang,
+                name = displayName,
+                isNovelSource = source.isNovelSource,
+            )
         }
     }
 }

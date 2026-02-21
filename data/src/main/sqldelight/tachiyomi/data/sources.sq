@@ -1,7 +1,10 @@
+import kotlin.Boolean;
+
 CREATE TABLE sources(
     _id INTEGER NOT NULL PRIMARY KEY,
     lang TEXT NOT NULL,
-    name TEXT NOT NULL
+    name TEXT NOT NULL,
+    is_novel INTEGER AS Boolean NOT NULL DEFAULT 0
 );
 
 findAll:
@@ -14,11 +17,12 @@ FROM sources
 WHERE _id = :id;
 
 upsert:
-INSERT INTO sources(_id, lang, name)
-VALUES (:id, :lang, :name)
+INSERT INTO sources(_id, lang, name, is_novel)
+VALUES (:id, :lang, :name, :isNovel)
 ON CONFLICT(_id)
 DO UPDATE
 SET
     lang = :lang,
-    name = :name
+    name = :name,
+    is_novel = :isNovel
 WHERE _id = :id;
