@@ -257,7 +257,7 @@ object SettingsDataScreen : SearchableSettings {
         pendingLNReaderUri?.let { uri ->
             LNReaderImportOptionsDialog(
                 onDismissRequest = { pendingLNReaderUri = null },
-                onConfirm = { novels, chapters, categories, history, plugins ->
+                onConfirm = { novels, chapters, categories, history, plugins, missingPlugins ->
                     pendingLNReaderUri = null
                     LNReaderImportJob.start(
                         context,
@@ -267,6 +267,7 @@ object SettingsDataScreen : SearchableSettings {
                         restoreCategories = categories,
                         restoreHistory = history,
                         restorePlugins = plugins,
+                        restoreMissingPlugins = missingPlugins,
                     )
                     lnReaderImportStatus = "Import started (check notifications for progress)"
                     scope.launch {
@@ -592,13 +593,14 @@ object SettingsDataScreen : SearchableSettings {
 @Composable
 private fun LNReaderImportOptionsDialog(
     onDismissRequest: () -> Unit,
-    onConfirm: (novels: Boolean, chapters: Boolean, categories: Boolean, history: Boolean, plugins: Boolean) -> Unit,
+    onConfirm: (novels: Boolean, chapters: Boolean, categories: Boolean, history: Boolean, plugins: Boolean, missingPlugins: Boolean) -> Unit,
 ) {
     var restoreNovels by remember { mutableStateOf(true) }
     var restoreChapters by remember { mutableStateOf(true) }
     var restoreCategories by remember { mutableStateOf(true) }
     var restoreHistory by remember { mutableStateOf(true) }
     var restorePlugins by remember { mutableStateOf(true) }
+    var restoreMissingPlugins by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
@@ -638,12 +640,20 @@ private fun LNReaderImportOptionsDialog(
                     Checkbox(checked = restorePlugins, onCheckedChange = { restorePlugins = it })
                     Text("Plugins (extensions)", modifier = Modifier.padding(start = 4.dp))
                 }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(
+                        checked = restoreMissingPlugins,
+                        onCheckedChange = { restoreMissingPlugins = it },
+                        enabled = restoreNovels,
+                    )
+                    Text("Restore with missing plugins (as stubs)", modifier = Modifier.padding(start = 4.dp))
+                }
             }
         },
         confirmButton = {
             androidx.compose.material3.TextButton(
                 onClick = {
-                    onConfirm(restoreNovels, restoreChapters, restoreCategories, restoreHistory, restorePlugins)
+                    onConfirm(restoreNovels, restoreChapters, restoreCategories, restoreHistory, restorePlugins, restoreMissingPlugins)
                 },
                 enabled = restoreNovels || restoreCategories || restorePlugins,
             ) {

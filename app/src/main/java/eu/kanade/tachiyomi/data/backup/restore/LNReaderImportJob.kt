@@ -41,6 +41,7 @@ class LNReaderImportJob(private val context: Context, workerParams: WorkerParame
                 restoreCategories = inputData.getBoolean(KEY_RESTORE_CATEGORIES, true),
                 restoreHistory = inputData.getBoolean(KEY_RESTORE_HISTORY, true),
                 restorePlugins = inputData.getBoolean(KEY_RESTORE_PLUGINS, true),
+                restoreMissingPlugins = inputData.getBoolean(KEY_RESTORE_MISSING_PLUGINS, false),
             )
             val startTime = System.currentTimeMillis()
             val result = importer.import(uri, options)
@@ -99,6 +100,7 @@ class LNReaderImportJob(private val context: Context, workerParams: WorkerParame
             restoreCategories: Boolean = true,
             restoreHistory: Boolean = true,
             restorePlugins: Boolean = true,
+            restoreMissingPlugins: Boolean = false,
         ) {
             val inputData = workDataOf(
                 LOCATION_URI_KEY to uri.toString(),
@@ -107,6 +109,7 @@ class LNReaderImportJob(private val context: Context, workerParams: WorkerParame
                 KEY_RESTORE_CATEGORIES to restoreCategories,
                 KEY_RESTORE_HISTORY to restoreHistory,
                 KEY_RESTORE_PLUGINS to restorePlugins,
+                KEY_RESTORE_MISSING_PLUGINS to restoreMissingPlugins,
             )
             val request = OneTimeWorkRequestBuilder<LNReaderImportJob>()
                 .addTag(TAG)
@@ -128,3 +131,4 @@ private const val KEY_RESTORE_CHAPTERS = "restore_chapters"
 private const val KEY_RESTORE_CATEGORIES = "restore_categories"
 private const val KEY_RESTORE_HISTORY = "restore_history"
 private const val KEY_RESTORE_PLUGINS = "restore_plugins"
+private const val KEY_RESTORE_MISSING_PLUGINS = "restore_missing_plugins"

@@ -19,6 +19,7 @@ import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.manga.interactor.GetMangaByUrlAndSourceId
+import tachiyomi.domain.source.repository.StubSourceRepository
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -48,6 +49,7 @@ class LNReaderBackupImporter(
     private val categoriesRestorer: CategoriesRestorer = CategoriesRestorer(),
     private val mangaRestorer: MangaRestorer = MangaRestorer(),
     private val getMangaByUrlAndSourceId: GetMangaByUrlAndSourceId = Injekt.get(),
+    private val stubSourceRepository: StubSourceRepository = Injekt.get(),
 ) {
 
     private val json = Json {
@@ -116,6 +118,7 @@ class LNReaderBackupImporter(
         val restoreCategories: Boolean = true,
         val restoreHistory: Boolean = true,
         val restorePlugins: Boolean = true,
+        val restoreMissingPlugins: Boolean = false,
     )
 
     /**
@@ -158,16 +161,37 @@ class LNReaderBackupImporter(
             }
 
             // Step 4: Build plugin mapping
-            val pluginIdToSourceId = buildPluginMapping()
+            val pluginIdToSourceId = buildPluginMapping().toMutableMap()
 
-            // Detect missing plugins
+            // Detect missing plugins and create stub sources if requested
             val requiredPlugins = novels.map { it.pluginId }.toSet()
-            missingPlugins.addAll(requiredPlugins - pluginIdToSourceId.keys)
-            if (missingPlugins.isNotEmpty()) {
-                logcat(LogPriority.WARN) { "LNReaderImport: Missing plugins: ${missingPlugins.joinToString()}" }
-                errors.add(
-                    Date() to "Missing plugins (install these extensions first): ${missingPlugins.joinToString()}",
-                )
+            val actualMissingPlugins = requiredPlugins - pluginIdToSourceId.keys
+            missingPlugins.addAll(actualMissingPlugins)
+
+            if (actualMissingPlugins.isNotEmpty()) {
+                if (options.restoreMissingPlugins) {
+                    // Create stub sources for missing plugins
+                    actualMissingPlugins.forEach { pluginId ->
+                        val stubSourceId = generateStubSourceId(pluginId)
+                        try {
+                            stubSourceRepository.upsertStubSource(
+                                id = stubSourceId,
+                                lang = "unknown",
+                                name = "$pluginId (Missing)",
+                            )
+                            pluginIdToSourceId[pluginId] = stubSourceId
+                            logcat(LogPriority.INFO) { "LNReaderImport: Created stub source for missing plugin '$pluginId' with ID $stubSourceId" }
+                        } catch (e: Exception) {
+                            logcat(LogPriority.ERROR, e) { "LNReaderImport: Failed to create stub source for '$pluginId'" }
+                            errors.add(Date() to "Failed to create stub source for '$pluginId': ${e.message}")
+                        }
+                    }
+                } else {
+                    logcat(LogPriority.WARN) { "LNReaderImport: Missing plugins: ${missingPlugins.joinToString()}" }
+                    errors.add(
+                        Date() to "Missing plugins (install these extensions first or enable 'Restore with missing plugins'): ${missingPlugins.joinToString()}",
+                    )
+                }
             }
 
             // Build category name -> novel IDs mapping for assignment
@@ -192,7 +216,7 @@ class LNReaderBackupImporter(
                             }
                             if (sourceId == null) {
                                 skippedCount++
-                                errors.add(Date() to "${novel.name}: Unknown plugin '${novel.pluginId}' - skipping")
+                                errors.add(Date() to "${novel.name}: Unknown plugin '${novel.pluginId}' - skipping (enable 'Restore with missing plugins' to import as stub)")
                                 return@forEachIndexed
                             }
 
@@ -450,6 +474,16 @@ class LNReaderBackupImporter(
                 }
             }
         }
+    }
+
+    /**
+     * Generate a deterministic source ID for a missing plugin based on its plugin ID.
+     * Uses a hash to ensure the same plugin ID always gets the same source ID.
+     * The range is chosen to avoid conflicts with real sources (which typically use small IDs).
+     */
+    private fun generateStubSourceId(pluginId: String): Long {
+        val hash = pluginId.hashCode()
+        return 5_000_000_000L + (hash.toLong() and 0x7FFFFFFF)
     }
 
     private fun writeErrorLog(): File {
