@@ -58,6 +58,7 @@ sealed class Preference {
             @IntRange(from = 0) val steps: Int = with(valueRange) { (last - first) - 1 },
             override val enabled: Boolean = true,
             override val onValueChanged: suspend (value: Int) -> Unit = {},
+            val preference: PreferenceData<*>? = null,
         ) : PreferenceItem<Int, Unit>() {
             override val icon: ImageVector? = null
         }

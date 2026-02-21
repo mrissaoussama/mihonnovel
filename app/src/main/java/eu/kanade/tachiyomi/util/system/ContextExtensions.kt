@@ -90,12 +90,18 @@ private fun Context.defaultBrowserPackageName(): String? {
 }
 
 fun Context.createFileInCacheDir(name: String): File {
-    val file = File(externalCacheDir, name)
-    if (file.exists()) {
-        file.delete()
+    fun createIn(dir: File): File {
+        dir.mkdirs()
+        val file = File(dir, name)
+        if (file.exists()) file.delete()
+        file.createNewFile()
+        return file
     }
-    file.createNewFile()
-    return file
+    return try {
+        createIn(externalCacheDir ?: cacheDir)
+    } catch (_: Exception) {
+        createIn(cacheDir)
+    }
 }
 
 /**

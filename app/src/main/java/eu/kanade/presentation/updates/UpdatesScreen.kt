@@ -146,6 +146,11 @@ fun UpdateScreen(
                                     onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
                                     label = { Text(stringResource(MR.strings.label_novels)) },
                                 )
+                                FilterChip(
+                                    selected = state.groupByNovel,
+                                    onClick = onToggleGroupByNovel,
+                                    label = { Text("Group by novel") },
+                                )
                             }
                         }
 

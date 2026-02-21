@@ -25,6 +25,17 @@ object SettingsReaderScreen : SearchableSettings {
 
     override val supportsReset: Boolean get() = true
 
+    @Composable
+    override fun getAdditionalResetPreferences(): List<tachiyomi.core.common.preference.Preference<*>> {
+        val readerPref = remember { Injekt.get<ReaderPreferences>() }
+        return listOf(
+            readerPref.flashDurationMillis(),
+            readerPref.flashPageInterval(),
+            readerPref.novelAutoSplitWordCount(),
+            readerPref.webtoonSidePadding(),
+        )
+    }
+
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_reader
@@ -204,12 +215,12 @@ object SettingsReaderScreen : SearchableSettings {
                     subtitle = "Split long novel chapters into multiple pages based on word count",
                 ),
                 Preference.PreferenceItem.SliderPreference(
-                    value = autoSplitWordCount,
-                    valueRange = 10..200,
-                    title = "Split word count (x100)",
-                    subtitle = "Pages will be split every ${autoSplitWordCount * 100} words",
+                    value = autoSplitWordCount / 50,
+                    valueRange = 1..40,
+                    title = "Split word count (×50)",
+                    subtitle = "Split every $autoSplitWordCount words",
                     enabled = autoSplitEnabled,
-                    onValueChanged = { autoSplitWordCountPref.set(it) },
+                    onValueChanged = { autoSplitWordCountPref.set(it * 50) },
                 ),
             ),
         )

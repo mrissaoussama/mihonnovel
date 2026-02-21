@@ -16,6 +16,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -72,14 +74,28 @@ class JsPluginManager(
 
     init {
         cacheDir.mkdirs()
-        loadInstalledPlugins()
-        loadRepositories()
-        loadCachedPluginList()
+        loadRepositoriesFromPrefs()
+        scope.launch {
+            loadRepositories()
+            loadInstalledPlugins()
+            loadCachedPluginList()
+        }
+
+        storageManager.changes
+            .onEach {
+                logcat(LogPriority.INFO) { "JsPluginManager: storage changed, reloading plugins" }
+                loadInstalledPlugins()
+            }
+            .launchIn(scope)
     }
 
     private fun saveCachedPluginList(plugins: List<JsPlugin>) {
         try {
+            if (!cacheDir.exists()) {
+                cacheDir.mkdirs()
+            }
             val cacheFile = File(cacheDir, "plugin_list_cache.json")
+            cacheFile.parentFile?.mkdirs()
             val jsonString = json.encodeToString(plugins)
             cacheFile.writeText(jsonString)
             logcat(LogPriority.DEBUG) { "Saved ${plugins.size} plugins to cache" }
@@ -325,10 +341,13 @@ class JsPluginManager(
      * Add a new repository
      */
     fun addRepository(name: String, url: String) {
+        logcat(LogPriority.INFO) { "JsPluginManager: addRepository called — name='$name', url='$url'" }
         _repositories.update { current ->
             if (current.any { it.url == url }) {
+                logcat(LogPriority.DEBUG) { "JsPluginManager: repo already exists, skipping: $url" }
                 current
             } else {
+                logcat(LogPriority.INFO) { "JsPluginManager: adding new repo — total will be ${current.size + 1}" }
                 current + JsPluginRepository(name, url)
             }
         }
@@ -512,12 +531,17 @@ class JsPluginManager(
         }
     }
 
+    /**
+     * Load repositories from the plugin directory file (requires storage to be available).
+     * If the directory is unavailable, keeps current repos (possibly already loaded from prefs).
+     */
     private fun loadRepositories() {
         try {
             val dir = pluginsDir
             if (dir == null) {
-                logcat(LogPriority.WARN) { "Plugins directory not available for loading repositories" }
-                _repositories.value = emptyList()
+                logcat(LogPriority.WARN) {
+                    "Plugins directory not available for loading repositories — keeping existing (${_repositories.value.size} repos)"
+                }
                 return
             }
             val reposFile = dir.findFile("repositories.json")
@@ -548,29 +572,58 @@ class JsPluginManager(
                             }
                         }
                     }
-                    _repositories.value = allRepos.distinctBy { it.url }
-                    logcat(LogPriority.INFO) { "Loaded ${allRepos.size} repositories from disk" }
-                    if (allRepos.isNotEmpty()) {
-                        saveRepositories()
+                    val distinct = allRepos.distinctBy { it.url }
+                    val merged = (_repositories.value + distinct).distinctBy { it.url }
+                    _repositories.value = merged
+                    logcat(LogPriority.INFO) {
+                        "Loaded ${distinct.size} repositories from disk (merged total: ${merged.size})"
                     }
+                    saveRepositories()
                     return
                 }
             }
-            // First run or no saved repos - start with empty list
-            logcat(LogPriority.INFO) { "No repositories found, starting with empty list" }
-            _repositories.value = emptyList()
+            if (_repositories.value.isNotEmpty()) {
+                saveRepositoriesToFile()
+            }
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to load repositories" }
-            // On error, use empty list
-            _repositories.value = emptyList()
+            logcat(LogPriority.ERROR, e) { "Failed to load repositories from disk" }
+        }
+    }
+
+    /**
+     * Load repositories from SharedPreferences.
+     */
+    private fun loadRepositoriesFromPrefs() {
+        try {
+            val json2 = sourcePreferences.jsRepositoriesBackup().get()
+            if (json2.isNotBlank()) {
+                val repos = json.decodeFromString<List<JsPluginRepository>>(json2)
+                _repositories.value = repos.distinctBy { it.url }
+                logcat(LogPriority.INFO) { "Loaded ${repos.size} repositories from SharedPreferences backup" }
+            } else {
+                logcat(LogPriority.DEBUG) { "No SharedPreferences repos backup found" }
+            }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to load repositories from SharedPreferences" }
         }
     }
 
     private fun saveRepositories() {
         try {
+            val jsonContent = json.encodeToString(_repositories.value)
+            sourcePreferences.jsRepositoriesBackup().set(jsonContent)
+            logcat(LogPriority.DEBUG) { "Saved ${_repositories.value.size} repositories to SharedPreferences" }
+        } catch (e: Exception) {
+            logcat(LogPriority.ERROR, e) { "Failed to save repositories to SharedPreferences" }
+        }
+        saveRepositoriesToFile()
+    }
+
+    private fun saveRepositoriesToFile() {
+        try {
             val dir = pluginsDir
             if (dir == null) {
-                logcat(LogPriority.ERROR) { "Plugins directory not available for saving repositories" }
+                logcat(LogPriority.WARN) { "Plugins directory not available for saving repositories.json" }
                 return
             }
             val reposFile = dir.createFile("repositories.json")
@@ -580,9 +633,10 @@ class JsPluginManager(
             }
             val jsonContent = json.encodeToString(_repositories.value)
             reposFile.writeText(jsonContent)
+            logcat(LogPriority.INFO) { "Wrote ${jsonContent.length} chars to repositories.json" }
             logcat(LogPriority.INFO) { "Saved ${_repositories.value.size} repositories to disk" }
         } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "Failed to save repositories" }
+            logcat(LogPriority.ERROR, e) { "Failed to save repositories to disk" }
         }
     }
 

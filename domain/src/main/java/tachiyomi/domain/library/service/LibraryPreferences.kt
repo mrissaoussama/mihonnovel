@@ -60,6 +60,8 @@ class LibraryPreferences(
 
     fun autoUpdateThrottle() = preferenceStore.getInt("pref_library_update_throttle_ms", 0)
 
+    fun joinedLibrary() = preferenceStore.getBoolean("pref_joined_library", false)
+
     fun showContinueReadingButton() = preferenceStore.getBoolean(
         "display_continue_reading_button",
         false,
@@ -158,6 +160,18 @@ class LibraryPreferences(
 
     // endregion
 
+    // region History
+
+    fun historyGroupByNovel() = preferenceStore.getBoolean("history_group_by_novel", false)
+
+    // endregion
+
+    // region Updates
+
+    fun updatesGroupByNovel() = preferenceStore.getBoolean("updates_group_by_novel", false)
+
+    // endregion
+
     // region Category
 
     fun defaultCategory() = preferenceStore.getInt(DEFAULT_CATEGORY_PREF_KEY, -1)
@@ -230,7 +244,7 @@ class LibraryPreferences(
      */
     fun autoRefreshLibrary() = preferenceStore.getBoolean("pref_auto_refresh_library", true)
 
-     // endregion
+    // endregion
 
     // region Swipe Actions
 

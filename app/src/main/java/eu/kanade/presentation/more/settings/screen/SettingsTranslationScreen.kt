@@ -19,6 +19,17 @@ object SettingsTranslationScreen : SearchableSettings {
 
     override val supportsReset: Boolean get() = true
 
+    @Composable
+    override fun getAdditionalResetPreferences(): List<tachiyomi.core.common.preference.Preference<*>> {
+        val prefs = remember { Injekt.get<TranslationPreferences>() }
+        return listOf(
+            prefs.rateLimitDelayMs(),
+            prefs.translationTimeoutMs(),
+            prefs.rateLimitWarningThreshold(),
+            prefs.maxParallelTranslations(),
+        )
+    }
+
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_translation

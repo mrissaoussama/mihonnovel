@@ -140,6 +140,7 @@ sealed class NovelRepoEvent {
 }
 
 sealed class NovelRepoDialog {
+    data object ChooseType : NovelRepoDialog()
     data object CreateJs : NovelRepoDialog()
     data object CreateKotlin : NovelRepoDialog()
     data class DeleteJs(val repo: JsPluginRepository) : NovelRepoDialog()

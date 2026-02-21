@@ -47,7 +47,7 @@ object TextSplitter {
                 // Check if we've passed the threshold since last punctuation
                 if (wordsSincePunctuation >= targetWordCount) {
                     // Insert paragraph break after this punctuation
-                    result.append("\n\n")
+                    result.append("<br><br>")
                     wordsSincePunctuation = 0
                 } else {
                     // Just add a space, continue counting
@@ -95,26 +95,27 @@ object TextSplitter {
                 val textEnd = if (nextTag == -1) html.length else nextTag
                 val text = html.substring(i, textEnd)
 
-                val words = text.split(Regex("(\\s+)"), limit = -1)
-                for (j in words.indices) {
-                    val word = words[j]
-                    if (word.isEmpty() || word.isBlank()) {
-                        result.append(word)
-                        continue
-                    }
+                // Walk character-by-character to preserve original whitespace exactly
+                var ti = 0
+                while (ti < text.length) {
+                    // Collect and emit whitespace as-is
+                    val wsStart = ti
+                    while (ti < text.length && text[ti].isWhitespace()) ti++
+                    if (ti > wsStart) result.append(text, wsStart, ti)
+                    if (ti >= text.length) break
+
+                    // Collect a word (non-whitespace run)
+                    val wordStart = ti
+                    while (ti < text.length && !text[ti].isWhitespace()) ti++
+                    val word = text.substring(wordStart, ti)
 
                     result.append(word)
                     wordsSincePunctuation++
 
                     val endsWithPunctuation = word.lastOrNull()?.let { it in sentenceEndingPunctuation } == true
-
-                    if (endsWithPunctuation) {
-                        // Check if we've passed the threshold since last punctuation
-                        if (wordsSincePunctuation >= targetWordCount) {
-                            // Insert paragraph break after this punctuation
-                            result.append("</p><p>")
-                            wordsSincePunctuation = 0
-                        }
+                    if (endsWithPunctuation && wordsSincePunctuation >= targetWordCount) {
+                        result.append("</p><p>")
+                        wordsSincePunctuation = 0
                     }
                 }
                 i = textEnd

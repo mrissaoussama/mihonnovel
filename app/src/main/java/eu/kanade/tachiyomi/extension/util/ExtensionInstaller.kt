@@ -83,7 +83,50 @@ internal class ExtensionInstaller(private val context: Context) {
         val request = DownloadManager.Request(downloadUri)
             .setTitle(extension.name)
             .setMimeType(APK_MIME)
-            .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, downloadUri.lastPathSegment)
+            .apply {
+                var destinationSet = false
+                // 1. Try app-specific external dir (preferred; no special permission needed)
+                if (!destinationSet) {
+                    try {
+                        setDestinationInExternalFilesDir(
+                            context,
+                            Environment.DIRECTORY_DOWNLOADS,
+                            downloadUri.lastPathSegment,
+                        )
+                        destinationSet = true
+                    } catch (e: Exception) {
+                        logcat(LogPriority.WARN) {
+                            "setDestinationInExternalFilesDir failed (${e.message}), trying fallback"
+                        }
+                    }
+                }
+                // 2. Try root of app-specific external dir
+                if (!destinationSet) {
+                    try {
+                        val extFilesDir = context.getExternalFilesDir(null)
+                        if (extFilesDir != null) {
+                            extFilesDir.mkdirs()
+                            val dest = java.io.File(extFilesDir, downloadUri.lastPathSegment ?: "ext.apk")
+                            setDestinationUri(android.net.Uri.fromFile(dest))
+                            destinationSet = true
+                            logcat(LogPriority.INFO) {
+                                "ExtensionInstaller: using getExternalFilesDir(null) fallback → $dest"
+                            }
+                        }
+                    } catch (e: Exception) {
+                        logcat(LogPriority.WARN) { "getExternalFilesDir(null) fallback failed: ${e.message}" }
+                    }
+                }
+                // 3. public Downloads dir
+                if (!destinationSet) {
+                    try {
+                        setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, downloadUri.lastPathSegment)
+                        logcat(LogPriority.INFO) { "ExtensionInstaller: using public Downloads dir fallback" }
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "All download destination fallbacks exhausted" }
+                    }
+                }
+            }
             .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
 
         val id = downloadManager.enqueue(request)

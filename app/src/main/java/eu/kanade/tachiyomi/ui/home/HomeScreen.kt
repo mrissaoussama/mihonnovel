@@ -23,6 +23,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.contentDescription
@@ -57,6 +58,7 @@ import tachiyomi.presentation.core.components.material.NavigationBar
 import tachiyomi.presentation.core.components.material.NavigationRail
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.pluralStringResource
+import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -81,9 +83,20 @@ object HomeScreen : Screen() {
         MoreTab,
     )
 
+    private val JOINED_TABS = listOf(
+        NovelsTab,
+        UpdatesTab,
+        HistoryTab,
+        BrowseTab,
+        MoreTab,
+    )
+
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
+        val libraryPreferences = remember { Injekt.get<tachiyomi.domain.library.service.LibraryPreferences>() }
+        val isJoined by libraryPreferences.joinedLibrary().collectAsState()
+        val tabs = if (isJoined) JOINED_TABS else TABS
         TabNavigator(
             tab = NovelsTab,
             key = TabNavigatorKey,
@@ -94,7 +107,7 @@ object HomeScreen : Screen() {
                     startBar = {
                         if (isTabletUi()) {
                             NavigationRail {
-                                TABS.fastForEach {
+                                tabs.fastForEach {
                                     NavigationRailItem(it)
                                 }
                             }
@@ -111,7 +124,7 @@ object HomeScreen : Screen() {
                                 exit = shrinkVertically(),
                             ) {
                                 NavigationBar {
-                                    TABS.fastForEach {
+                                    tabs.fastForEach {
                                         NavigationBarItem(it)
                                     }
                                 }
@@ -141,21 +154,21 @@ object HomeScreen : Screen() {
                 }
             }
 
-            val goToLibraryTab = { tabNavigator.current = LibraryTab }
+            val goToNovelsTab = { tabNavigator.current = NovelsTab }
 
-            BackHandler(enabled = tabNavigator.current != LibraryTab, onBack = goToLibraryTab)
+            BackHandler(enabled = tabNavigator.current != NovelsTab, onBack = goToNovelsTab)
 
             LaunchedEffect(Unit) {
                 launch {
                     librarySearchEvent.receiveAsFlow().collectLatest {
-                        goToLibraryTab()
-                        LibraryTab.search(it)
+                        goToNovelsTab()
+                        NovelsTab.search(it)
                     }
                 }
                 launch {
                     openTabEvent.receiveAsFlow().collectLatest {
                         tabNavigator.current = when (it) {
-                            is Tab.Library -> LibraryTab
+                            is Tab.Library -> if (isJoined) NovelsTab else LibraryTab
                             Tab.Updates -> UpdatesTab
                             Tab.History -> HistoryTab
                             is Tab.Browse -> {

@@ -29,6 +29,15 @@ object SettingsDownloadScreen : SearchableSettings {
 
     override val supportsReset: Boolean get() = true
 
+    @Composable
+    override fun getAdditionalResetPreferences(): List<tachiyomi.core.common.preference.Preference<*>> {
+        val downloadPreferences = remember { Injekt.get<DownloadPreferences>() }
+        return listOf(
+            downloadPreferences.parallelSourceLimit(),
+            downloadPreferences.parallelPageLimit(),
+        )
+    }
+
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_downloads

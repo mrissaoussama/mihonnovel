@@ -111,7 +111,7 @@ class LibraryScreenModel(
 
     val snackbarHostState: SnackbarHostState = SnackbarHostState()
 
-  private val itemCache = HashMap<Long, LibraryItem>()
+    private val itemCache = HashMap<Long, LibraryItem>()
     private val itemCacheMangaRef = HashMap<Long, LibraryManga>()
     private var itemCachePrefs: ItemPreferences? = null
 
@@ -189,7 +189,7 @@ class LibraryScreenModel(
                 val itemPreferences = flows[4]
                 val isLoading = flows[5] as Boolean
 
-                val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0) }
+                val showSystemCategory = favorites.any { it.libraryManga.categories.contains(0L) }
                 @Suppress("UNCHECKED_CAST")
                 val filteredFavorites = favorites
                     .applyFilters(tracksMap as Map<Long, List<Track>>, trackingFilters as Map<Long, TriState>, itemPreferences as ItemPreferences)

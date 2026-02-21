@@ -63,7 +63,9 @@ class HistoryScreenModel(
     private val updateManga: UpdateManga = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
     private val sourceManager: SourceManager = Injekt.get(),
-) : StateScreenModel<HistoryScreenModel.State>(State()) {
+) : StateScreenModel<HistoryScreenModel.State>(
+    State(groupByNovel = Injekt.get<LibraryPreferences>().historyGroupByNovel().get()),
+) {
 
     private val _events: Channel<Event> = Channel(Channel.UNLIMITED)
     val events: Flow<Event> = _events.receiveAsFlow()
@@ -167,6 +169,7 @@ class HistoryScreenModel(
 
     fun setGroupByNovel(groupByNovel: Boolean) {
         mutableState.update { it.copy(groupByNovel = groupByNovel) }
+        libraryPreferences.historyGroupByNovel().set(groupByNovel)
     }
 
     fun setDialog(dialog: Dialog?) {

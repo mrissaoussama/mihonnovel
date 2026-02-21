@@ -51,6 +51,8 @@ class SourcePreferences(
 
     fun extensionUpdatesCount() = preferenceStore.getInt("ext_updates_count", 0)
 
+    fun jsRepositoriesBackup() = preferenceStore.getString("js_plugin_repositories_backup", "")
+
     fun trustedExtensions() = preferenceStore.getStringSet(
         Preference.appStateKey("trusted_extensions"),
         emptySet(),

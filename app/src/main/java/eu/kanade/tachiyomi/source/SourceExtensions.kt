@@ -1,6 +1,7 @@
 package eu.kanade.tachiyomi.source
 
 import eu.kanade.domain.source.service.SourcePreferences
+import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
@@ -15,8 +16,8 @@ fun Source.getNameForMangaInfo(): String {
     return when {
         // For edge cases where user disables a source they got manga of in their library.
         hasOneActiveLanguages && !isInEnabledLanguages -> toString()
-        // Hide the language tag when only one language is used.
-        hasOneActiveLanguages && isInEnabledLanguages -> name
+        // Hide the language tag when only one language is used, but always append (JS) for JS sources.
+        hasOneActiveLanguages && isInEnabledLanguages -> if (this is JsSource) "$name (JS)" else name
         else -> toString()
     }
 }

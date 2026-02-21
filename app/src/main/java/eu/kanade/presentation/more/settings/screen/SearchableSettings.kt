@@ -37,11 +37,20 @@ interface SearchableSettings : Screen {
      */
     val supportsReset: Boolean get() = false
 
+    /**
+     * Override to provide additional preferences to reset that aren't automatically
+     * detected from the preference list (e.g., slider preferences with no backing
+     * preference field, custom preferences, etc.).
+     */
+    @Composable
+    fun getAdditionalResetPreferences(): List<tachiyomi.core.common.preference.Preference<*>> = emptyList()
+
     @Composable
     fun RowScope.AppBarAction() {
         if (supportsReset) {
             var showResetDialog by remember { mutableStateOf(false) }
             val preferences = getPreferences()
+            val additionalPrefs = getAdditionalResetPreferences()
             IconButton(onClick = { showResetDialog = true }) {
                 Icon(Icons.Outlined.RestartAlt, contentDescription = "Reset to defaults")
             }
@@ -54,6 +63,7 @@ interface SearchableSettings : Screen {
                     confirmButton = {
                         TextButton(onClick = {
                             resetPreferencesToDefaults(preferences)
+                            additionalPrefs.forEach { it.delete() }
                             showResetDialog = false
                         }) {
                             Text("Reset")
@@ -111,7 +121,7 @@ interface SearchableSettings : Screen {
                 is Preference.PreferenceItem.ListPreference<*> -> item.preference.delete()
                 is Preference.PreferenceItem.MultiSelectListPreference -> item.preference.delete()
                 is Preference.PreferenceItem.EditTextPreference -> item.preference.delete()
-                is Preference.PreferenceItem.SliderPreference -> {}
+                is Preference.PreferenceItem.SliderPreference -> item.preference?.delete()
                 is Preference.PreferenceItem.TextPreference -> {}
                 is Preference.PreferenceItem.TrackerPreference -> {}
                 is Preference.PreferenceItem.InfoPreference -> {}

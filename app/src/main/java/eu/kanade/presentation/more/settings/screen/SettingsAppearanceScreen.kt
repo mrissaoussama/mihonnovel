@@ -39,10 +39,12 @@ object SettingsAppearanceScreen : SearchableSettings {
     @Composable
     override fun getPreferences(): List<Preference> {
         val uiPreferences = remember { Injekt.get<UiPreferences>() }
+        val libraryPreferences = remember { Injekt.get<tachiyomi.domain.library.service.LibraryPreferences>() }
 
         return listOf(
             getThemeGroup(uiPreferences = uiPreferences),
             getDisplayGroup(uiPreferences = uiPreferences),
+            getLibraryLayoutGroup(libraryPreferences = libraryPreferences),
         )
     }
 
@@ -150,6 +152,27 @@ object SettingsAppearanceScreen : SearchableSettings {
                 Preference.PreferenceItem.SwitchPreference(
                     preference = uiPreferences.imagesInDescription(),
                     title = stringResource(MR.strings.pref_display_images_description),
+                ),
+            ),
+        )
+    }
+
+    @Composable
+    private fun getLibraryLayoutGroup(
+        libraryPreferences: tachiyomi.domain.library.service.LibraryPreferences,
+    ): Preference.PreferenceGroup {
+        val context = LocalContext.current
+        return Preference.PreferenceGroup(
+            title = "Library layout",
+            preferenceItems = persistentListOf(
+                Preference.PreferenceItem.SwitchPreference(
+                    preference = libraryPreferences.joinedLibrary(),
+                    title = "Combined library",
+                    subtitle = "Merge Novels and Manga into a single Library tab",
+                    onValueChanged = {
+                        context.toast(MR.strings.requires_app_restart)
+                        true
+                    },
                 ),
             ),
         )

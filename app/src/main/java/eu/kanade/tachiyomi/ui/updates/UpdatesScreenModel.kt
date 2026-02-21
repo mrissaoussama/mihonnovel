@@ -86,7 +86,9 @@ class UpdatesScreenModel(
     private val getChapter: GetChapter = Injekt.get(),
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     val snackbarHostState: SnackbarHostState = SnackbarHostState(),
-) : StateScreenModel<UpdatesScreenModel.State>(State()) {
+) : StateScreenModel<UpdatesScreenModel.State>(
+    State(groupByNovel = Injekt.get<LibraryPreferences>().updatesGroupByNovel().get()),
+) {
 
     @Volatile
     private var latestUpdates: List<UpdatesWithRelations> = emptyList()
@@ -419,7 +421,9 @@ class UpdatesScreenModel(
     }
 
     fun toggleGroupByNovel() {
-        mutableState.update { it.copy(groupByNovel = !it.groupByNovel) }
+        val newValue = !state.value.groupByNovel
+        mutableState.update { it.copy(groupByNovel = newValue) }
+        libraryPreferences.updatesGroupByNovel().set(newValue)
     }
 
     fun clearUpdatesCacheAll() {

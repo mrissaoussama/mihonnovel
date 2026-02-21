@@ -132,6 +132,13 @@ class GetLibraryManga(
                     val updated = item.categories.toMutableSet()
                     addCategories.forEach { updated.add(it) }
                     removeCategories.forEach { updated.remove(it) }
+                    if (addCategories.any { it != 0L } && updated.any { it != 0L }) {
+                        updated.remove(0L)
+                    }
+                    if (updated.isEmpty() || updated.all { it == 0L }) {
+                        updated.clear()
+                        updated.add(0L)
+                    }
                     result.add(item.copy(categories = updated.toList()))
                     changed = true
                 }
@@ -146,6 +153,8 @@ class GetLibraryManga(
      */
     suspend fun setCategoriesForManga(mangaIds: List<Long>, categoryIds: List<Long>) {
         if (mangaIds.isEmpty()) return
+        // When no categories are specified, use the default (uncategorized) category
+        val effectiveCategories = categoryIds.ifEmpty { listOf(0L) }
         mutex.withLock {
             val idSet = mangaIds.toSet()
             val current = _libraryState.value
@@ -155,7 +164,7 @@ class GetLibraryManga(
                 if (item.id !in idSet) {
                     result.add(item)
                 } else {
-                    result.add(item.copy(categories = categoryIds))
+                    result.add(item.copy(categories = effectiveCategories))
                     changed = true
                 }
             }
@@ -328,7 +337,6 @@ class GetLibraryManga(
             val stackTrace = Thread.currentThread().stackTrace
                 .drop(2).take(10)
                 .joinToString("\n    ") { "${it.className.substringAfterLast('.')}.${it.methodName}(${it.fileName}:${it.lineNumber})" }
-            //logcat(LogPriority.WARN) { "GetLibraryManga: refreshInternal(force=$force) FULL STACK TRACE:\n    $stackTrace" }
 
             if (force) {
                 logcat(LogPriority.INFO) { "GetLibraryManga: Rebuilding library_cache table (forced)" }

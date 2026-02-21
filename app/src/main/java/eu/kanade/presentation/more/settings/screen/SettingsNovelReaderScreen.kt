@@ -19,6 +19,25 @@ object SettingsNovelReaderScreen : SearchableSettings {
 
     override val supportsReset: Boolean get() = true
 
+    @Composable
+    override fun getAdditionalResetPreferences(): List<tachiyomi.core.common.preference.Preference<*>> {
+        val readerPref = remember { Injekt.get<ReaderPreferences>() }
+        return listOf(
+            readerPref.novelFontSize(),
+            readerPref.novelLineHeight(),
+            readerPref.novelAutoScrollSpeed(),
+            readerPref.novelParagraphIndent(),
+            readerPref.novelParagraphSpacing(),
+            readerPref.novelMarginLeft(),
+            readerPref.novelMarginRight(),
+            readerPref.novelMarginTop(),
+            readerPref.novelMarginBottom(),
+            readerPref.novelAutoLoadNextChapterAt(),
+            readerPref.novelTtsSpeed(),
+            readerPref.novelTtsPitch(),
+        )
+    }
+
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_novel

@@ -130,10 +130,15 @@ internal object ExtensionLoader {
         // Log packages that might be extensions (for debugging)
         val potentialExts = installedPkgs.filter { pkg ->
             pkg.packageName.contains("extension", ignoreCase = true) ||
-            pkg.packageName.contains("tachiyomi", ignoreCase = true) ||
-            pkg.packageName.contains("mihon", ignoreCase = true)
+                pkg.packageName.contains("tachiyomi", ignoreCase = true) ||
+                pkg.packageName.contains("mihon", ignoreCase = true)
         }
-        android.util.Log.d("ExtensionLoader", "${potentialExts.size} potential extension packages: ${potentialExts.map { it.packageName }}")
+        android.util.Log.d(
+            "ExtensionLoader",
+            "${potentialExts.size} potential extension packages: ${potentialExts.map {
+                it.packageName
+            }}",
+        )
 
         val sharedExtPkgs = installedPkgs
             .asSequence()
@@ -141,7 +146,12 @@ internal object ExtensionLoader {
             .map { ExtensionInfo(packageInfo = it, isShared = true) }
 
         val sharedExtList = sharedExtPkgs.toList()
-        android.util.Log.d("ExtensionLoader", "${sharedExtList.size} shared extensions found: ${sharedExtList.map { it.packageInfo.packageName }}")
+        android.util.Log.d(
+            "ExtensionLoader",
+            "${sharedExtList.size} shared extensions found: ${sharedExtList.map {
+                it.packageInfo.packageName
+            }}",
+        )
 
         val privateExtPkgs = getPrivateExtensionDir(context)
             .listFiles()
@@ -351,7 +361,9 @@ internal object ExtensionLoader {
                     }
                 }
 
-                logcat(LogPriority.ERROR, lastError) { "Extension load error: $extName - class not found in any namespace: $classesToTry" }
+                logcat(LogPriority.ERROR, lastError) {
+                    "Extension load error: $extName - class not found in any namespace: $classesToTry"
+                }
                 return LoadResult.Error
             }
 
@@ -411,9 +423,13 @@ internal object ExtensionLoader {
     private fun isPackageAnExtension(pkgInfo: PackageInfo): Boolean {
         val hasFeature = pkgInfo.reqFeatures.orEmpty().any { it.name == EXTENSION_FEATURE }
         if (pkgInfo.packageName.contains("extension", ignoreCase = true) ||
-            pkgInfo.packageName.contains("mihon", ignoreCase = true)) {
-            android.util.Log.d("ExtensionLoader",
-                "isPackageAnExtension: ${pkgInfo.packageName} - features: ${pkgInfo.reqFeatures?.map { it.name }}, hasFeature=$hasFeature"
+            pkgInfo.packageName.contains("mihon", ignoreCase = true)
+        ) {
+            android.util.Log.d(
+                "ExtensionLoader",
+                "isPackageAnExtension: ${pkgInfo.packageName} - features: ${pkgInfo.reqFeatures?.map {
+                    it.name
+                }}, hasFeature=$hasFeature",
             )
         }
         return hasFeature

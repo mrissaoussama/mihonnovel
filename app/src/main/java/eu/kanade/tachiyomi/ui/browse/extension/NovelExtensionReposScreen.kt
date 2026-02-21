@@ -72,7 +72,7 @@ class NovelExtensionReposScreen : Screen() {
             },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { screenModel.showDialog(NovelRepoDialog.CreateJs) },
+                    onClick = { screenModel.showDialog(NovelRepoDialog.ChooseType) },
                 ) {
                     Icon(
                         imageVector = Icons.Outlined.Add,
@@ -143,27 +143,24 @@ class NovelExtensionReposScreen : Screen() {
                             )
                         }
                     }
-
-                    item(key = "add-kotlin-repo") {
-                        TextButton(
-                            onClick = { screenModel.showDialog(NovelRepoDialog.CreateKotlin) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = MaterialTheme.padding.medium),
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Add,
-                                contentDescription = null,
-                                modifier = Modifier.padding(end = MaterialTheme.padding.small),
-                            )
-                            Text("Add Kotlin extension repo")
-                        }
-                    }
                 }
             }
 
             when (val dialog = successState.dialog) {
                 null -> {}
+                is NovelRepoDialog.ChooseType -> {
+                    RepoTypeChooserDialog(
+                        onDismissRequest = screenModel::dismissDialog,
+                        onChooseJs = {
+                            screenModel.dismissDialog()
+                            screenModel.showDialog(NovelRepoDialog.CreateJs)
+                        },
+                        onChooseKotlin = {
+                            screenModel.dismissDialog()
+                            screenModel.showDialog(NovelRepoDialog.CreateKotlin)
+                        },
+                    )
+                }
                 is NovelRepoDialog.CreateJs -> {
                     NovelRepoCreateDialog(
                         onDismissRequest = screenModel::dismissDialog,
@@ -298,8 +295,8 @@ private fun NovelRepoCreateDialog(
         },
         confirmButton = {
             TextButton(
-                onClick = { onCreate(name, url) },
-                enabled = name.isNotBlank() && url.isNotBlank(),
+                onClick = { onCreate(name.ifBlank { url }, url) },
+                enabled = url.isNotBlank(),
             ) {
                 Text(text = stringResource(MR.strings.action_add))
             }
@@ -466,6 +463,29 @@ private fun KotlinRepoConflictDialog(
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
                 Text(text = stringResource(MR.strings.action_cancel))
+            }
+        },
+    )
+}
+
+@Composable
+private fun RepoTypeChooserDialog(
+    onDismissRequest: () -> Unit,
+    onChooseJs: () -> Unit,
+    onChooseKotlin: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        title = { Text(text = "Add Repository") },
+        text = { Text(text = "Choose the type of repository to add:") },
+        confirmButton = {
+            TextButton(onClick = onChooseKotlin) {
+                Text(text = "Kotlin Extension")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onChooseJs) {
+                Text(text = "JS Plugin")
             }
         },
     )

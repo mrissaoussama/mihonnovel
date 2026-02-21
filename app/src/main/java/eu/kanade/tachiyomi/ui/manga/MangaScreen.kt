@@ -44,6 +44,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.presentation.util.isTabletUi
 import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.Source
+import eu.kanade.tachiyomi.source.getNameForMangaInfo
 import eu.kanade.tachiyomi.source.isLocalOrStub
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.browse.source.browse.BrowseSourceScreen
@@ -156,7 +157,17 @@ class MangaScreen(
             onFilterButtonClicked = screenModel::showSettingsDialog,
             onRefresh = screenModel::fetchAllFromSource,
             onContinueReading = { continueReading(context, screenModel.getNextUnreadChapter()) },
-            onSearch = { query, global -> scope.launch { performSearch(navigator, query, global) } },
+            onSearch = { query, global ->
+                scope.launch {
+                    val source = screenModel.source
+                    // If clicking the source name, navigate directly to BrowseSourceScreen
+                    if (!global && source != null && query == source.getNameForMangaInfo()) {
+                        navigator.push(BrowseSourceScreen(source.id, null))
+                    } else {
+                        performSearch(navigator, query, global)
+                    }
+                }
+            },
             onCoverClicked = screenModel::showCoverDialog,
             onShareClicked = {
                 shareManga(context, screenModel.manga, screenModel.source)
@@ -205,8 +216,17 @@ class MangaScreen(
                     initialSelection = dialog.initialSelection,
                     onDismissRequest = onDismissRequest,
                     onEditCategories = { navigator.push(CategoryScreen()) },
-                    onConfirm = { include, _ ->
-                        screenModel.moveMangaToCategoriesAndAddToLibrary(dialog.manga, include)
+                    onConfirm = { addCategories, removeCategories ->
+                        val currentSelected = dialog.initialSelection
+                            .filter {
+                                it is tachiyomi.core.common.preference.CheckboxState.State.Checked ||
+                                    it is tachiyomi.core.common.preference.CheckboxState.TriState.Include
+                            }
+                            .map { it.value.id }
+                            .toMutableSet()
+                        currentSelected.addAll(addCategories)
+                        currentSelected.removeAll(removeCategories.toSet())
+                        screenModel.moveMangaToCategoriesAndAddToLibrary(dialog.manga, currentSelected.toList())
                     },
                 )
             }

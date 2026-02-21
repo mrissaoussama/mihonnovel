@@ -52,6 +52,22 @@ object SettingsNovelDownloadScreen : SearchableSettings {
 
     override val supportsReset: Boolean get() = true
 
+    @Composable
+    override fun getAdditionalResetPreferences(): List<tachiyomi.core.common.preference.Preference<*>> {
+        val prefs = remember { Injekt.get<NovelDownloadPreferences>() }
+        return listOf(
+            prefs.downloadDelay(),
+            prefs.randomDelayRange(),
+            prefs.parallelNovelDownloads(),
+            prefs.maxImageSizeKb(),
+            prefs.imageCompressionQuality(),
+            prefs.updateDelay(),
+            prefs.parallelNovelUpdates(),
+            prefs.massImportDelay(),
+            prefs.parallelMassImport(),
+        )
+    }
+
     @ReadOnlyComposable
     @Composable
     override fun getTitleRes() = MR.strings.pref_category_novel_downloads

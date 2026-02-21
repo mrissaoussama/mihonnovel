@@ -10,6 +10,8 @@ import eu.kanade.tachiyomi.source.Source
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.util.TextSplitter
 import mihon.core.archive.archiveReader
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.manga.model.Manga
@@ -27,6 +29,7 @@ internal class DownloadPageLoader(
 ) : PageLoader() {
 
     private val context: Application by injectLazy()
+    private val readerPreferences: ReaderPreferences by injectLazy()
 
     private var archivePageLoader: ArchivePageLoader? = null
 
@@ -75,13 +78,20 @@ internal class DownloadPageLoader(
             val uriString = page.uri?.toString() ?: ""
             logcat { "DownloadPageLoader: Processing page ${page.index}, uri=$uriString" }
 
-            val textContent = if (uriString.endsWith(".html")) {
+            var textContent = if (uriString.endsWith(".html")) {
                 logcat { "DownloadPageLoader: Reading HTML content from $uriString" }
                 context.contentResolver.openInputStream(page.uri!!)?.use {
                     it.bufferedReader().readText()
                 }
             } else {
                 null
+            }
+            // Apply auto-split if enabled
+            if (textContent != null && readerPreferences.novelAutoSplitText().get()) {
+                val wordCount = readerPreferences.novelAutoSplitWordCount().get()
+                if (wordCount > 0) {
+                    textContent = TextSplitter.splitText(textContent, wordCount)
+                }
             }
 
             logcat { "DownloadPageLoader: Page ${page.index} has ${textContent?.length ?: 0} chars of text" }

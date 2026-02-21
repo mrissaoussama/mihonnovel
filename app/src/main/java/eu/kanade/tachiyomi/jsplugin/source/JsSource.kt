@@ -107,7 +107,9 @@ class JsSource(
         if (!codeLooksTruncated(original)) return original
 
         return try {
-            logcat(LogPriority.WARN) { "JsSource[${plugin.id}]: plugin code looks truncated (len=${original.length}); re-downloading from $url" }
+            logcat(LogPriority.WARN) {
+                "JsSource[${plugin.id}]: plugin code looks truncated (len=${original.length}); re-downloading from $url"
+            }
             val response = networkHelper.client.newCall(GET(url)).execute()
             if (!response.isSuccessful) {
                 logcat(LogPriority.WARN) { "JsSource[${plugin.id}]: re-download failed HTTP ${response.code}" }
@@ -127,7 +129,9 @@ class JsSource(
      * Get or create a cached plugin instance to avoid expensive re-initialization.
      * Must be called from jsDispatcher to ensure proper JNI environment.
      */
-    private suspend fun getOrCreateInstance(): eu.kanade.tachiyomi.jsplugin.runtime.PluginInstance = withContext(jsDispatcher) {
+    private suspend fun getOrCreateInstance(): eu.kanade.tachiyomi.jsplugin.runtime.PluginInstance = withContext(
+        jsDispatcher,
+    ) {
         synchronized(instanceLock) {
             val now = System.currentTimeMillis()
             val existing = cachedInstance
@@ -233,7 +237,7 @@ class JsSource(
                         globalThis.__tsundoku_done_$token = true;
                     }
                 })();
-                """.trimIndent()
+                """.trimIndent(),
             )
 
             // Poll for completion with proper async waiting
@@ -260,14 +264,16 @@ class JsSource(
             val jsonResult = instance.execute("globalThis.__tsundoku_result_$token") as? String
 
             // Cleanup global variables AFTER reading
-            instance.execute("""
+            instance.execute(
+                """
                 delete globalThis.__tsundoku_result_$token;
                 delete globalThis.__tsundoku_error_$token;
                 delete globalThis.__tsundoku_done_$token;
                 if (globalThis.__clearCheerioCache) {
                     globalThis.__clearCheerioCache();
                 }
-            """.trimIndent())
+                """.trimIndent(),
+            )
 
             // Check for errors - "null" string from error means no error, not "Plugin error: null"
             if (!error.isNullOrEmpty() && error != "null") {
@@ -281,7 +287,8 @@ class JsSource(
             // Invalidate on SyntaxError or critical errors
             val message = e.message.orEmpty()
             if (message.contains("SyntaxError", ignoreCase = true) ||
-                message.contains("vm is not cached", ignoreCase = true)) {
+                message.contains("vm is not cached", ignoreCase = true)
+            ) {
                 invalidateInstance()
             }
             throw e
@@ -294,8 +301,9 @@ class JsSource(
         try {
             logcat(LogPriority.DEBUG) { "JsSource[${plugin.id}].getPopularManga: page=$page" }
             // Fetch page content and execute plugin
-            val result = executePluginMethod("plugin.popularNovels($page, { showLatestNovels: false, filters: plugin.filters })")
-            logcat(LogPriority.DEBUG) { "JsSource[${plugin.id}].getPopularManga: result ${result}" }
+            val result =
+                executePluginMethod("plugin.popularNovels($page, { showLatestNovels: false, filters: plugin.filters })")
+            logcat(LogPriority.DEBUG) { "JsSource[${plugin.id}].getPopularManga: result $result" }
             parseMangasPage(result, page)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Error in getPopularManga for ${plugin.name}" }
@@ -306,8 +314,9 @@ class JsSource(
     override suspend fun getLatestUpdates(page: Int): MangasPage = withContext(Dispatchers.IO) {
         try {
             logcat(LogPriority.DEBUG) { "JsSource[${plugin.id}].getLatestUpdates: page=$page" }
-            val result = executePluginMethod("plugin.popularNovels($page, { showLatestNovels: true, filters: plugin.filters })")
-            logcat(LogPriority.DEBUG) { "JsSource[${plugin.id}].getLatestUpdates: result${result}" }
+            val result =
+                executePluginMethod("plugin.popularNovels($page, { showLatestNovels: true, filters: plugin.filters })")
+            logcat(LogPriority.DEBUG) { "JsSource[${plugin.id}].getLatestUpdates: result$result" }
             parseMangasPage(result, page)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Error in getLatestUpdates for ${plugin.name}" }
@@ -315,7 +324,9 @@ class JsSource(
         }
     }
 
-    override suspend fun getSearchManga(page: Int, query: String, filters: FilterList): MangasPage = withContext(Dispatchers.IO) {
+    override suspend fun getSearchManga(page: Int, query: String, filters: FilterList): MangasPage = withContext(
+        Dispatchers.IO,
+    ) {
         try {
             val escapedQuery = query.replace("'", "\\'").replace("\"", "\\\"")
 
@@ -340,11 +351,15 @@ class JsSource(
             } else if (hasActiveFilters) {
                 // Use popularNovels with user-modified filters
                 val filtersJs = convertFiltersToJs(filters)
-                val result = executePluginMethod("plugin.popularNovels($page, { showLatestNovels: false, filters: $filtersJs })")
+                val result =
+                    executePluginMethod("plugin.popularNovels($page, { showLatestNovels: false, filters: $filtersJs })")
                 parseMangasPage(result, page)
             } else {
                 // Default to popular with plugin's original filters
-                val result = executePluginMethod("plugin.popularNovels($page, { showLatestNovels: false, filters: plugin.filters })")
+                val result =
+                    executePluginMethod(
+                        "plugin.popularNovels($page, { showLatestNovels: false, filters: plugin.filters })",
+                    )
                 parseMangasPage(result, page)
             }
         } catch (e: Exception) {
@@ -472,12 +487,16 @@ class JsSource(
             val totalPages = try {
                 val obj = json.parseToJsonElement(result).jsonObject
                 obj["totalPages"]?.jsonPrimitive?.content?.toIntOrNull() ?: 1
-            } catch (_: Exception) { 1 }
+            } catch (_: Exception) {
+                1
+            }
 
-         val needsPaging = (chapters.isEmpty() && totalPages >= 0) || totalPages > 0
+            val needsPaging = (chapters.isEmpty() && totalPages >= 0) || totalPages > 0
             if (needsPaging) {
                 val startPage = if (chapters.isEmpty()) 1 else 2
-                logcat(LogPriority.DEBUG) { "JsSource[$pluginId]: Paged source detected, totalPages=$totalPages, startPage=$startPage, existingChapters=${chapters.size}" }
+                logcat(LogPriority.DEBUG) {
+                    "JsSource[$pluginId]: Paged source detected, totalPages=$totalPages, startPage=$startPage, existingChapters=${chapters.size}"
+                }
                 for (page in startPage..totalPages) {
                     try {
                         val pageResult = executePluginMethod("plugin.parsePage('$path', '$page')")
@@ -489,7 +508,7 @@ class JsSource(
                 }
             }
 
-       val total = chapters.size
+            val total = chapters.size
             chapters.forEachIndexed { index, chapter ->
                 // Only override chapter_number if the plugin didn't provide one
                 // (default SChapter chapter_number is -1)
@@ -548,7 +567,10 @@ class JsSource(
             if (settingsJson.isBlank() || settingsJson == "{}" || settingsJson == "null") return
 
             val settings = json.parseToJsonElement(settingsJson).jsonObject
-            val prefs = screen.context.getSharedPreferences("jsplugin_storage_$pluginId", android.content.Context.MODE_PRIVATE)
+            val prefs = screen.context.getSharedPreferences(
+                "jsplugin_storage_$pluginId",
+                android.content.Context.MODE_PRIVATE,
+            )
 
             settings.forEach { (key, value) ->
                 val settingObj = value as? JsonObject ?: return@forEach
@@ -568,7 +590,7 @@ class JsSource(
                             setOnPreferenceChangeListener { _, newValue ->
                                 val boolVal = newValue as? Boolean ?: false
                                 prefs.edit().putString(key, boolVal.toString()).apply()
-                                logcat(LogPriority.DEBUG) { "[${pluginId}] Switch pref '$key' changed: $boolVal" }
+                                logcat(LogPriority.DEBUG) { "[$pluginId] Switch pref '$key' changed: $boolVal" }
                                 true
                             }
                         }
@@ -625,7 +647,6 @@ class JsSource(
             jsonValue
         }
     }
-
 
     // Parsing helpers
 
@@ -779,13 +800,20 @@ class JsSource(
                         }
                         date_upload = try {
                             chapterObj["releaseTime"]?.jsonPrimitive?.content?.let { dateStr ->
-                                if (dateStr.contains("T")) java.time.Instant.parse(dateStr).toEpochMilli()
-                                else dateFormat.parse(dateStr)?.time ?: 0L
+                                if (dateStr.contains("T")) {
+                                    java.time.Instant.parse(dateStr).toEpochMilli()
+                                } else {
+                                    dateFormat.parse(dateStr)?.time ?: 0L
+                                }
                             } ?: 0L
-                        } catch (_: Exception) { 0L }
+                        } catch (_: Exception) {
+                            0L
+                        }
                         scanlator = chapterObj["page"]?.jsonPrimitive?.content
                     }
-                } catch (_: Exception) { null }
+                } catch (_: Exception) {
+                    null
+                }
             }
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to parse page chapters: $jsonResult" }
@@ -867,6 +895,7 @@ class JsSource(
     ) : Filter.Group<JsTriState>(name, triStates) {
         /** Get included values */
         fun includedValues(): List<String> = state.filter { it.isIncluded() }.map { it.value }
+
         /** Get excluded values */
         fun excludedValues(): List<String> = state.filter { it.isExcluded() }.map { it.value }
     }
@@ -883,7 +912,9 @@ class JsSource(
         val key: String,
         defaultValue: String = "",
     ) : Filter.Text(name) {
-        init { state = defaultValue }
+        init {
+            state = defaultValue
+        }
     }
 
     /** Switch filter that stores the original JSON key */
@@ -921,7 +952,9 @@ class JsSource(
                 val defaultValue = filterObj["value"]?.jsonPrimitive?.content
                 val defaultIndex = if (defaultValue != null) {
                     options.indexOfFirst { it.second == defaultValue }.takeIf { it >= 0 } ?: 0
-                } else 0
+                } else {
+                    0
+                }
 
                 filters.add(JsSelectFilter(label, key, options, defaultIndex))
             }
@@ -1035,5 +1068,3 @@ class JsSource(
         }
     }
 }
-
-

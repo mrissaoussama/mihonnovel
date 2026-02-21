@@ -245,7 +245,7 @@ class ReaderViewModel @JvmOverloads constructor(
                 if (chapterPageIndex >= 0) {
                     // Restore from SavedState
                     currentChapter.requestedPage = chapterPageIndex
-                } else if (!currentChapter.chapter.read) {
+                } else {
                     currentChapter.requestedPage = currentChapter.chapter.last_page_read
                 }
                 chapterId = currentChapter.chapter.id!!
@@ -781,7 +781,11 @@ class ReaderViewModel @JvmOverloads constructor(
         if (!incognitoMode && page.status !is Page.State.Error) {
             readerChapter.chapter.last_page_read = pageIndex
 
-            if (readerChapter.pages?.lastIndex == pageIndex) {
+            // For novel chapters each chapter has exactly 1 page (the full text).
+            // Marking complete via page-index would always fire on selection.
+            // Novel completion is handled by saveNovelProgress (marks at >=95%).
+            val isNovelChapter = manga?.isNovel == true && (readerChapter.pages?.size ?: 0) <= 1
+            if (!isNovelChapter && readerChapter.pages?.lastIndex == pageIndex) {
                 updateChapterProgressOnComplete(readerChapter)
             }
 

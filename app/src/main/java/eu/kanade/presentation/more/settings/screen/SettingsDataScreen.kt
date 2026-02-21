@@ -4,6 +4,7 @@ import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.provider.DocumentsContract
 import androidx.activity.compose.ManagedActivityResultLauncher
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -164,8 +165,30 @@ object SettingsDataScreen : SearchableSettings {
         }
 
         return remember(storageDir) {
-            val file = UniFile.fromUri(context, storageDir.toUri())
-            file?.displayablePath
+            val uri = storageDir.toUri()
+            var displayPath: String? = try {
+                UniFile.fromUri(context, uri)?.displayablePath
+            } catch (_: Exception) {
+                null
+            }
+
+            // Parse the SAF document ID to produce a human-readable /storage/… path.
+            if (displayPath == null || displayPath.startsWith("content://")) {
+                if (uri.authority == "com.android.externalstorage.documents") {
+                    try {
+                        val docId = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                            ?: runCatching { DocumentsContract.getDocumentId(uri) }.getOrNull()
+                        if (docId != null) {
+                            val parts = docId.split(":", limit = 2)
+                            if (parts.size == 2) {
+                                val root = if (parts[0] == "primary") "/storage/emulated/0" else "/storage/${parts[0]}"
+                                displayPath = if (parts[1].isEmpty()) root else "$root/${parts[1]}"
+                            }
+                        }
+                    } catch (_: Exception) { }
+                }
+            }
+            displayPath
         } ?: stringResource(MR.strings.invalid_location, storageDir)
     }
 

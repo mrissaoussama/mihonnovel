@@ -1,5 +1,6 @@
 package eu.kanade.tachiyomi.ui.browse.source.browse
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -115,6 +116,11 @@ data class BrowseSourceScreen(
                 }
                 else -> navigator.pop()
             }
+        }
+
+        // Intercept system back button with the same threshold logic
+        BackHandler(enabled = true) {
+            navigateUp()
         }
 
         if (screenModel.source is StubSource) {

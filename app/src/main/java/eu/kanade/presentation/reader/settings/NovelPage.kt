@@ -16,8 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -42,9 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.PrimaryScrollableTabRow
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Tab
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -56,7 +52,6 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -157,47 +152,6 @@ private val backgroundColors = listOf(
     "Charcoal" to 0xFF292832.toInt(),
     "Custom" to Int.MIN_VALUE,
 )
-
-@Composable
-internal fun ColumnScope.NovelPage(screenModel: ReaderSettingsScreenModel) {
-    val pagerState = rememberPagerState(pageCount = { 4 })
-    val scope = rememberCoroutineScope()
-    val renderingMode by screenModel.preferences.novelRenderingMode().collectAsState()
-
-    val tabs = listOf(
-        stringResource(MR.strings.novel_tab_reading),
-        stringResource(MR.strings.novel_tab_appearance),
-        stringResource(MR.strings.novel_tab_controls),
-        stringResource(MR.strings.novel_tab_advanced),
-    )
-
-    PrimaryScrollableTabRow(
-        selectedTabIndex = pagerState.currentPage,
-        edgePadding = 0.dp,
-    ) {
-        tabs.forEachIndexed { index, title ->
-            Tab(
-                selected = pagerState.currentPage == index,
-                onClick = { scope.launch { pagerState.animateScrollToPage(index) } },
-                text = { Text(title) },
-            )
-        }
-    }
-
-    HorizontalPager(
-        state = pagerState,
-        modifier = Modifier.weight(1f),
-    ) { page ->
-        Column(modifier = Modifier.fillMaxWidth()) {
-            when (page) {
-                0 -> NovelReadingTab(screenModel, renderingMode)
-                1 -> NovelAppearanceTab(screenModel, renderingMode)
-                2 -> NovelControlsTab(screenModel, renderingMode)
-                3 -> NovelAdvancedTab(screenModel, renderingMode)
-            }
-        }
-    }
-}
 
 @Composable
 internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel, renderingMode: String) {
@@ -334,10 +288,10 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
     // Word count threshold (only shown when enabled)
     if (autoSplitEnabled) {
         SliderItem(
-            label = "Split word count (x100)",
-            value = autoSplitWordCount / 100,
-            valueRange = 1..20,
-            onChange = { screenModel.preferences.novelAutoSplitWordCount().set(it * 100) },
+            label = "Split word count (×50)",
+            value = autoSplitWordCount / 50,
+            valueRange = 1..40,
+            onChange = { screenModel.preferences.novelAutoSplitWordCount().set(it * 50) },
         )
     }
 }
