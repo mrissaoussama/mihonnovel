@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "258226299730",
+    "project_id": "tsundoku-3278b",
+    "storage_bucket": "tsundoku-3278b.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258226299730:android:c81918ca6fd2feebcb108b",
+        "android_client_info": {
+          "package_name": "app.tsundoku"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3vZSJPW1SBK3gf13OcNoLDbJZAO2n16Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:258226299730:android:edec154f3390e1fccb108b",
+        "android_client_info": {
+          "package_name": "app.tsundoku.debug"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3vZSJPW1SBK3gf13OcNoLDbJZAO2n16Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
