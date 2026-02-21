@@ -14,7 +14,6 @@ import tachiyomi.domain.manga.model.Manga
 /**
  * Test to verify identity-based caching in LibraryScreenModel.getFavoritesFlow()
  * prevents massive object allocation on every library update.
- *
  * - Uses reference equality (===) to detect unchanged LibraryManga objects
  * - Reuses cached LibraryItem for unchanged manga
  * - Only creates new LibraryItem for the newly added manga
@@ -24,7 +23,6 @@ class LibraryScreenModelCachingTest {
 
     @Test
     fun `identity caching should reuse LibraryItem when LibraryManga reference unchanged`() = runTest {
-        // Create test manga objects
         val manga1 = createTestLibraryManga(id = 1L, title = "Manga 1")
         val manga2 = createTestLibraryManga(id = 2L, title = "Manga 2")
 
@@ -37,8 +35,6 @@ class LibraryScreenModelCachingTest {
         // When using reference equality, list1[0] === list2[0] should be true
         (list1[0] === list2[0]) shouldBe true
         (list1[1] === list2[1]) shouldBe true
-
-        // This verifies the test setup is correct for identity-based caching
     }
 
     @Test
@@ -47,10 +43,8 @@ class LibraryScreenModelCachingTest {
         val manga2 = createTestLibraryManga(id = 2L, title = "Manga 2")
         val manga3 = createTestLibraryManga(id = 3L, title = "Manga 3")
 
-        // Initial list
         val list1 = listOf(manga1, manga2)
 
-        // Simulate addToLibrary: append manga3 to existing list
         val list2 = list1 + manga3
 
         // Original items should be same references
@@ -59,6 +53,7 @@ class LibraryScreenModelCachingTest {
 
         // New item is a different reference
         (list2[2] === manga3) shouldBe true
+
     }
 
     @Test
@@ -68,6 +63,7 @@ class LibraryScreenModelCachingTest {
 
         (manga1a == manga1b) shouldBe true
         (manga1a === manga1b) shouldBe false
+
     }
 
     @Test
@@ -85,6 +81,7 @@ class LibraryScreenModelCachingTest {
         val secondEmission = stateFlow.value
 
         (firstEmission[0] === secondEmission[0]) shouldBe true
+
     }
 
     private fun createTestLibraryManga(
@@ -100,9 +97,14 @@ class LibraryScreenModelCachingTest {
         )
         return LibraryManga(
             manga = manga,
-            category = 0L,
-            unreadCount = unreadCount,
+            categories = listOf(0L),
             totalChapters = totalChapters,
+            readCount = totalChapters - unreadCount,
+            bookmarkCount = 0L,
+            latestUpload = 0L,
+            chapterFetchedAt = 0L,
+            lastRead = 0L,
+            downloadCount = 0L,
         )
     }
 }
