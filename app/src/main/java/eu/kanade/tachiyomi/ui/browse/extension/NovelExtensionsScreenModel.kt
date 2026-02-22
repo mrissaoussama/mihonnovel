@@ -103,7 +103,7 @@ class NovelExtensionsScreenModel(
             ) { query, downloads, (_updates, _installed, _available, _untrusted), jsAvailable, jsInstalled ->
                 val searchQuery = query ?: ""
 
-                val itemsGroups: ItemGroups = mutableMapOf()
+                buildMap {
 
                 // Build extensions from available plugins
                 val jsExtensions = jsAvailable.map { plugin ->
@@ -173,7 +173,7 @@ class NovelExtensionsScreenModel(
                 val updates = (_updates.filter { it.isNovel } + jsUpdates)
                     .filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
                 if (updates.isNotEmpty()) {
-                    itemsGroups[ExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending)] = updates
+                    put(ExtensionUiModel.Header.Resource(MR.strings.ext_updates_pending), updates)
                 }
 
                 val installed = (
@@ -185,7 +185,7 @@ class NovelExtensionsScreenModel(
                     it.isNovel
                 }.filter(queryFilter(searchQuery)).map(extensionMapper(downloads))
                 if (installed.isNotEmpty() || untrusted.isNotEmpty()) {
-                    itemsGroups[ExtensionUiModel.Header.Resource(MR.strings.ext_installed)] = (installed + untrusted)
+                    put(ExtensionUiModel.Header.Resource(MR.strings.ext_installed), installed + untrusted)
                 }
 
                 val languagesWithExtensions = (
@@ -201,10 +201,9 @@ class NovelExtensionsScreenModel(
                     }
 
                 if (languagesWithExtensions.isNotEmpty()) {
-                    itemsGroups.putAll(languagesWithExtensions)
+                    putAll(languagesWithExtensions)
                 }
-
-                itemsGroups
+                }
             }
                 .collectLatest {
                     mutableState.update { state ->

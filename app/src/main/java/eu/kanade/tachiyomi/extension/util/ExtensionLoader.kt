@@ -19,7 +19,7 @@ import eu.kanade.tachiyomi.util.storage.copyAndSetReadOnlyTo
 import eu.kanade.tachiyomi.util.system.ChildFirstPathClassLoader
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.coroutineScope
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import uy.kohesive.injekt.injectLazy
@@ -116,7 +116,7 @@ internal object ExtensionLoader {
      *
      * @param context The application context.
      */
-    fun loadExtensions(context: Context): List<LoadResult> {
+    suspend fun loadExtensions(context: Context): List<LoadResult> {
         val pkgManager = context.packageManager
 
         val installedPkgs = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -190,15 +190,14 @@ internal object ExtensionLoader {
         if (extPkgs.isEmpty()) return emptyList()
 
         // Load each extension concurrently and wait for completion
-        return runBlocking {
+        return coroutineScope {
             // Preload trusted fingerprints ONCE before loading all extensions
             // This prevents N database queries when loading N extensions
             trustExtension.preloadTrustedFingerprints()
 
-            val deferred = extPkgs.map {
+            extPkgs.map {
                 async { loadExtension(context, it) }
-            }
-            deferred.awaitAll()
+            }.awaitAll()
         }
     }
 

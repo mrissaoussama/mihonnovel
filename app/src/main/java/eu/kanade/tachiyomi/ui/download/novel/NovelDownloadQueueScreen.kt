@@ -33,8 +33,10 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.SmallExtendedFloatingActionButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.animateFloatingActionButton
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -56,7 +58,6 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
-import tachiyomi.presentation.core.components.material.ExtendedFloatingActionButton
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -92,41 +93,39 @@ object NovelDownloadQueueScreen : Screen() {
                 )
             },
             floatingActionButton = {
-                AnimatedVisibility(
-                    visible = downloadList.isNotEmpty(),
-                    enter = fadeIn(),
-                    exit = fadeOut(),
-                ) {
-                    ExtendedFloatingActionButton(
-                        text = {
-                            Text(
-                                text = if (isRunning) {
-                                    stringResource(MR.strings.action_pause)
-                                } else {
-                                    stringResource(MR.strings.action_resume)
-                                },
-                            )
-                        },
-                        icon = {
-                            Icon(
-                                imageVector = if (isRunning) {
-                                    Icons.Outlined.Pause
-                                } else {
-                                    Icons.Default.PlayArrow
-                                },
-                                contentDescription = null,
-                            )
-                        },
-                        onClick = {
-                            if (isRunning) {
-                                screenModel.pauseDownloads()
+                SmallExtendedFloatingActionButton(
+                    text = {
+                        Text(
+                            text = if (isRunning) {
+                                stringResource(MR.strings.action_pause)
                             } else {
-                                screenModel.startDownloads()
-                            }
-                        },
-                        expanded = fabExpanded,
-                    )
-                }
+                                stringResource(MR.strings.action_resume)
+                            },
+                        )
+                    },
+                    icon = {
+                        Icon(
+                            imageVector = if (isRunning) {
+                                Icons.Outlined.Pause
+                            } else {
+                                Icons.Default.PlayArrow
+                            },
+                            contentDescription = null,
+                        )
+                    },
+                    onClick = {
+                        if (isRunning) {
+                            screenModel.pauseDownloads()
+                        } else {
+                            screenModel.startDownloads()
+                        }
+                    },
+                    expanded = fabExpanded,
+                    modifier = Modifier.animateFloatingActionButton(
+                        visible = downloadList.isNotEmpty(),
+                        alignment = Alignment.BottomEnd,
+                    ),
+                )
             },
             modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection),
         ) { contentPadding ->

@@ -43,6 +43,7 @@ CREATE TABLE mangas(
 CREATE INDEX library_favorite_index ON mangas(favorite) WHERE favorite = 1;
 CREATE INDEX mangas_url_index ON mangas(url);
 CREATE INDEX mangas_is_novel_index ON mangas(is_novel);
+CREATE INDEX idx_mangas_source ON mangas(source);
 
 CREATE TRIGGER update_last_favorited_at_mangas
 AFTER UPDATE OF favorite ON mangas
@@ -215,24 +216,18 @@ AND source = :sourceId;
 
 getDuplicateLibraryManga:
 SELECT M._id, M.source, M.url, M.artist, M.author, M.description, M.genre, M.title, M.alternative_titles, M.status, M.thumbnail_url, M.favorite, M.last_update, M.next_update, M.initialized, M.viewer, M.chapter_flags, M.cover_last_modified, M.date_added, M.update_strategy, M.calculate_interval, M.last_modified_at, M.favorite_modified_at, M.version, M.is_syncing, M.notes, M.is_novel,
-  (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id) AS totalCount,
-  (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id AND read = 1) AS readCount
+    (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id) AS totalCount,
+    (SELECT COUNT(*) FROM chapters WHERE manga_id = M._id AND read = 1) AS readCount
 FROM mangas M
 WHERE M.favorite = 1
 AND M._id != :id
 AND lower(trim(M.title)) = lower(trim(:title))
 LIMIT 10;
 
--- Get lightweight ID+title for all favorites (used for Kotlin-side contains comparison)
-getFavoriteIdAndTitle:
-SELECT _id, title
-FROM mangas
-WHERE favorite = 1;
-
--- Find all duplicate groups with exact match (case-insensitive, trimmed)
+-- Find all duplicate groups with exact title match (case-insensitive, trimmed)
 findDuplicatesExact:
 SELECT
-    lower(trim(title)) AS normalized_title,
+    lower(trim(title)) AS normalizedTitle,
     CAST(group_concat(_id) AS TEXT) AS ids,
     count(*) AS duplicate_count
 FROM mangas
@@ -750,4 +745,9 @@ SET
             AND chapters.scanlator = excluded_scanlators.scanlator
         WHERE chapters.manga_id = mangas._id AND excluded_scanlators.scanlator IS NULL
     ), 0)
+WHERE favorite = 1;
+
+getFavoriteIdAndTitle:
+SELECT _id, title
+FROM mangas
 WHERE favorite = 1;
