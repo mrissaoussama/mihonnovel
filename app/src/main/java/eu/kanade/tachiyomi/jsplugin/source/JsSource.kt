@@ -518,6 +518,12 @@ class JsSource(
                 }
             }
 
+            // LNReader plugins return chapters newest-first; reverse to oldest-first
+            // so sourceOrder aligns with chapter_number (chapter 1 = index 0).
+            // The per-source "Reverse chapter list" toggle in SyncChaptersWithSource
+            // can override this if needed.
+            chapters.reverse()
+
             // Cache the result
             chaptersCache[manga.url] = chapters to now
             chapters

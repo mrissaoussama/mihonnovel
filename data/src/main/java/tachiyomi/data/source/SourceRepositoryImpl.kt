@@ -41,6 +41,8 @@ class SourceRepositoryImpl(
 
     override fun getSourcesWithFavoriteCount(): Flow<List<Pair<DomainSource, Long>>> {
         return combine(
+            // Triggers cause multiple table writes per operation, so debounce
+            // collapses them into a single query execution after the burst.
             handler.subscribeToDebouncedList(2.seconds) { mangasQueries.getSourceIdWithFavoriteCount() },
             sourceManager.catalogueSources,
         ) { sourceIdWithFavoriteCount, _ -> sourceIdWithFavoriteCount }

@@ -703,12 +703,8 @@ private fun ColumnScope.ExtensionsPage(
     val availableExtensions by screenModel.extensionsFlow.collectAsState()
     val isLoading by screenModel.isLoading.collectAsState()
 
-    // Load data when first entering this page (only if empty)
-    LaunchedEffect(Unit) {
-        if (availableExtensions.isEmpty()) {
-            screenModel.refreshExtensions()
-        }
-    }
+    // Extensions are now auto-loaded in the ScreenModel's init block
+    // No need for LaunchedEffect here
 
     HeadingItem(MR.strings.label_extensions)
 
@@ -785,7 +781,43 @@ private fun ColumnScope.ExtensionsPage(
             }
         }
 
-        availableExtensions.forEach { extensionInfo ->
+        // Separate manga and novel sources when showing "All" type
+        val mangaSources = if (screenModel.type == eu.kanade.tachiyomi.ui.library.LibraryScreenModel.LibraryType.All) {
+            availableExtensions.filter { !it.isNovel }
+        } else {
+            emptyList()
+        }
+        val novelSources = if (screenModel.type == eu.kanade.tachiyomi.ui.library.LibraryScreenModel.LibraryType.All) {
+            availableExtensions.filter { it.isNovel }
+        } else {
+            emptyList()
+        }
+        val showSeparator = screenModel.type == eu.kanade.tachiyomi.ui.library.LibraryScreenModel.LibraryType.All && 
+                             mangaSources.isNotEmpty() && novelSources.isNotEmpty()
+
+        val sourcesToShow = if (screenModel.type == eu.kanade.tachiyomi.ui.library.LibraryScreenModel.LibraryType.All) {
+            mangaSources + novelSources
+        } else {
+            availableExtensions
+        }
+
+        sourcesToShow.forEachIndexed { index, extensionInfo ->
+            // Add divider between manga and novel sections
+            if (showSeparator && index == mangaSources.size) {
+                Spacer(modifier = Modifier.height(8.dp))
+                androidx.compose.material3.HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = TabbedDialogPaddings.Horizontal),
+                    thickness = 1.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                Text(
+                    text = "Novel Sources",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = TabbedDialogPaddings.Horizontal, vertical = 4.dp),
+                )
+            }
+
             // Extension is checked if it's NOT in the excluded set
             val isChecked = extensionInfo.sourceId.toString() !in excludedExtensions
             Row(

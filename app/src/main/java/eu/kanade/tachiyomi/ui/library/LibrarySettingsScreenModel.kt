@@ -38,6 +38,7 @@ data class ExtensionInfo(
     val sourceId: Long,
     val sourceName: String,
     val isStub: Boolean = false,
+    val isNovel: Boolean = false,
 )
 
 class LibrarySettingsScreenModel(
@@ -92,6 +93,12 @@ class LibrarySettingsScreenModel(
     // Flags to track if we've attempted to load from disk cache
     private val _extensionsLoaded = AtomicBoolean(false)
     private val _tagsLoaded = AtomicBoolean(false)
+
+    init {
+        // Auto-load extensions on initialization to fix first-time loading issue
+        // This ensures data is ready when the UI is displayed
+        refreshExtensions()
+    }
 
     fun toggleFilter(preference: (LibraryPreferences) -> Preference<TriState>) {
         preference(libraryPreferences).getAndSet {
@@ -235,7 +242,7 @@ class LibrarySettingsScreenModel(
                     if (shouldInclude) {
                         // Add (JS) suffix for JS plugin sources
                         val displayName = if (source is JsSource) "${source.name} (JS)" else source.name
-                        ExtensionInfo(sourceId, displayName, isStub)
+                        ExtensionInfo(sourceId, displayName, isStub, isNovel)
                     } else null
                 }.sortedWith(
                     compareBy<ExtensionInfo> { it.sourceId != 0L && it.sourceId != 1L }
