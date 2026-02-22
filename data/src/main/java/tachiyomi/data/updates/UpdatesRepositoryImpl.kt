@@ -6,7 +6,6 @@ import tachiyomi.data.DatabaseHandler
 import tachiyomi.domain.manga.model.MangaCover
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.domain.updates.repository.UpdatesRepository
-import kotlin.time.Duration.Companion.seconds
 
 class UpdatesRepositoryImpl(
     private val databaseHandler: DatabaseHandler,
@@ -35,7 +34,7 @@ class UpdatesRepositoryImpl(
         bookmarked: Boolean?,
         hideExcludedScanlators: Boolean,
     ): Flow<List<UpdatesWithRelations>> {
-        return databaseHandler.subscribeToDebouncedList(1.seconds) {
+        return databaseHandler.subscribeToList {
             updatesQueries.getRecentUpdates(
                 after = after,
                 limit = limit,
@@ -53,7 +52,7 @@ class UpdatesRepositoryImpl(
         after: Long,
         limit: Long,
     ): Flow<List<UpdatesWithRelations>> {
-        return databaseHandler.subscribeToDebouncedList(1.seconds) {
+        return databaseHandler.subscribeToList {
             updatesQueries.getUpdatesByReadStatus(
                 read = read,
                 after = after,

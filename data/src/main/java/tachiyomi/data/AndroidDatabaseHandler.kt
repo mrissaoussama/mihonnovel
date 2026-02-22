@@ -71,7 +71,19 @@ class AndroidDatabaseHandler(
         window: Duration,
         block: Database.() -> Query<T>,
     ): Flow<List<T>> {
-        return block(db).asFlow().debounce(window).mapToList(queryDispatcher)
+        return kotlinx.coroutines.flow.flow {
+            var isFirst = true
+            block(db).asFlow()
+                .debounce {
+                    if (isFirst) {
+                        isFirst = false
+                        kotlin.time.Duration.ZERO
+                    } else {
+                        window
+                    }
+                }
+                .collect { emit(it) }
+        }.mapToList(queryDispatcher)
     }
 
     override fun <T : Any> subscribeToOne(block: Database.() -> Query<T>): Flow<T> {
