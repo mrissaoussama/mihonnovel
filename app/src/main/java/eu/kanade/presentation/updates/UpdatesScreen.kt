@@ -7,12 +7,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.FilterList
 import androidx.compose.material.icons.outlined.FlipToBack
 import androidx.compose.material.icons.outlined.GridView
 import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.SelectAll
 import androidx.compose.material.icons.outlined.ViewList
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -45,6 +48,7 @@ import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
+import tachiyomi.presentation.core.theme.active
 import java.time.LocalDate
 import kotlin.time.Duration.Companion.seconds
 
@@ -62,11 +66,13 @@ fun UpdateScreen(
     onMultiBookmarkClicked: (List<UpdatesItem>, bookmark: Boolean) -> Unit,
     onMultiMarkAsReadClicked: (List<UpdatesItem>, read: Boolean) -> Unit,
     onMultiDeleteClicked: (List<UpdatesItem>) -> Unit,
-    onUpdateSelected: (UpdatesItem, Boolean, Boolean, Boolean) -> Unit,
+    onUpdateSelected: (UpdatesItem, Boolean, Boolean) -> Unit,
     onOpenChapter: (UpdatesItem) -> Unit,
     onFilterSelected: (UpdatesFilter) -> Unit = {},
+    onFilterClicked: () -> Unit,
+    hasActiveFilters: Boolean,
     onToggleGroupByNovel: () -> Unit = {},
-    onClickNovelGroup: (Long) -> Unit = {}, // Navigate to manga screen
+    onClickNovelGroup: (Long) -> Unit = {},
     onClearUpdatesCacheClicked: () -> Unit = {},
 ) {
     BackHandler(enabled = state.selectionMode) {
@@ -81,6 +87,8 @@ fun UpdateScreen(
                 onToggleGroupByNovel = onToggleGroupByNovel,
                 onClearUpdatesCacheClicked = onClearUpdatesCacheClicked,
                 groupByNovel = state.groupByNovel,
+                onFilterClicked = { onFilterClicked() },
+                hasFilters = hasActiveFilters,
                 actionModeCounter = state.selected.size,
                 onSelectAll = { onSelectAll(true) },
                 onInvertSelection = { onInvertSelection() },
@@ -203,6 +211,8 @@ private fun UpdatesAppBar(
     onToggleGroupByNovel: () -> Unit,
     onClearUpdatesCacheClicked: () -> Unit,
     groupByNovel: Boolean,
+    onFilterClicked: () -> Unit,
+    hasFilters: Boolean,
     // For action mode
     actionModeCounter: Int,
     onSelectAll: () -> Unit,
@@ -217,6 +227,12 @@ private fun UpdatesAppBar(
         actions = {
             AppBarActions(
                 persistentListOf(
+                    AppBar.Action(
+                        title = stringResource(MR.strings.action_filter),
+                        icon = Icons.Outlined.FilterList,
+                        iconTint = if (hasFilters) MaterialTheme.colorScheme.active else LocalContentColor.current,
+                        onClick = onFilterClicked,
+                    ),
                     AppBar.Action(
                         title = if (groupByNovel) "List View" else "Group by Novel",
                         icon = if (groupByNovel) Icons.Outlined.ViewList else Icons.Outlined.GridView,

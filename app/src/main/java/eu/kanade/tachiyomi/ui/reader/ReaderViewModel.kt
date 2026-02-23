@@ -67,6 +67,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.lang.withUIContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.interactor.GetChaptersByMangaId
+import tachiyomi.domain.chapter.service.getChapterSort
 import tachiyomi.domain.chapter.interactor.UpdateChapter
 import tachiyomi.domain.chapter.model.ChapterUpdate
 import tachiyomi.domain.download.service.DownloadPreferences
@@ -212,7 +213,7 @@ class ReaderViewModel @JvmOverloads constructor(
             else -> chapters
         }
 
-        val sortedChapters = chaptersForReader.sortedBy { it.chapterNumber }
+        val sortedChapters = chaptersForReader.sortedWith(getChapterSort(manga, sortDescending = false))
 
         sortedChapters
             .run {
@@ -245,7 +246,7 @@ class ReaderViewModel @JvmOverloads constructor(
                 if (chapterPageIndex >= 0) {
                     // Restore from SavedState
                     currentChapter.requestedPage = chapterPageIndex
-                } else {
+                } else if (!currentChapter.chapter.read) {
                     currentChapter.requestedPage = currentChapter.chapter.last_page_read
                 }
                 chapterId = currentChapter.chapter.id!!
@@ -739,7 +740,7 @@ class ReaderViewModel @JvmOverloads constructor(
      * if setting is enabled and [currentChapter] is queued for download
      */
     private fun cancelQueuedDownloads(currentChapter: ReaderChapter): Download? {
-        return downloadManager.getQueuedDownloadOrNull(currentChapter.chapter.id!!.toLong())?.also {
+        return downloadManager.getQueuedDownloadOrNull(currentChapter.chapter.id!!)?.also {
             downloadManager.cancelQueuedDownloads(listOf(it))
         }
     }
@@ -835,6 +836,10 @@ class ReaderViewModel @JvmOverloads constructor(
         }
     }
 
+    suspend fun updateHistory() {
+        getCurrentChapter()?.let { updateHistory(it) }
+    }
+
     /**
      * Saves the chapter last read history if incognito mode isn't on.
      */
@@ -897,7 +902,7 @@ class ReaderViewModel @JvmOverloads constructor(
         viewModelScope.launchNonCancellable {
             updateChapter.await(
                 ChapterUpdate(
-                    id = chapter.id!!.toLong(),
+                    id = chapter.id!!,
                     bookmark = bookmarked,
                 ),
             )
@@ -992,7 +997,7 @@ class ReaderViewModel @JvmOverloads constructor(
      */
     fun setMangaReadingMode(readingMode: ReadingMode) {
         val manga = manga ?: return
-        runBlocking(Dispatchers.IO) {
+        viewModelScope.launchIO {
             setMangaViewerFlags.awaitSetReadingMode(manga.id, readingMode.flagValue.toLong())
             val currChapters = state.value.viewerChapters
             if (currChapters != null) {

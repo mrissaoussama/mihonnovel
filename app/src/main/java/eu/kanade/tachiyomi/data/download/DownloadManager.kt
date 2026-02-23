@@ -103,10 +103,10 @@ class DownloadManager(
         return queueState.value.find { it.chapterId == chapterId }
     }
 
-    fun startDownloadNow(chapterId: Long) {
+    suspend fun startDownloadNow(chapterId: Long) {
         val existingDownload = getQueuedDownloadOrNull(chapterId)
         // If not in queue try to start a new download
-        val toAdd = existingDownload ?: runBlocking { Download.fromChapterId(chapterId) } ?: return
+        val toAdd = existingDownload ?: Download.fromChapterId(chapterId) ?: return
         queueState.value.toMutableList().apply {
             existingDownload?.let { remove(it) }
             add(0, toAdd)

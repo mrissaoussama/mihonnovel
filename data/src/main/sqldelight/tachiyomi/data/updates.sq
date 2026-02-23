@@ -23,12 +23,18 @@ SELECT
     M.thumbnail_url AS thumbnailUrl,
     M.cover_last_modified AS coverLastModified,
     C.date_upload AS dateUpload,
-    C.date_fetch AS dateFetch
+    C.date_fetch AS dateFetch,
+    ES.scanlator AS excludedScanlator
 FROM chapters C
 INNER JOIN mangas M ON M._id = C.manga_id
+LEFT JOIN excluded_scanlators ES ON C.manga_id = ES.manga_id AND C.scanlator = ES.scanlator
 WHERE M.favorite = 1
 AND C.date_fetch > M.date_added
 AND C.date_upload > :after
+AND (:filterUnread IS NULL OR C.read != :filterUnread)
+AND (:filterStarted IS NULL OR (CASE WHEN :filterStarted THEN C.last_page_read > 0 ELSE C.last_page_read = 0 END))
+AND (:filterBookmarked IS NULL OR C.bookmark = :filterBookmarked)
+AND (:hideExcludedScanlators = 0 OR ES.scanlator IS NULL)
 ORDER BY C.date_fetch DESC
 LIMIT :limit;
 
@@ -48,9 +54,11 @@ SELECT
     M.thumbnail_url AS thumbnailUrl,
     M.cover_last_modified AS coverLastModified,
     C.date_upload AS dateUpload,
-    C.date_fetch AS dateFetch
+    C.date_fetch AS dateFetch,
+    ES.scanlator AS excludedScanlator
 FROM chapters C
 INNER JOIN mangas M ON M._id = C.manga_id
+LEFT JOIN excluded_scanlators ES ON C.manga_id = ES.manga_id AND C.scanlator = ES.scanlator
 WHERE C.read = :read
 AND C.date_upload > :after
 AND M.favorite = 1

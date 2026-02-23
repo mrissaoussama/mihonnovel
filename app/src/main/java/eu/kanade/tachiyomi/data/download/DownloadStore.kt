@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.core.content.edit
 import eu.kanade.tachiyomi.data.download.model.Download
 import eu.kanade.tachiyomi.source.CatalogueSource
-import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -90,7 +89,7 @@ class DownloadStore(
     /**
      * Returns the list of downloads to restore. It should be called in a background thread.
      */
-    fun restore(): List<Download> {
+    suspend fun restore(): List<Download> {
         val objs = preferences.all
             .mapNotNull { it.value as? String }
             .mapNotNull { deserialize(it) }
@@ -101,10 +100,10 @@ class DownloadStore(
             val cachedManga = mutableMapOf<Long, Manga?>()
             for ((mangaId, chapterId) in objs) {
                 val manga = cachedManga.getOrPut(mangaId) {
-                    runBlocking { getManga.await(mangaId) }
+                    getManga.await(mangaId)
                 } ?: continue
                 val source = sourceManager.get(manga.source) as? CatalogueSource ?: continue
-                val chapter = runBlocking { getChapter.await(chapterId) } ?: continue
+                val chapter = getChapter.await(chapterId) ?: continue
                 downloads.add(
                     Download.from(manga = manga, chapter = chapter, source = source),
                 )

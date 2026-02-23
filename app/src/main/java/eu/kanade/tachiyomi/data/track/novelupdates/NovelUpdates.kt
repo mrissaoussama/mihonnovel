@@ -44,8 +44,6 @@ class NovelUpdates(id: Long) : BaseTracker(id, "NovelUpdates") {
 
     override fun getLogo() = R.drawable.ic_tracker_novelupdates
 
-    override fun getLogoColor(): Int = Color.parseColor("#15A8E6")
-
     override fun getStatusList() = listOf(READING, COMPLETED, ON_HOLD, DROPPED, PLAN_TO_READ)
 
     override fun getStatus(status: Long): StringResource? {
