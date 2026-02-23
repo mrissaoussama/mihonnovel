@@ -1,6 +1,4 @@
--- Migration 13: Create library_cache table for performance optimization
--- This replaces expensive VIEW joins with a pre-computed cache table
--- Updated via triggers when underlying data changes
+-- Migration 13: Create library_cache table
 
 -- Create the library_cache table to store pre-computed library aggregates
 CREATE TABLE IF NOT EXISTS library_cache (

@@ -402,7 +402,6 @@ class Downloader(
 
         // Use a background thread for the heavy lifting of checking file existence
         launchIO {
-            // Optimize: Use batch directory check instead of per-chapter filesystem calls
             val (_, downloadedDirs) = provider.findChapterDirs(chapters, manga, source)
             val downloadedChapterIds = HashSet<Long>(downloadedDirs.size)
             for (i in downloadedDirs.indices) {
@@ -411,7 +410,6 @@ class Downloader(
                 }
             }
 
-            // Avoid O(n^2) scanning of queueState for large chapter lists
             val queuedChapterIds = HashSet<Long>(queueState.value.size)
             for (queued in queueState.value) {
                 queuedChapterIds.add(queued.chapterId)

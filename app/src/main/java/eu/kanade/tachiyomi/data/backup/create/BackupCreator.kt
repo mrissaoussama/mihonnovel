@@ -95,12 +95,9 @@ class BackupCreator(
 
             val nonFavoriteManga = if (options.readEntries) mangaRepository.getReadMangaNotInLibrary() else emptyList()
 
-            // Use getFavoritesEntry to get lightweight objects (IDs/Metadata) avoiding OOM
-            // Description and other heavy fields are null here, we'll fetch them on-demand in batches
             val favorites = mangaRepository.getFavoritesEntry()
             val allManga = favorites + nonFavoriteManga
 
-            // Log library size for debugging OOM issues
             logcat(LogPriority.INFO) { "Backup: Processing ${allManga.size} manga entries" }
 
             // Filter by manga/novel content type based on options
@@ -116,16 +113,11 @@ class BackupCreator(
 
             logcat(LogPriority.INFO) { "Backup: ${filteredManga.size} manga after filtering" }
 
-            // Use streaming protobuf serialization to avoid OOM on large libraries.
-            // Instead of building one huge Backup object and serializing it all at once,
-            // we serialize each BackupManga individually and write the raw protobuf bytes
-            // incrementally to the output stream.
             val backupCategories = backupCategories(options)
             val backupAppPrefs = backupAppPreferences(options)
             val backupExtensionRepos = backupExtensionRepos(options)
             val backupSourcePrefs = backupSourcePreferences(options)
 
-            // Stream-write protobuf directly to gzipped output to avoid holding full backup in memory
             val outputStream = file.openOutputStream()
             (outputStream as? FileOutputStream)?.channel?.truncate(0)
             val gzipOut = outputStream.sink().gzip().buffer()

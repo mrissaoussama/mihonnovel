@@ -448,10 +448,8 @@ class DuplicateDetectionScreenModel(
     suspend fun deleteSelected(deleteManga: Boolean, deleteChapters: Boolean) {
         val selectedIds = state.value.selection.toList()
         screenModelScope.launch(Dispatchers.IO) {
-            // Process in batches of 100 to avoid overwhelming the database
             selectedIds.chunked(100).forEach { batch ->
                 try {
-                    // Batch update for better performance
                     val updates = batch.map { mangaId ->
                         tachiyomi.domain.manga.model.MangaUpdate(
                             id = mangaId,

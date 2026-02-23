@@ -176,10 +176,6 @@ internal class HttpPageLoader(
     private suspend fun internalLoadPage(page: ReaderPage) {
         try {
             // Determine if this page should be treated as novel content
-            // A page is novel content if:
-            // 1. The source implements NovelSource AND
-            // 2. The page doesn't have an actual image URL set (imageUrl field)
-            // Note: page.url is used for fetching content, not as image indicator
             val isNovel = source.isNovelSource()
             val hasActualImageUrl = !page.imageUrl.isNullOrEmpty()
             val hasTextData = !page.text.isNullOrEmpty()

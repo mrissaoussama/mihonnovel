@@ -146,8 +146,6 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
             return
         }
 
-        // Build library index - ultra lightweight query that avoids expensive libraryView JOIN
-        // Only fetches source + url columns directly from mangas table
         val libraryUrlIndex = try {
             mangaRepository.getFavoriteSourceUrlPairs()
                 .asSequence()
@@ -219,10 +217,8 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
         }
 
         // Per-source semaphores to serialize requests to the same source
-        // This ensures only one request per source at a time when throttling is enabled
         val sourceSemaphores = ConcurrentHashMap<Long, Semaphore>()
 
-        // Use Flow with flatMapMerge to control concurrency
         urlsWithSource.asFlow()
             .flatMapMerge(concurrency) { (url, source) ->
                 flow {
@@ -351,9 +347,6 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
         updateBatchStatus(batchId, BatchStatus.Completed)
 
         showCompletionNotification(addedCount.get(), skippedCount.get(), erroredCount.get(), null)
-
-        // Note: Library cache is now refreshed per-manga during processUrlWithSource
-        // to avoid blocking the database with a massive full refresh query
     }
 
     private fun updateBatchStatus(batchId: String, status: BatchStatus) {
@@ -488,7 +481,6 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
                 ),
             )
 
-            // Update in-memory library list so UI shows the new entry immediately
             getLibraryManga.addToLibrary(manga.id)
 
             if (categoryId > 0L) {

@@ -433,7 +433,6 @@ class LibraryScreenModel(
         trackMap: Map<Long, List<Track>>,
         loggedInTrackerIds: Set<Long>,
     ): Map<Category, List</* LibraryItem */ Long>> {
-        // Pre-compute lowercase titles to avoid creating new Strings on every comparison
         val lowercaseTitles = HashMap<Long, String>(favoritesById.size * 2)
         for ((id, item) in favoritesById) {
             lowercaseTitles[id] = item.libraryManga.manga.title.lowercase()
@@ -1526,11 +1525,8 @@ class LibraryScreenModel(
     }
 
     fun reloadLibraryFromDB() {
-        // Force a complete refresh of the library from database
-        // This clears the aggressive cache in GetLibraryManga and reloads all data
         screenModelScope.launchIO {
             logcat { "LibraryScreenModel: User requested library reload" }
-            // Force refresh bypasses the 2-second throttle
             val library = getLibraryManga.refreshForced()
             logcat { "LibraryScreenModel: Library reloaded with ${library.size} items" }
         }

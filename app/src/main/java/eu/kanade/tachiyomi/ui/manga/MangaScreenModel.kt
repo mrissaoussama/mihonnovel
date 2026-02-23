@@ -1445,9 +1445,6 @@ class MangaScreenModel(
             if (details.addToAltTitles && !details.translatedTitle.isNullOrBlank() &&
                 details.translatedTitle != manga.title
             ) {
-                // This logic depends on how alternative titles are stored (usually in description or custom field)
-                // For now, we'll append to description if not already there
-                // Or if there's a specific implementation for alt titles
             }
 
             // Save tags to notes if requested

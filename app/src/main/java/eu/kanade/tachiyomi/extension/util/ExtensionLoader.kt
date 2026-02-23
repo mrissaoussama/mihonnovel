@@ -192,7 +192,6 @@ internal object ExtensionLoader {
         // Load each extension concurrently and wait for completion
         return coroutineScope {
             // Preload trusted fingerprints ONCE before loading all extensions
-            // This prevents N database queries when loading N extensions
             trustExtension.preloadTrustedFingerprints()
 
             extPkgs.map {

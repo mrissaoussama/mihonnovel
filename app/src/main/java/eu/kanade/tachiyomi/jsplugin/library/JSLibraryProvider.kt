@@ -1324,8 +1324,6 @@ class JSLibraryProvider(
                             var text = await r.text();
                             // Handle encoding if specified
                             if (enc && enc.toLowerCase() !== 'utf-8') {
-                                // For non-UTF-8 encodings, the text is already decoded by the server
-                                // This is a simplified approach
                             }
                             return text;
                         },

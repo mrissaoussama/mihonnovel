@@ -220,10 +220,6 @@ class BrowseSourceScreenModel(
      *
      * Note: We use hashCode for comparison because FilterList.equals() always returns false
      * to force recomposition, but we only want new Pagers when filters actually change.
-     *
-     * Optimization: Instead of creating individual DB subscriptions per manga item,
-     * we maintain a single cached flow of library manga for this source and do
-     * in-memory lookups to update favorite status.
      */
     private val hideInLibraryItems = sourcePreferences.hideInLibraryItems().get()
     private fun normalizeUrl(url: String): String = url.trimEnd('/').substringBefore('#')
@@ -258,7 +254,6 @@ class BrowseSourceScreenModel(
                         manga
                     }
                     // Use cached library lookup instead of individual DB subscription
-                    // This StateFlow combines remote manga with library status from cache
                     libraryMangaForSource
                         .map { libraryMap ->
                             libraryMap[normalizedUrl] ?: normalizedManga

@@ -27,7 +27,6 @@ class GetLibraryManga(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
 
-    // Cached library data - ONLY updated via refresh()
     private val _libraryState = MutableStateFlow<List<LibraryManga>>(emptyList())
     private val _isLoading = MutableStateFlow(true)
     private var isInitialized = false
@@ -247,7 +246,7 @@ class GetLibraryManga(
      * where the calling scope is about to be cancelled.
      */
     fun applyMangaDetailUpdateSync(mangaId: Long, updater: (tachiyomi.domain.manga.model.Manga) -> tachiyomi.domain.manga.model.Manga) {
-        // Direct update without mutex since this is called from onDispose where ordering is guaranteed
+        // Direct update without mutex since this is called from onDispose
         val current = _libraryState.value
         val result = ArrayList<LibraryManga>(current.size)
         var changed = false

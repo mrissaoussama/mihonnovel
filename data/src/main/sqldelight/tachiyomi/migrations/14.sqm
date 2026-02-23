@@ -1,5 +1,4 @@
 -- Migration 14: Add download_count to library_cache and create history_cache/updates_cache tables
--- This eliminates expensive VIEW queries for history and updates screens
 
 -- Add download_count column to library_cache for cached download counts
 ALTER TABLE library_cache ADD COLUMN download_count INTEGER NOT NULL DEFAULT 0;

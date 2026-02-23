@@ -272,7 +272,6 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                 displayZoomControls = false
                 cacheMode = WebSettings.LOAD_DEFAULT
                 // Block images/videos if preference is set
-                // Note: using explicit get() to match ReaderPreferences signature
                 val shouldBlock = preferences.novelBlockMedia().get()
                 blockNetworkImage = shouldBlock
                 loadsImagesAutomatically = !shouldBlock

@@ -240,7 +240,6 @@ class LibraryPreferences(
 
     /**
      * Whether the library should auto-refresh when database changes occur.
-     * Disabling this improves performance on large libraries by requiring manual refresh.
      */
     fun autoRefreshLibrary() = preferenceStore.getBoolean("pref_auto_refresh_library", true)
 

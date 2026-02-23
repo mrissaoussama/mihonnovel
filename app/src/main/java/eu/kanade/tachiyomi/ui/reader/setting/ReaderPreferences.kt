@@ -180,11 +180,10 @@ class ReaderPreferences(
     fun novelBlockMedia() = preferenceStore.getBoolean("pref_novel_block_media", false)
 
     // Font color (stored as ARGB int, 0 means use theme default)
-    // Note: Using 0 instead of -1 because 0xFFFFFFFF (white) = -1 as signed int
+    // Note: 0xFFFFFFFF (white) = -1 as signed int, so 0 is used as the "unset" marker
     fun novelFontColor() = preferenceStore.getInt("pref_novel_font_color", 0)
 
     // Background color (stored as ARGB int, 0 means use theme default)
-    // Note: Using 0 instead of -1 because 0xFFFFFFFF (white) = -1 as signed int
     fun novelBackgroundColor() = preferenceStore.getInt("pref_novel_background_color", 0)
 
     // Paragraph indentation in em units (0 = no indent, default 2em)

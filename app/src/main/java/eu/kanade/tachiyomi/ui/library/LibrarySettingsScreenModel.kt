@@ -60,17 +60,12 @@ class LibrarySettingsScreenModel(
             initialValue = trackerManager.loggedInTrackers(),
         )
 
-    // Cached extension list - NO automatic database subscription
-    // Data is loaded only when refreshExtensions() is called
     private val _extensionsFlow = MutableStateFlow<List<ExtensionInfo>>(emptyList())
     val extensionsFlow = _extensionsFlow.asStateFlow()
 
-    // Cached tags with counts - NO automatic database subscription
-    // Data is loaded only when refreshTags() is called
     private val _tagsFlow = MutableStateFlow<List<Pair<String, Int>>>(emptyList())
     val tagsFlow = _tagsFlow.asStateFlow()
 
-    // Cached count of manga with no tags
     private val _noTagsCountFlow = MutableStateFlow(0)
     val noTagsCountFlow = _noTagsCountFlow.asStateFlow()
 
@@ -227,8 +222,6 @@ class LibrarySettingsScreenModel(
                     }
                 }
 
-                // If no cache or forced refresh, load from DB using ultra-lightweight query
-                // This only fetches source IDs, avoiding the expensive libraryView JOIN
                 val sourceIds = getLibraryManga.awaitSourceIds()
                 val extensions = sourceIds.mapNotNull { sourceId ->
                     val source = sourceManager.getOrStub(sourceId)

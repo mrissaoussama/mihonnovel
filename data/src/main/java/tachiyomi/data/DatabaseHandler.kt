@@ -66,13 +66,11 @@ interface DatabaseHandler {
 
     /**
      * Execute REINDEX to rebuild all indexes.
-     * This can improve query performance if indexes have become fragmented.
      */
     suspend fun reindex()
 
     /**
      * Execute ANALYZE to update database statistics used by the query planner.
-     * This can improve query performance by helping SQLite choose better query plans.
      */
     suspend fun analyze()
 

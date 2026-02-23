@@ -161,9 +161,6 @@ class MassImport(
 
         val novelSources = getAllSources() // Support both manga and novel extensions
 
-        // Prefilter: build an in-memory index of library entries to avoid per-URL DB hits.
-        // Key is (sourceId,urlPath) where urlPath matches the stored manga.url format.
-        // Use efficient query that only fetches source_id and url
         val libraryUrlIndex: Set<Pair<Long, String>> = try {
             mangaRepository.getFavoriteSourceAndUrl().toSet()
         } catch (e: Exception) {

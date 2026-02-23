@@ -126,7 +126,6 @@ private val renderingModes = listOf(
 )
 
 // Predefined font colors (ARGB int format, 0 = theme default, Int.MIN_VALUE = custom)
-// Note: Need to use special marker values because white = 0xFFFFFFFF = -1 as signed int
 private val fontColors = listOf(
     "Default" to 0,
     "Black" to 0xFF000000.toInt(),
@@ -140,7 +139,6 @@ private val fontColors = listOf(
 )
 
 // Predefined background colors (ARGB int format, 0 = theme default, Int.MIN_VALUE = custom)
-// Note: Need to use special marker values because white = 0xFFFFFFFF = -1 as signed int
 private val backgroundColors = listOf(
     "Default" to 0,
     "White" to 0xFFFFFFFF.toInt(),
@@ -543,7 +541,6 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
         "Number only" to 1,
         "Both" to 2,
     )
-    // Note: SettingsChipRow already calls HeadingItem internally
     SettingsChipRow(MR.strings.pref_novel_chapter_title_display) {
         titleDisplayOptions.map { (label, value) ->
             FilterChip(

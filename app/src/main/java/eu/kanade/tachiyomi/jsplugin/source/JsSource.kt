@@ -249,7 +249,6 @@ class JsSource(
                 if (done) break
                 attempts++
                 // Give async functions time to execute their Kotlin coroutines
-                // This is necessary because asyncFunction runs actual network requests
                 kotlinx.coroutines.delay(50)
                 // Also process JS microtasks
                 instance.execute("null")

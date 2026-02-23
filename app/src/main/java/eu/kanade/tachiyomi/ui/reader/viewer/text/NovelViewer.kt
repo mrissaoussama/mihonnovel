@@ -892,7 +892,6 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 .drop(1) // Drop initial value
                 .collectLatest { selectable ->
                     // Force reload all chapters by clearing loaded chapters first
-                    // This ensures the text selection property is properly applied
                     activity.runOnUiThread {
                         // Update text selection on existing loaded chapters immediately
                         loadedChapters.forEach { loaded ->
@@ -1731,8 +1730,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         }
 
         val (_, themeTextColor) = getThemeColors(theme)
-        // 0 = default (use theme color), other values are actual colors
-        // Note: 0xFFFFFFFF (white) = -1 as signed int, so we check for 0 as default
+        // 0 = default (use theme color)
         val finalTextColor = if (fontColor != 0) fontColor else themeTextColor
         textView.setTextColor(finalTextColor)
     }

@@ -715,7 +715,6 @@ object SettingsAdvancedScreen : SearchableSettings {
 
                                     val mangaRepo = Injekt.get<MangaRepository>()
 
-                                    // Use lightweight query (id + url only) to avoid OOM from loading full Manga objects
                                     val chunkSize = 50
                                     val favorites = mangaRepo.getFavoriteIdAndUrl()
                                     for (urlChunk in urls.chunked(chunkSize)) {

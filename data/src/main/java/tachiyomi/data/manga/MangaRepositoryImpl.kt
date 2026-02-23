@@ -213,15 +213,12 @@ class MangaRepositoryImpl(
         }
     }
 
-    // Cache library manga to avoid repeated expensive queries
-    // Cache NEVER expires - only GetLibraryManga.refresh() should trigger new queries
     @Volatile
     private var cachedLibraryManga: List<LibraryManga>? = null
     @Volatile
     private var cacheTimestamp: Long = 0
-    private val CACHE_VALIDITY_MS = Long.MAX_VALUE // Never expire - only refresh() triggers query
+    private val CACHE_VALIDITY_MS = Long.MAX_VALUE
 
-    // Cache favorite source/URL pairs for mass import performance
     @Volatile
     private var cachedFavoriteSourceUrl: List<Pair<Long, String>>? = null
     @Volatile
@@ -730,7 +727,6 @@ class MangaRepositoryImpl(
             mangaIds.forEach { mangaId ->
                 mangas_categoriesQueries.deleteMangaCategoryByMangaId(mangaId)
             }
-            // Bulk insert all new manga-category pairs
             mangaIds.forEach { mangaId ->
                 categoryIds.forEach { categoryId ->
                     mangas_categoriesQueries.insertBulkMangaCategory(mangaId, categoryId)
@@ -742,7 +738,6 @@ class MangaRepositoryImpl(
 
     override suspend fun addMangasCategories(mangaIds: List<Long>, categoryIds: List<Long>) {
         handler.await(inTransaction = true) {
-            // Use INSERT OR IGNORE to handle duplicates efficiently
             mangaIds.forEach { mangaId ->
                 categoryIds.forEach { categoryId ->
                     mangas_categoriesQueries.insertBulkMangaCategory(mangaId, categoryId)
@@ -755,7 +750,6 @@ class MangaRepositoryImpl(
     override suspend fun removeMangasCategories(mangaIds: List<Long>, categoryIds: List<Long>) {
         if (mangaIds.isEmpty() || categoryIds.isEmpty()) return
         handler.await(inTransaction = true) {
-            // Use bulk delete for better performance
             mangas_categoriesQueries.deleteBulkMangaCategories(mangaIds, categoryIds)
         }
         invalidateLibraryCacheInternal()
@@ -877,7 +871,6 @@ class MangaRepositoryImpl(
                 return 0
             }
 
-            // Use batch SQL update for better performance
             handler.await(inTransaction = true) {
                 mangasQueries.normalizeUrls()
             }
@@ -966,7 +959,6 @@ class MangaRepositoryImpl(
         return try {
             var removedCount = 0
             val removedItems = mutableListOf<Triple<String, String, String>>()
-            // Map of (source, normalizedUrl) -> first manga that has this normalized URL
             val seenNormalizedUrls = mutableMapOf<Pair<Long, String>, Long>()
             val idsToDelete = mutableListOf<Long>()
 

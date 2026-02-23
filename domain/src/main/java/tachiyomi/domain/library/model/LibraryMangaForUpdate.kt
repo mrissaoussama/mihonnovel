@@ -27,8 +27,6 @@ data class LibraryMangaForUpdate(
     val hasStarted: Boolean
         get() = readCount > 0
 
-    // Extension function to convert to Manga model for legacy compatibility
-    // Note: Fields like description, artist, author will be missing/null
     fun toManga(): tachiyomi.domain.manga.model.Manga {
         return tachiyomi.domain.manga.model.Manga(
             id = id,
@@ -36,7 +34,7 @@ data class LibraryMangaForUpdate(
             favorite = favorite,
             lastUpdate = lastUpdate,
             nextUpdate = nextUpdate,
-            fetchInterval = 0, // Not available in this model
+            fetchInterval = 0,
             dateAdded = 0,
             viewerFlags = 0,
             chapterFlags = 0,
