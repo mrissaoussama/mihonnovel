@@ -1,8 +1,8 @@
 package tachiyomi.core.common
 
 object Constants {
-    const val URL_HELP = "https://tsundoku.app/docs/guides/troubleshooting/"
-    const val URL_HELP_UPCOMING = "https://tsundoku.app/docs/faq/updates/upcoming"
+    const val URL_HELP = "https://tsundoku-otaku.github.io/docs/guides/troubleshooting/"
+    const val URL_HELP_UPCOMING = "https://tsundoku-otaku.github.io/docs/faq/updates/upcoming"
     const val URL_DONATE = "https://opencollective.com/tsundoku/contribute"
 
     const val MANGA_EXTRA = "manga"

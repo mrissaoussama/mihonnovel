@@ -1,6 +1,6 @@
 <div align="center">
 
-<a href="https://tsundoku.app">
+<a href="https://tsundoku-otaku.github.io">
     <img src="./.github/assets/logo.png" alt="Tsundoku logo" title="Tsundoku logo" width="80"/>
 </a>
 
@@ -9,8 +9,8 @@
 ### Full-featured reader
 Discover and read novels and more – easier than ever on your Android device.
 
-[![Discord server](https://img.shields.io/discord/835746409357246465.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/QdcWN4MD63)
-[![GitHub downloads](https://img.shields.io/github/downloads/tsundoku-otaku/tsundoku/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://tsundoku.app/download)
+[![Discord server](https://img.shields.io/discord/1475219284551536653.svg?label=&labelColor=6A7EC2&color=7389D8&logo=discord&logoColor=FFFFFF)](https://discord.gg/RycBkEgrPE)
+[![GitHub downloads](https://img.shields.io/github/downloads/tsundoku-otaku/tsundoku/total?label=downloads&labelColor=27303D&color=0D1117&logo=github&logoColor=FFFFFF&style=flat)](https://tsundoku-otaku.github.io/download)
 
 [![CI](https://img.shields.io/github/actions/workflow/status/tsundoku-otaku/tsundoku/build.yml?labelColor=27303D)](https://github.com/tsundoku-otaku/tsundoku/actions/workflows/build_push.yml)
 [![License: Apache-2.0](https://img.shields.io/github/license/tsundoku-otaku/tsundoku?labelColor=27303D&color=0877d2)](/LICENSE)
@@ -18,8 +18,8 @@ Discover and read novels and more – easier than ever on your Android device.
 
 ## Download
 
-[![Tsundoku Stable](https://img.shields.io/github/release/tsundoku-otaku/tsundoku.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://tsundoku.app/download)
-[![Tsundoku Beta](https://img.shields.io/github/v/release/tsundoku-otaku/tsundoku-preview.svg?maxAge=3600&label=Beta&labelColor=2c2c47&color=1c1c39)](https://tsundoku.app/download)
+[![Tsundoku Stable](https://img.shields.io/github/release/tsundoku-otaku/tsundoku.svg?maxAge=3600&label=Stable&labelColor=06599d&color=043b69)](https://tsundoku-otaku.github.io/download)
+[![Tsundoku Beta](https://img.shields.io/github/v/release/tsundoku-otaku/tsundoku-preview.svg?maxAge=3600&label=Beta&labelColor=2c2c47&color=1c1c39)](https://tsundoku-otaku.github.io/download)
 
 *Requires Android 8.0 or higher.*
 
@@ -46,13 +46,12 @@ Discover and read novels and more – easier than ever on your Android device.
 
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
 
-Before reporting a new issue, take a look at the [FAQ](https://tsundoku.app/docs/faq/general), the [changelog](https://tsundoku.app/changelogs/) and the already opened [issues](https://github.com/tsundoku-otaku/tsundoku/issues); if you got any questions, join our [Discord server](https://discord.gg/QdcWN4MD63).
+Before reporting a new issue, take a look at the [FAQ](https://tsundoku-otaku.github.io/docs/faq/general), the [changelog](https://tsundoku-otaku.github.io/changelogs/) and the already opened [issues](https://github.com/tsundoku-otaku/tsundoku/issues); if you got any questions, join our [Discord server](https://discord.gg/RycBkEgrPE).
 
 
 ### Repositories
 
 [![tsundoku-otaku/website - GitHub](https://github-readme-stats.vercel.app/api/pin/?username=tsundoku-otaku&repo=website&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/tsundoku-otaku/website/)
-[![tsundoku-otaku/bitmap.kt - GitHub](https://github-readme-stats.vercel.app/api/pin/?username=tsundoku-otaku&repo=bitmap.kt&bg_color=161B22&text_color=c9d1d9&title_color=0877d2&icon_color=0877d2&border_radius=8&hide_border=true&description_lines_count=2)](https://github.com/tsundoku-otaku/bitmap.kt/)
 
 ### Credits
 

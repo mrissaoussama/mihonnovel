@@ -93,7 +93,7 @@ body:
           required: true
         - label: I have written a short but informative title.
           required: true
-        - label: I have gone through the [FAQ](https://tsundoku.app/docs/faq/general) and [troubleshooting guide](https://tsundoku.app/docs/guides/troubleshooting/).
+        - label: I have gone through the [FAQ](https://tsundoku-otaku.github.io/docs/faq/general) and [troubleshooting guide](https://tsundoku-otaku.github.io/docs/guides/troubleshooting/).
           required: true
         - label: I have updated the app to version **[0.1.0](https://github.com/tsundoku-otaku/tsundoku/releases/latest)**.
           required: true

@@ -259,7 +259,7 @@ fun WebViewScreenContent(
                                     .clip(MaterialTheme.shapes.small)
                                     .clickable {
                                         uriHandler.openUri(
-                                            "https://tsundoku.app/docs/guides/troubleshooting/#cloudflare",
+                                            "https://tsundoku-otaku.github.io/docs/guides/troubleshooting/#cloudflare",
                                         )
                                     },
                             )

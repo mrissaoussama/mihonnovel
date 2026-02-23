@@ -26,11 +26,11 @@ Before you start, please note that the ability to use following technologies is 
 
 ## Getting help
 
-- Join [the Discord server](https://discord.gg/tsundoku) for online help and to ask questions while developing.
+- Join [the Discord server](https://discord.gg/RycBkEgrPE) for online help and to ask questions while developing.
 
 # Translations
 
-Translations are done externally via Weblate. See [our website](https://tsundoku.app/docs/contribute#translation) for more details.
+Translations are done externally via Weblate. See [our website](https://tsundoku-otaku.github.io/docs/contribute#translation) for more details.
 
 
 # Forks

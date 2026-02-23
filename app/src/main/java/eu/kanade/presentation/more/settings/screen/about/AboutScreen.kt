@@ -157,7 +157,7 @@ object AboutScreen : Screen() {
                 item {
                     TextPreferenceWidget(
                         title = stringResource(MR.strings.privacy_policy),
-                        onPreferenceClick = { uriHandler.openUri("https://tsundoku.app/privacy/") },
+                        onPreferenceClick = { uriHandler.openUri("https://tsundoku-otaku.github.io/privacy/") },
                     )
                 }
 
@@ -171,13 +171,13 @@ object AboutScreen : Screen() {
                         LinkIcon(
                             label = stringResource(MR.strings.website),
                             icon = Icons.Outlined.Public,
-                            url = "https://tsundoku.app",
+                            url = "https://tsundoku-otaku.github.io",
                         )
-                        // LinkIcon(
-                        //     label = "Discord",
-                        //     icon = CustomIcons.Discord,
-                        //     url = "https://discord.gg/tsundoku",
-                        // )
+                        LinkIcon(
+                            label = "Discord",
+                            icon = CustomIcons.Discord,
+                            url = "https://discord.gg/RycBkEgrPE",
+                        )
                         // LinkIcon(
                         //     label = "X",
                         //     icon = CustomIcons.X,
