@@ -39,6 +39,12 @@ jobs:
           git rev-list --count HEAD
           commit_count=$(git rev-list --count HEAD)
           echo "COMMIT_COUNT=$commit_count" >> $GITHUB_ENV
+
+      - name: Verify Commit Count
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
+        run: |
+          set -e
+
           echo "${{ env.COMMIT_COUNT }}"
           test ${{ env.COMMIT_COUNT }} -gt 1 || exit 1
 
