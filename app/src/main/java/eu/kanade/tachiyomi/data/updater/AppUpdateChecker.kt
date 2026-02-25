@@ -4,6 +4,7 @@ import android.content.Context
 import eu.kanade.tachiyomi.BuildConfig
 import eu.kanade.tachiyomi.util.system.isFossBuildType
 import eu.kanade.tachiyomi.util.system.isPreviewBuildType
+import eu.kanade.tachiyomi.util.system.isNightlyBuildType
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.domain.release.interactor.GetApplicationRelease
 import uy.kohesive.injekt.injectLazy
@@ -41,7 +42,9 @@ class AppUpdateChecker {
 }
 
 val GITHUB_REPO: String by lazy {
-    if (isPreviewBuildType) {
+    if (isNightlyBuildType) {
+        "tsundoku-otaku/tsundoku-nightly"
+    } else if (isNightlyBuildType) {
         "tsundoku-otaku/tsundoku-preview"
     } else {
         "tsundoku-otaku/tsundoku"

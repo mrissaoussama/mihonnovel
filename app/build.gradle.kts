@@ -74,6 +74,18 @@ android {
 
             buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = false)}\"")
         }
+        create("nightly") {
+            initWith(release)
+
+            applicationIdSuffix = ".nightly"
+
+            versionNameSuffix = debug.versionNameSuffix
+            signingConfig = debug.signingConfig
+
+            matchingFallbacks.addAll(commonMatchingFallbacks)
+
+            buildConfigField("String", "BUILD_TIME", "\"${getBuildTime(useLastCommitTime = false)}\"")
+        }
         create("benchmark") {
             initWith(release)
 
@@ -90,6 +102,7 @@ android {
 
     sourceSets {
         getByName("preview").res.srcDirs("src/debug/res")
+        getByName("nightly").res.srcDirs("src/debug/res")
         getByName("benchmark").res.srcDirs("src/debug/res")
     }
 
