@@ -26,6 +26,21 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Count Commits
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+
+          git rev-list --count HEAD
+          commit_count=$(git rev-list --count HEAD)
+          echo "COMMIT_COUNT=$commit_count" >> $GITHUB_ENV
+          echo "${{ env.COMMIT_COUNT }}"
+          test ${{ env.COMMIT_COUNT }} -gt 1 || exit 1
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -72,16 +87,9 @@ jobs:
 
       - name: Clean up build artifacts
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
 
-          git rev-list --count HEAD
-          commit_count=$(git rev-list --count HEAD)
-          echo "COMMIT_COUNT=$commit_count" >> $GITHUB_ENV
-          echo "${{ env.COMMIT_COUNT }}"
-          test ${{ env.COMMIT_COUNT }} -eq 1 && exit 1
           mv app/build/outputs/apk/nightly/app-universal-nightly.apk tsundoku-r${{ env.COMMIT_COUNT }}.apk
           mv app/build/outputs/apk/nightly/app-arm64-v8a-nightly.apk tsundoku-arm64-v8a-r${{ env.COMMIT_COUNT }}.apk
           mv app/build/outputs/apk/nightly/app-armeabi-v7a-nightly.apk tsundoku-armeabi-v7a-r${{ env.COMMIT_COUNT }}.apk
