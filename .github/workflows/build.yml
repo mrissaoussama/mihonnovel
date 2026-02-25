@@ -17,8 +17,6 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
-permissions:
-  contents: read
 
 jobs:
   build:
@@ -27,7 +25,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up JDK 17
         uses: actions/setup-java@v5
@@ -42,7 +40,7 @@ jobs:
           build-tools: 34.0.0
 
       - name: Build release APK(s) (unsigned)
-        run: ./gradlew assembleNightly -Pinclude-telemetry -Penable-updater
+        run: ./gradlew assembleNightly -Penable-updater
 
       - name: Run unit tests
         run: ./gradlew testReleaseUnitTest
@@ -59,10 +57,10 @@ jobs:
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
 
-      - name: Sign all release APKs
+      - name: Sign all nightly APKs
         if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
         run: |
-          for apk in app/build/outputs/apk/release/*.apk; do
+          for apk in app/build/outputs/apk/nightly/*.apk; do
             echo "Signing $apk"
             $ANDROID_HOME/build-tools/34.0.0/apksigner sign \
               --ks release.keystore \
@@ -73,14 +71,22 @@ jobs:
           done
 
       - name: Clean up build artifacts
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
 
-          mv app/build/outputs/apk/preview/app-universal-nightly-unsigned.apk tsundoku-r${{ env.COMMIT_COUNT }}.apk
-          mv app/build/outputs/apk/preview/app-arm64-v8a-nightly-unsigned.apk tsundoku-arm64-v8a-r${{ env.COMMIT_COUNT }}.apk
-          mv app/build/outputs/apk/preview/app-armeabi-v7a-nightly-unsigned.apk tsundoku-armeabi-v7a-r${{ env.COMMIT_COUNT }}.apk
-          mv app/build/outputs/apk/preview/app-x86-nightly-unsigned.apk tsundoku-x86-r${{ env.COMMIT_COUNT }}.apk
-          mv app/build/outputs/apk/preview/app-x86_64-nightly-unsigned.apk tsundoku-x86_64-r${{ env.COMMIT_COUNT }}.apk
+          git rev-list --count HEAD
+          commit_count=$(git rev-list --count HEAD)
+          echo "COMMIT_COUNT=$commit_count" >> $GITHUB_ENV
+          echo "${{ env.COMMIT_COUNT }}"
+          test ${{ env.COMMIT_COUNT }} -eq 1 && exit 1
+          mv app/build/outputs/apk/nightly/app-universal-nightly.apk tsundoku-r${{ env.COMMIT_COUNT }}.apk
+          mv app/build/outputs/apk/nightly/app-arm64-v8a-nightly.apk tsundoku-arm64-v8a-r${{ env.COMMIT_COUNT }}.apk
+          mv app/build/outputs/apk/nightly/app-armeabi-v7a-nightly.apk tsundoku-armeabi-v7a-r${{ env.COMMIT_COUNT }}.apk
+          mv app/build/outputs/apk/nightly/app-x86-nightly.apk tsundoku-x86-r${{ env.COMMIT_COUNT }}.apk
+          mv app/build/outputs/apk/nightly/app-x86_64-nightly.apk tsundoku-x86_64-r${{ env.COMMIT_COUNT }}.apk
 
 
       - name: Upload signed APKs
@@ -92,6 +98,7 @@ jobs:
 
 
       - name: Create release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
         uses: softprops/action-gh-release@a06a81a03ee405af7f2048a818ed3f03bbf83c7b # v2.5.0
         with:
           repository: tsundoku-otaku/tsundoku-nightly
@@ -115,6 +122,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.TSUNDOKU_BOT_TOKEN }}
 
       - name: Prune old releases
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' && github.repository == 'tsundoku-otaku/tsundoku'
         uses: dev-drprasad/delete-older-releases@dfbe6be2a006e9475dfcbe5b8d201f1824c2a9fe # v0.3.4
         env:
           GITHUB_TOKEN: ${{ secrets.TSUNDOKU_BOT_TOKEN }}
