@@ -2,10 +2,14 @@ package eu.kanade.tachiyomi.ui.reader.loader
 
 import eu.kanade.tachiyomi.data.cache.ChapterCache
 import eu.kanade.tachiyomi.data.database.models.toDomainChapter
+import eu.kanade.tachiyomi.source.fetchNovelPageText
+import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.Page
 import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.ui.reader.model.ReaderChapter
 import eu.kanade.tachiyomi.ui.reader.model.ReaderPage
+import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
+import eu.kanade.tachiyomi.util.TextSplitter
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,6 +36,7 @@ internal class HttpPageLoader(
     private val chapter: ReaderChapter,
     private val source: HttpSource,
     private val chapterCache: ChapterCache = Injekt.get(),
+    private val readerPreferences: ReaderPreferences = Injekt.get(),
 ) : PageLoader() {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -72,7 +77,7 @@ internal class HttpPageLoader(
         }
         return pages.mapIndexed { index, page ->
             // Don't trust sources and use our own indexing
-            ReaderPage(index, page.url, page.imageUrl)
+            ReaderPage(index, page.url, page.imageUrl, page.text)
         }
     }
 
@@ -164,24 +169,61 @@ internal class HttpPageLoader(
     /**
      * Loads the page, retrieving the image URL and downloading the image if necessary.
      * Downloaded images are stored in the chapter cache.
+     * For novel sources, fetches the text content instead.
      *
      * @param page the page whose source image has to be downloaded.
      */
     private suspend fun internalLoadPage(page: ReaderPage) {
         try {
-            if (page.imageUrl.isNullOrEmpty()) {
-                // Guard: getImageUrl calls imageUrlRequest → GET(page.url, ...).
-                // If page.url is also blank the OkHttp URL parser throws
-                // "expected url scheme http or https but no scheme was found for ''".
-                if (page.url.isBlank()) {
-                    throw IllegalStateException(
-                        "Page ${page.index} has no imageUrl and no intermediate URL for resolution",
-                    )
-                }
+            // Determine if this page should be treated as novel content
+            val isNovel = source.isNovelSource()
+            val hasActualImageUrl = !page.imageUrl.isNullOrEmpty()
+            val hasTextData = !page.text.isNullOrEmpty()
+
+            // If text content is already present, consider this page ready regardless of source flag.
+            if (hasTextData) {
+                page.status = Page.State.Ready
+                return
+            }
+
+            // For NovelSource: treat as novel unless there's an actual image URL
+            // The page.url field is just used for fetchPageText, not for images
+            val treatAsNovel = isNovel && !hasActualImageUrl
+
+            if (treatAsNovel) {
+                // For novels, fetch text content instead of images
                 page.status = Page.State.LoadPage
+                var text = source.fetchNovelPageText(page)
+                if (readerPreferences.novelAutoSplitText().get()) {
+                    val wordCount = readerPreferences.novelAutoSplitWordCount().get()
+                    if (wordCount > 0) {
+                        text = TextSplitter.splitText(text, wordCount)
+                    }
+                }
+                page.text = text
+                page.status = Page.State.Ready
+                return
+            }
+
+            // For manga sources (or novel sources with image pages), handle images
+            // Match mihon: only call getImageUrl when imageUrl is null (not just empty).
+            // Sources like MadTheme set imageUrl="" (empty string) to indicate "no two-step
+            // URL fetch needed" — calling getImageUrl on those would invoke imageUrlRequest(page)
+            // with page.url="" and OkHttp would throw IllegalArgumentException.
+            if (page.imageUrl == null) {
+                page.status = Page.State.LoadPage
+                // Call getImageUrl — extensions like MadTheme override this method and don't
+                // rely on page.url, so it's safe to call when imageUrl was never set.
                 page.imageUrl = source.getImageUrl(page)
             }
-            val imageUrl = page.imageUrl!!
+            val imageUrl = page.imageUrl ?: run {
+                throw IllegalStateException("Page ${page.index}: getImageUrl returned null")
+            }
+
+            // Validate the image URL
+            if (imageUrl.isBlank()) {
+                throw IllegalStateException("Page ${page.index} has an empty image URL")
+            }
 
             if (!chapterCache.isImageInCache(imageUrl)) {
                 page.status = Page.State.DownloadImage

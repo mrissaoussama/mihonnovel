@@ -21,6 +21,12 @@ open class Page @JvmOverloads constructor(
      * Binary compatibility constructor that matches extensions compiled with 4-param Page.
      * Extensions call the synthetic constructor: Page(index, url, imageUrl, uri, defaults, marker)
      * This provides that exact signature.
+     *
+     * Bitmask uses parameter POSITION for bit index (Kotlin convention):
+     *   bit 0 (0x1) = param 0 (index) — no default, always 0
+     *   bit 1 (0x2) = param 1 (url)
+     *   bit 2 (0x4) = param 2 (imageUrl)
+     *   bit 3 (0x8) = param 3 (uri)
      */
     @Suppress("UNUSED_PARAMETER")
     constructor(
@@ -32,9 +38,9 @@ open class Page @JvmOverloads constructor(
         marker: DefaultConstructorMarker?,
     ) : this(
         index = index,
-        url = if (defaults and 0x1 != 0) "" else url ?: "",
-        imageUrl = if (defaults and 0x2 != 0) null else imageUrl,
-        uri = if (defaults and 0x4 != 0) null else uri,
+        url = if (defaults and 0x2 != 0) "" else url ?: "",
+        imageUrl = if (defaults and 0x4 != 0) null else imageUrl,
+        uri = if (defaults and 0x8 != 0) null else uri,
         text = null, // Always null for extensions compiled without text support
     )
 
