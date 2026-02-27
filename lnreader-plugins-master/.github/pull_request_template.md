@@ -1,5 +1,0 @@
-#### Checklist
-
-- [ ] Update version code if an existing plugin was modified
-- [ ] Test changes in Plugin Playground or the app
-- [ ] Reference related issues in the PR body (e.g. Closes #xyz)
