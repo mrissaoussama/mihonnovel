@@ -13,8 +13,16 @@ val updaterEnabled: Boolean
 val isDebugBuildType: Boolean
     inline get() = BuildConfig.BUILD_TYPE == "debug"
 
+val isNightlyBuildType: Boolean
+    inline get() = BuildConfig.BUILD_TYPE == "nightly"
+
+    //isNightly must always be checked before isPreview in any statements
+    // This is because isPreview is always true if isNightly is true
+    // Did this because adding an argument to AppUpdateChecker seemed complicated.
+    // The only desired differences are two if statements in
+    // repo target and build name, anyway.
 val isPreviewBuildType: Boolean
-    inline get() = BuildConfig.BUILD_TYPE == "preview"
+    inline get() = BuildConfig.BUILD_TYPE == "preview" || BuildConfig.BUILD_TYPE == "nightly"
 
 val isReleaseBuildType: Boolean
     inline get() = BuildConfig.BUILD_TYPE == "release"
