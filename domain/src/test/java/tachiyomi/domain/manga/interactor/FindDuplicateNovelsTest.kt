@@ -42,7 +42,8 @@ class FindDuplicateNovelsTest {
         val mangaWithCount2 = MangaWithChapterCount(manga2, 20, 10)
 
         coEvery { mangaRepository.findDuplicatesExact() } returns listOf(group)
-        coEvery { mangaRepository.getMangaWithCountsLight(listOf(1L, 2L)) } returns listOf(mangaWithCount1, mangaWithCount2)
+        coEvery { mangaRepository.getMangaWithCountsLight(listOf(1L, 2L)) } returns
+            listOf(mangaWithCount1, mangaWithCount2)
 
         // Act
         val result = findDuplicateNovels.findDuplicatesGrouped(DuplicateMatchMode.EXACT)
@@ -65,7 +66,8 @@ class FindDuplicateNovelsTest {
             1L to "Novel",
             2L to "Novel Extended Title",
         )
-        coEvery { mangaRepository.getMangaWithCountsLight(listOf(1L, 2L)) } returns listOf(mangaWithCount1, mangaWithCount2)
+        coEvery { mangaRepository.getMangaWithCountsLight(listOf(1L, 2L)) } returns
+            listOf(mangaWithCount1, mangaWithCount2)
 
         // Act
         val result = findDuplicateNovels.findDuplicatesGrouped(DuplicateMatchMode.CONTAINS)

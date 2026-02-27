@@ -6,9 +6,9 @@ import tachiyomi.domain.manga.repository.DuplicatePair
 import tachiyomi.domain.manga.repository.MangaRepository
 
 enum class DuplicateMatchMode {
-    EXACT,      // Exact title match (case-insensitive, trimmed)
-    CONTAINS,   // One title contains another
-    URL,        // Same URL within the same extension/source
+    EXACT, // Exact title match (case-insensitive, trimmed)
+    CONTAINS, // One title contains another
+    URL, // Same URL within the same extension/source
 }
 
 /**
@@ -77,7 +77,6 @@ class FindDuplicateNovels(
      * Returns novels in library that match or contain the title.
      */
     suspend fun findSimilarTo(mangaId: Long, title: String): List<MangaWithChapterCount> {
-
         val exactMatches = mangaRepository.findDuplicatesExact()
             .find { group -> group.ids.contains(mangaId) }
             ?.ids?.filter { it != mangaId }

@@ -1012,6 +1012,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             // setTextIsSelectable MUST be called and we should NOT override movementMethod
             // Android internally sets up the correct movement method for selection when this is true
             setTextIsSelectable(isSelectable)
+            
+            // Prevent TextView.setText from implicitly swapping out our movementMethod
+            // with LinkMovementMethod when it detects ClickableSpans (which causes selection cancellation logs).
+            linksClickable = false
 
             // For text selection to work, we need to ensure the textview can receive focus
             if (isSelectable) {
@@ -1030,19 +1034,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
 
             setOnTouchListener { v, event ->
                 val textView = v as TextView
-                if (preferences.novelTextSelectable().get()) {
+                if (preferences.novelTextSelectable().get() && textView.hasSelection()) {
                     when (event.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            v.parent?.requestDisallowInterceptTouchEvent(true)
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            if (!textView.hasSelection()) {
-                                v.parent?.requestDisallowInterceptTouchEvent(false)
-                            }
-                        }
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                            v.parent?.requestDisallowInterceptTouchEvent(false)
-                        }
+                        MotionEvent.ACTION_DOWN -> v.parent?.requestDisallowInterceptTouchEvent(true)
+                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> v.parent?.requestDisallowInterceptTouchEvent(false)
                     }
                 }
                 false // Let the TextView handle the event

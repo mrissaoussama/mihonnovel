@@ -211,7 +211,7 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
             val entryPath = resolveZipPath(basePath, page)
             getInputStream(entryPath)?.use { inputStream ->
                 val document = Jsoup.parse(inputStream, null, "")
-                
+
                 // Inline images as Base64 to support NovelViewer
                 val imageBasePath = getParentDirectory(entryPath)
                 document.select("img[src], image[xlink:href]").forEach { img ->
@@ -345,7 +345,7 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
 
         return getInputStream(entryPath)?.use { inputStream ->
             val document = Jsoup.parse(inputStream, null, "")
-            
+
             // Inline images as Base64 to support NovelViewer
             val imageBasePath = getParentDirectory(entryPath)
             document.select("img[src], image[xlink:href]").forEach { img ->

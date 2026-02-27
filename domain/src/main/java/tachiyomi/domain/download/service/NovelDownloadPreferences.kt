@@ -130,7 +130,7 @@ class NovelDownloadPreferences(
         return try {
             val json = sourceOverrides().get()
             if (json.isEmpty() || json == "{}") return null
-            
+
             val overrides = kotlinx.serialization.json.Json.decodeFromString<Map<String, SourceOverride>>(json)
             overrides[sourceId.toString()]
         } catch (e: Exception) {
@@ -149,7 +149,7 @@ class NovelDownloadPreferences(
             } else {
                 kotlinx.serialization.json.Json.decodeFromString<MutableMap<String, SourceOverride>>(currentJson)
             }
-            
+
             overrides[override.sourceId.toString()] = override
             val newJson = kotlinx.serialization.json.Json.encodeToString(overrides)
             sourceOverrides().set(newJson)
@@ -165,10 +165,12 @@ class NovelDownloadPreferences(
         try {
             val currentJson = sourceOverrides().get()
             if (currentJson.isEmpty() || currentJson == "{}") return
-            
-            val overrides = kotlinx.serialization.json.Json.decodeFromString<MutableMap<String, SourceOverride>>(currentJson)
+
+            val overrides = kotlinx.serialization.json.Json.decodeFromString<MutableMap<String, SourceOverride>>(
+                currentJson,
+            )
             overrides.remove(sourceId.toString())
-            
+
             val newJson = if (overrides.isEmpty()) {
                 "{}"
             } else {
@@ -187,7 +189,7 @@ class NovelDownloadPreferences(
         return try {
             val json = sourceOverrides().get()
             if (json.isEmpty() || json == "{}") return emptyList()
-            
+
             val overrides = kotlinx.serialization.json.Json.decodeFromString<Map<String, SourceOverride>>(json)
             overrides.values.toList()
         } catch (e: Exception) {

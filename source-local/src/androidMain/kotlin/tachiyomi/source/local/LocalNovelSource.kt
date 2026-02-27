@@ -39,13 +39,13 @@ import tachiyomi.source.local.io.Format
 import tachiyomi.source.local.io.LocalNovelSourceFileSystem
 import tachiyomi.source.local.metadata.fillMetadata
 import uy.kohesive.injekt.injectLazy
-import java.io.InputStream
 import java.io.ByteArrayInputStream
+import java.io.InputStream
+import java.net.HttpURLConnection
+import java.net.URL
 import java.nio.charset.StandardCharsets
 import kotlin.time.Duration.Companion.days
 import tachiyomi.domain.source.model.Source as DomainSource
-import java.net.HttpURLConnection
-import java.net.URL
 
 actual class LocalNovelSource(
     private val context: Context,
@@ -220,12 +220,16 @@ actual class LocalNovelSource(
                                     if (cover != null) {
                                         if (cover.startsWith("http://") || cover.startsWith("https://")) {
                                             downloadCoverBytes(cover)?.let { bytes ->
-                                                logcat(LogPriority.INFO) { "LocalNovelSource: Downloaded external cover $cover" }
+                                                logcat(LogPriority.INFO) {
+                                                    "LocalNovelSource: Downloaded external cover $cover"
+                                                }
                                                 coverManager.update(manga, ByteArrayInputStream(bytes))
                                             }
                                         } else {
                                             epub.getInputStream(cover)?.use { stream ->
-                                                logcat(LogPriority.INFO) { "LocalNovelSource: Extracted embedded cover $cover" }
+                                                logcat(LogPriority.INFO) {
+                                                    "LocalNovelSource: Extracted embedded cover $cover"
+                                                }
                                                 coverManager.update(manga, stream)
                                             }
                                         }

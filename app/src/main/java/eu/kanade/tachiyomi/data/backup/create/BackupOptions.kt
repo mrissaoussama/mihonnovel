@@ -39,7 +39,7 @@ data class BackupOptions(
     companion object {
         val libraryOptions = persistentListOf(
             Entry(
-                label = MR.strings.manga,
+                label = MR.strings.label_library,
                 getter = BackupOptions::libraryEntries,
                 setter = { options, enabled -> options.copy(libraryEntries = enabled) },
             ),

@@ -17,7 +17,7 @@ class CreateExtensionRepo(
     suspend fun await(indexUrl: String): Result {
         // Allow any URL, but try to append index.min.json if it looks like a base URL
         val url = indexUrl.toHttpUrlOrNull()?.toString() ?: return Result.InvalidUrl
-        
+
         val formattedIndexUrl = if (url.endsWith("/index.min.json")) {
             url
         } else {

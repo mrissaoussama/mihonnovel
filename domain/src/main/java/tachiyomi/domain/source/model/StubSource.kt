@@ -34,7 +34,7 @@ class StubSource(
                 isNovelSource = source.isNovelSource,
             )
         }
-        
+
         /**
          * Create a StubSource that preserves the full display name (including markers like "(JS)")
          */

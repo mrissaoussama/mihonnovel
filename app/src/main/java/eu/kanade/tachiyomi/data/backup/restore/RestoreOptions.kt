@@ -6,6 +6,8 @@ import tachiyomi.i18n.MR
 
 data class RestoreOptions(
     val libraryEntries: Boolean = true,
+    val includeManga: Boolean = true,
+    val includeNovels: Boolean = true,
     val categories: Boolean = true,
     val appSettings: Boolean = true,
     val extensionRepoSettings: Boolean = true,
@@ -18,6 +20,8 @@ data class RestoreOptions(
         appSettings,
         extensionRepoSettings,
         sourceSettings,
+        includeManga,
+        includeNovels,
     )
 
     fun canRestore() = libraryEntries || categories || appSettings || extensionRepoSettings || sourceSettings
@@ -28,6 +32,18 @@ data class RestoreOptions(
                 label = MR.strings.label_library,
                 getter = RestoreOptions::libraryEntries,
                 setter = { options, enabled -> options.copy(libraryEntries = enabled) },
+            ),
+            Entry(
+                label = MR.strings.label_manga,
+                getter = RestoreOptions::includeManga,
+                setter = { options, enabled -> options.copy(includeManga = enabled) },
+                enabled = { it.libraryEntries },
+            ),
+            Entry(
+                label = MR.strings.label_novels,
+                getter = RestoreOptions::includeNovels,
+                setter = { options, enabled -> options.copy(includeNovels = enabled) },
+                enabled = { it.libraryEntries },
             ),
             Entry(
                 label = MR.strings.categories,
@@ -57,6 +73,8 @@ data class RestoreOptions(
             appSettings = array[2],
             extensionRepoSettings = array[3],
             sourceSettings = array[4],
+            includeManga = array.getOrElse(5) { true },
+            includeNovels = array.getOrElse(6) { true },
         )
     }
 
@@ -64,5 +82,6 @@ data class RestoreOptions(
         val label: StringResource,
         val getter: (RestoreOptions) -> Boolean,
         val setter: (RestoreOptions, Boolean) -> RestoreOptions,
+        val enabled: (RestoreOptions) -> Boolean = { true },
     )
 }

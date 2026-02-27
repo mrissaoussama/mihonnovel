@@ -5,7 +5,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.manga.repository.MangaRepository
 
 /**
-  * Interactor for recomputing library aggregate columns on the mangas table.
+ * Interactor for recomputing library aggregate columns on the mangas table.
  *
  * Aggregates (total_count, read_count, etc.) are stored directly on the mangas table
  * and maintained automatically by database triggers. This interactor can be used to:
@@ -32,7 +32,4 @@ class RefreshLibraryCache(
     suspend fun awaitForManga(mangaId: Long) {
         mangaRepository.refreshLibraryCacheForManga(mangaId)
     }
-
-
-
 }

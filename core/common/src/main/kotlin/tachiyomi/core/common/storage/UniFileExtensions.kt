@@ -9,4 +9,8 @@ val UniFile.nameWithoutExtension: String?
     get() = name?.substringBeforeLast('.')
 
 val UniFile.displayablePath: String
-    get() = try { filePath ?: uri.toString() } catch (_: Exception) { uri?.toString() ?: "" }
+    get() = try {
+        filePath ?: uri.toString()
+    } catch (_: Exception) {
+        uri?.toString() ?: ""
+    }

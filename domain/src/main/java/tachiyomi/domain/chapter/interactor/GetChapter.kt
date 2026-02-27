@@ -17,7 +17,7 @@ class GetChapter(
             null
         }
     }
-    
+
     suspend fun awaitAll(ids: List<Long>): List<Chapter> {
         return try {
             chapterRepository.getChaptersByIds(ids)
