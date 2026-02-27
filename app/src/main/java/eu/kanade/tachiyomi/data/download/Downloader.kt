@@ -509,8 +509,7 @@ class Downloader(
                         url = page.url,
                         imageUrl = page.imageUrl,
                         uri = page.uri,
-                        text = page.text,
-                    )
+                    ).also { it.text = page.text }
                 }
                 download.pages = reIndexedPages
                 reIndexedPages

@@ -545,7 +545,7 @@ class JsSource(
             val result = executePluginMethod("plugin.parseChapter('$path')")
             // For novels, the result is HTML content - return as a single text page
             // Store the chapter URL in the page so fetchPageText can re-fetch if needed
-            listOf(Page(0, chapter.url, "", text = decodeJsonStringIfQuoted(result)))
+            listOf(Page(0, chapter.url, "").also { it.text = decodeJsonStringIfQuoted(result) })
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Error in getPageList for ${plugin.name}" }
             emptyList()

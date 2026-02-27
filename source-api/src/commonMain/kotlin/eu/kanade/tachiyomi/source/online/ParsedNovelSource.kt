@@ -29,7 +29,7 @@ abstract class ParsedNovelSource : ParsedHttpSource(), NovelSource {
      */
     override fun pageListParse(document: Document): List<Page> {
         val content = novelContentParse(document)
-        return listOf(Page(0, text = content))
+        return listOf(Page(0).also { it.text = content })
     }
 
     /**

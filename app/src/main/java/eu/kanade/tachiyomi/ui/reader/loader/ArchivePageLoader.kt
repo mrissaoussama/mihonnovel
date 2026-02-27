@@ -29,7 +29,8 @@ internal class ArchivePageLoader(private val reader: ArchiveReader) : PageLoader
                     null
                 }
 
-                ReaderPage(i, text = textContent).apply {
+                ReaderPage(i).apply {
+                    text = textContent
                     stream = { reader.getInputStream(entry.name)!! }
                     status = Page.State.Ready
                 }

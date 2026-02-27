@@ -6,43 +6,22 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.Transient
-import kotlin.jvm.internal.DefaultConstructorMarker
 
 @Serializable
-open class Page @JvmOverloads constructor(
+open class Page(
     val index: Int,
     val url: String = "",
     var imageUrl: String? = null,
     @Transient var uri: Uri? = null, // Deprecated but can't be deleted due to extensions
-    var text: String? = null, // Added for Novel support - MUST be last for binary compatibility
 ) : ProgressListener {
 
     /**
-     * Binary compatibility constructor that matches extensions compiled with 4-param Page.
-     * Extensions call the synthetic constructor: Page(index, url, imageUrl, uri, defaults, marker)
-     * This provides that exact signature.
-     *
-     * Bitmask uses parameter POSITION for bit index (Kotlin convention):
-     *   bit 0 (0x1) = param 0 (index) — no default, always 0
-     *   bit 1 (0x2) = param 1 (url)
-     *   bit 2 (0x4) = param 2 (imageUrl)
-     *   bit 3 (0x8) = param 3 (uri)
+     * Novel text content. This is a body property (not a constructor parameter)
+     * to preserve binary compatibility with extensions compiled against the
+     * upstream 4-param Page(index, url, imageUrl, uri) constructor.
      */
-    @Suppress("UNUSED_PARAMETER")
-    constructor(
-        index: Int,
-        url: String?,
-        imageUrl: String?,
-        uri: Uri?,
-        defaults: Int,
-        marker: DefaultConstructorMarker?,
-    ) : this(
-        index = index,
-        url = if (defaults and 0x2 != 0) "" else url ?: "",
-        imageUrl = if (defaults and 0x4 != 0) null else imageUrl,
-        uri = if (defaults and 0x8 != 0) null else uri,
-        text = null, // Always null for extensions compiled without text support
-    )
+    @Transient
+    var text: String? = null
 
     val number: Int
         get() = index + 1
