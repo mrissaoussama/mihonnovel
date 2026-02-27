@@ -67,13 +67,20 @@ internal class HttpPageLoader(
      * otherwise fallbacks to network.
      */
     override suspend fun getPages(): List<ReaderPage> {
-        val pages = try {
-            chapterCache.getPageListFromCache(chapter.chapter.toDomainChapter()!!)
-        } catch (e: Throwable) {
-            if (e is CancellationException) {
-                throw e
-            }
+        val pages = if (source.isNovelSource()) {
+            // Novel page text is @Transient — not serializable — so the page-list
+            // cache always returns pages with text=null. Always fetch fresh so that
+            // internalLoadPage sees the text and can mark pages Ready immediately.
             source.getPageList(chapter.chapter)
+        } else {
+            try {
+                chapterCache.getPageListFromCache(chapter.chapter.toDomainChapter()!!)
+            } catch (e: Throwable) {
+                if (e is CancellationException) {
+                    throw e
+                }
+                source.getPageList(chapter.chapter)
+            }
         }
         return pages.mapIndexed { index, page ->
             // Don't trust sources and use our own indexing
