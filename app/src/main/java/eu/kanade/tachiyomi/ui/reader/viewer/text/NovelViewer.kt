@@ -514,19 +514,22 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             // Track chapter index before update to detect chapter change
             val previousChapterIndex = currentChapterIndex
 
-            // Update current chapter based on scroll position first
-            // Skip when isRestoringScroll is set (e.g. cleanupDistantChapters adjusts scroll)
-            // to avoid spurious chapter detection from stale TextVIew layout coordinates.
-            if (!isRestoringScroll) {
+            // Suppress chapter detection and progress saves for a grace period after
+            // chapter entry or view-hierarchy changes (displayChapter / cleanup).
+            // Stale textView.bottom coordinates after addView/removeView would cause
+            // updateCurrentChapterFromScroll to detect the wrong chapter.
+            val inGracePeriod = System.currentTimeMillis() - chapterEntryTime < CHAPTER_ENTRY_GRACE_MS
+
+            // Update current chapter based on scroll position first.
+            // Skip when isRestoringScroll (view hierarchy is being modified) or during
+            // the grace period (layout coordinates may still be stale).
+            if (!isRestoringScroll && !inGracePeriod) {
                 updateCurrentChapterFromScroll(scrollY)
             }
 
             // If chapter changed, skip progress update (onChapterChanged already sent initialProgress)
             val chapterChanged = previousChapterIndex != currentChapterIndex
             if (chapterChanged) return@setOnScrollChangeListener
-
-            // Suppress progress and threshold for a grace period after chapter entry or cleanup.
-            val inGracePeriod = System.currentTimeMillis() - chapterEntryTime < CHAPTER_ENTRY_GRACE_MS
 
             // Calculate progress within the current chapter's text only
             val chapterProgress = calculateCurrentChapterProgress(scrollY)
@@ -920,29 +923,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 }
         }
 
-        // Observe text selection preference separately
-        // Note: setTextIsSelectable() requires recreating the textview to work properly
-        // when toggling at runtime, so we fully reload chapters
+        // Observe text selection preference separately.
+        // Toggling setTextIsSelectable(false) on a TextView that has an active Editor
+        // fires Android's internal "Selection cancelled" warning.  Rather than updating
+        // existing TextViews (which are about to be destroyed anyway), just reload.
         scope.launch {
             preferences.novelTextSelectable().changes()
                 .drop(1) // Drop initial value
-                .collectLatest { selectable ->
-                    // Force reload all chapters by clearing loaded chapters first
+                .collectLatest {
                     activity.runOnUiThread {
-                        // Update text selection on existing loaded chapters immediately
-                        loadedChapters.forEach { loaded ->
-                            clearTextViewSelection(loaded.textView)
-                            loaded.textView.setTextIsSelectable(selectable)
-                            loaded.textView.isFocusable = selectable
-                            loaded.textView.isFocusableInTouchMode = selectable
-                            loaded.textView.isLongClickable = selectable
-                            // Only set LinkOnlyMovementMethod when NOT selectable
-                            // When selectable, setTextIsSelectable sets up the correct movement method
-                            if (!selectable) {
-                                loaded.textView.movementMethod = LinkOnlyMovementMethod
-                            }
-                        }
-                        // Also reload to ensure consistent state
+                        // Fully reload chapters — TextViews will be recreated
+                        // with the correct selection state from the start.
                         currentChapters?.let {
                             contentContainer.removeAllViews()
                             loadedChapters.clear()
@@ -1534,6 +1525,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             currentChapterIndex = loadedChapters.size - 1
         }
 
+        // Suppress scroll events for the entire view-hierarchy modification.
+        // addView/removeView trigger layout recalculation whose scroll events would see
+        // stale textView.bottom coordinates → wrong chapter detection.
+        // Reset is deferred to scrollView.post{} so it happens AFTER the layout pass.
+        isRestoringScroll = true
+
         if (isAppend) {
             val separator = TextView(activity).apply {
                 text = "──────────"
@@ -1541,7 +1538,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 setTextColor(0xFF888888.toInt())
                 gravity = Gravity.CENTER
                 setPadding(16, 48, 16, 48)
-                setTextIsSelectable(true)
+                setTextIsSelectable(preferences.novelTextSelectable().get())
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -1575,6 +1572,14 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         }
 
         cleanupDistantChapters()
+
+        // Defer re-enabling scroll events until AFTER the layout pass completes.
+        // This ensures textView.bottom coordinates are up-to-date before
+        // updateCurrentChapterFromScroll can run again.
+        scrollView.post {
+            isRestoringScroll = false
+            chapterEntryTime = System.currentTimeMillis()
+        }
     }
 
     private val NEXT_CHAPTER_BUTTON_TAG = "next_chapter_button"
@@ -1652,19 +1657,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 }
             }
 
-            // Adjust scroll position to prevent visual jump
+            // Adjust scroll position to prevent visual jump.
             // Content shifted UP by removedHeight, so we must scroll UP by the same amount
             // to keep the viewport on the same content.
-            // Set isRestoringScroll=true so the scroll listener skips chapter detection
-            // while the view hasn't remeasured yet (stale coordinates → wrong chapter index).
-            isRestoringScroll = true
+            // isRestoringScroll is already true (set by displayChapter before addView calls)
+            // and will be reset by displayChapter's scrollView.post{} after the layout pass.
             scrollView.scrollBy(0, -removedHeight)
-            isRestoringScroll = false
-
-            // The scrollBy above fires a scroll event before the layout remeasures,
-            // so headerView.top coordinates are stale. Suppress progress/threshold
-            // for the grace period to avoid spurious ~50% readings.
-            chapterEntryTime = System.currentTimeMillis()
 
             logcat(LogPriority.DEBUG) { "NovelViewer: Removed distant chapter, adjusted scroll by -$removedHeight" }
         }
@@ -2031,10 +2029,16 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
      */
     private fun clearTextViewSelection(textView: TextView) {
         val text = textView.text
-        if (text is android.text.Spannable && android.text.Selection.getSelectionStart(text) >= 0) {
+        if (text is android.text.Spannable && text.isNotEmpty() &&
+            android.text.Selection.getSelectionStart(text) >= 0
+        ) {
             android.text.Selection.removeSelection(text)
         }
-        textView.clearFocus()
+        // Only clearFocus when the view actually has focus, to avoid cascading
+        // focus-change events on other TextViews that could trigger selection warnings.
+        if (textView.isFocused) {
+            textView.clearFocus()
+        }
     }
 
     /**
