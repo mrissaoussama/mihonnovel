@@ -480,9 +480,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                         }
                     }
 
-                    // Check if any child TextView has an active text selection or focus
+                    // Check if any child TextView has an active text selection.
+                    // Only check hasSelection(), NOT isFocused — a focused-but-
+                    // no-selection view should still allow normal scrolling.
                     loadedChapters.forEach { loaded ->
-                        if (loaded.textView.hasSelection() || loaded.textView.isFocused) {
+                        if (loaded.textView.hasSelection()) {
                             isTextSelectionMode = true
                             return false
                         }
@@ -1032,7 +1034,6 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                     when (event.action) {
                         MotionEvent.ACTION_DOWN -> {
                             v.parent?.requestDisallowInterceptTouchEvent(true)
-                            if (!textView.isFocused) textView.requestFocus()
                         }
                         MotionEvent.ACTION_MOVE -> {
                             if (!textView.hasSelection()) {
