@@ -165,7 +165,7 @@ class LibreTranslateEngine(
             .build()
 
         val response = client.newCall(request).execute()
-        val responseBody = response.body.string()
+        val responseBody = response.use { it.body.string() }
 
         if (!response.isSuccessful) {
             val errorCode = when (response.code) {
@@ -231,7 +231,7 @@ class LibreTranslateEngine(
                 .build()
 
             val response = client.newCall(request).execute()
-            val responseBody = response.body.string()
+            val responseBody = response.use { it.body.string() }
 
             if (!response.isSuccessful) return@withContext null
 

@@ -1,0 +1,252 @@
+{
+  "filters": {
+    "genre[]": {
+      "type": "Checkbox",
+      "label": "Genre",
+      "value": [],
+      "options": [
+        {
+          "label": "Action",
+          "value": "action"
+        },
+        {
+          "label": "Adventure",
+          "value": "adventure"
+        },
+        {
+          "label": "BL",
+          "value": "bl"
+        },
+        {
+          "label": "Chasing Wife/Runaway",
+          "value": "chasing-wife-runaway"
+        },
+        {
+          "label": "Childcare",
+          "value": "childcare"
+        },
+        {
+          "label": "Clean & Wholesome",
+          "value": "clean-wholesome"
+        },
+        {
+          "label": "Dark Romance",
+          "value": "dark-romance"
+        },
+        {
+          "label": "Drama",
+          "value": "drama"
+        },
+        {
+          "label": "Enemies to Lovers",
+          "value": "enemies-to-lovers"
+        },
+        {
+          "label": "Epistolary",
+          "value": "epistolary"
+        },
+        {
+          "label": "Fake Relationship",
+          "value": "fake-relationship"
+        },
+        {
+          "label": "Forced Proximity",
+          "value": "forced-proximity-cohabitation"
+        },
+        {
+          "label": "Friends to Lovers",
+          "value": "friends-to-lovers"
+        },
+        {
+          "label": "Gender Bender",
+          "value": "gender-bender"
+        },
+        {
+          "label": "Historical",
+          "value": "historical"
+        },
+        {
+          "label": "Military",
+          "value": "military"
+        },
+        {
+          "label": "Modern Romance",
+          "value": "modern-romance"
+        },
+        {
+          "label": "Mutual Pining",
+          "value": "mutual-pining"
+        },
+        {
+          "label": "Mystery",
+          "value": "mystery"
+        },
+        {
+          "label": "Non-Human Characters",
+          "value": "non-human-characters"
+        },
+        {
+          "label": "Paranormal Romance",
+          "value": "paranormal-romance"
+        },
+        {
+          "label": "Political Intrigue",
+          "value": "political-intrigue"
+        },
+        {
+          "label": "Psychological",
+          "value": "psychological"
+        },
+        {
+          "label": "R19",
+          "value": "r19"
+        },
+        {
+          "label": "Reverse Harem",
+          "value": "reverse-harem"
+        },
+        {
+          "label": "Romance",
+          "value": "romance"
+        },
+        {
+          "label": "Romantic Comedy",
+          "value": "romantic-comedy"
+        },
+        {
+          "label": "Romantic Fantasy",
+          "value": "romantic-fantasy"
+        },
+        {
+          "label": "Romantic Suspense",
+          "value": "romantic-suspense"
+        },
+        {
+          "label": "School Life",
+          "value": "school-life"
+        },
+        {
+          "label": "Sci-fi",
+          "value": "sci-fi"
+        },
+        {
+          "label": "Second Chance Romance",
+          "value": "second-chance-romance"
+        },
+        {
+          "label": "Secret Baby",
+          "value": "secret-baby"
+        },
+        {
+          "label": "Short Story",
+          "value": "short-story"
+        },
+        {
+          "label": "Slice of Life",
+          "value": "slice-of-life"
+        },
+        {
+          "label": "Supernatural",
+          "value": "supernatural"
+        },
+        {
+          "label": "Tragedy",
+          "value": "tragedy"
+        },
+        {
+          "label": "Workplace Romance",
+          "value": "workplace-romance"
+        }
+      ]
+    },
+    "op": {
+      "type": "Switch",
+      "label": "having all selected genres",
+      "value": false
+    },
+    "author": {
+      "type": "Text",
+      "label": "Author",
+      "value": ""
+    },
+    "artist": {
+      "type": "Text",
+      "label": "Artist",
+      "value": ""
+    },
+    "release": {
+      "type": "Text",
+      "label": "Year of Released",
+      "value": ""
+    },
+    "adult": {
+      "type": "Picker",
+      "label": "Adult content",
+      "value": "",
+      "options": [
+        {
+          "label": "All",
+          "value": ""
+        },
+        {
+          "label": "None adult content",
+          "value": "0"
+        },
+        {
+          "label": "Only adult content",
+          "value": "1"
+        }
+      ]
+    },
+    "status[]": {
+      "type": "Checkbox",
+      "label": "Status",
+      "value": [],
+      "options": [
+        {
+          "label": "OnGoing",
+          "value": "on-going"
+        },
+        {
+          "label": "Completed",
+          "value": "end"
+        },
+        {
+          "label": "Canceled",
+          "value": "canceled"
+        },
+        {
+          "label": "On Hold",
+          "value": "on-hold"
+        },
+        {
+          "label": "Upcoming",
+          "value": "upcoming"
+        }
+      ]
+    },
+    "m_orderby": {
+      "type": "Picker",
+      "label": "Order by",
+      "value": "",
+      "options": [
+        {
+          "label": "Relevance",
+          "value": ""
+        },
+        {
+          "label": "Latest",
+          "value": "latest"
+        },
+        {
+          "label": "A-Z",
+          "value": "alphabet"
+        },
+        {
+          "label": "Most Views",
+          "value": "views"
+        }
+      ]
+    }
+  }
+}

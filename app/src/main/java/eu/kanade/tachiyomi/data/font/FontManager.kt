@@ -170,7 +170,7 @@ class FontManager(
                 .build()
 
             val response = networkHelper.client.newCall(request).execute()
-            val css = response.body?.string() ?: throw Exception("Empty response")
+            val css = response.use { it.body?.string() } ?: throw Exception("Empty response")
 
             // Parse font URLs from CSS
             val urlRegex = """url\((https://fonts\.gstatic\.com/[^)]+\.(?:ttf|woff2?))\)""".toRegex()
@@ -191,7 +191,7 @@ class FontManager(
                 .build()
 
             val fontResponse = networkHelper.client.newCall(fontRequest).execute()
-            val fontBytes = fontResponse.body?.bytes()
+            val fontBytes = fontResponse.use { it.body?.bytes() }
                 ?: throw Exception("Failed to download font")
 
             emit(FontDownloadState.Downloading(75))

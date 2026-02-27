@@ -112,7 +112,7 @@ class CustomNovelSource(
                 val ajaxResponse = client.newCall(
                     GET(config.chapterAjax!!.buildAjaxUrl(baseUrl, novelId), headers),
                 ).execute()
-                return parseChapterList(ajaxResponse.asJsoup(), selectors)
+                return ajaxResponse.use { parseChapterList(it.asJsoup(), selectors) }
             }
         }
 

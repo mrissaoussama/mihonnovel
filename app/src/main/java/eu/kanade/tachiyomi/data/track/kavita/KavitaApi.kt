@@ -99,7 +99,7 @@ class KavitaApi(private val client: OkHttpClient, interceptor: KavitaInterceptor
             val listVolumeDto = with(json) {
                 authClient.newCall(GET(requestUrl))
                     .execute()
-                    .parseAs<List<VolumeDto>>()
+                    .use { it.parseAs<List<VolumeDto>>() }
             }
             var volumeNumber = 0L
             var maxChapterNumber = 0L

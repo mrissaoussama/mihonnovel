@@ -159,11 +159,12 @@ class JsPluginManager(
         try {
             // Use URL as is, do not append index or modify
             val response = client.newCall(GET(url)).execute()
-            if (!response.isSuccessful) {
-                throw Exception("HTTP ${response.code}")
+            val body = response.use { resp ->
+                if (!resp.isSuccessful) {
+                    throw Exception("HTTP ${resp.code}")
+                }
+                resp.body?.string() ?: return@withContext emptyList()
             }
-
-            val body = response.body?.string() ?: return@withContext emptyList()
             try {
                 json.decodeFromString<List<JsPlugin>>(body)
             } catch (e: kotlinx.serialization.SerializationException) {
@@ -189,12 +190,13 @@ class JsPluginManager(
 
             // Download plugin code
             val response = client.newCall(GET(plugin.url)).execute()
-            if (!response.isSuccessful) {
-                logcat(LogPriority.ERROR) { "Failed to download plugin ${plugin.name}: HTTP ${response.code}" }
-                return@withContext false
+            val code = response.use { resp ->
+                if (!resp.isSuccessful) {
+                    logcat(LogPriority.ERROR) { "Failed to download plugin ${plugin.name}: HTTP ${resp.code}" }
+                    return@withContext false
+                }
+                resp.body?.string() ?: return@withContext false
             }
-
-            val code = response.body?.string() ?: return@withContext false
 
             // Save to disk
             val pluginFile = dir.createFile("${plugin.id}.js") ?: throw Exception("Failed to create plugin file")
@@ -450,22 +452,24 @@ class JsPluginManager(
                         }
                         try {
                             val response = client.newCall(GET(plugin.url)).execute()
-                            if (response.isSuccessful) {
-                                val fresh = response.body?.string().orEmpty()
-                                if (fresh.isNotBlank() && fresh.contains("exports.default")) {
-                                    file.writeUtf8(fresh)
-                                    code = fresh
-                                    logcat(LogPriority.INFO) {
-                                        "Re-downloaded plugin '$nameWithoutExtension' successfully (len=${fresh.length})"
+                            response.use { resp ->
+                                if (resp.isSuccessful) {
+                                    val fresh = resp.body?.string().orEmpty()
+                                    if (fresh.isNotBlank() && fresh.contains("exports.default")) {
+                                        file.writeUtf8(fresh)
+                                        code = fresh
+                                        logcat(LogPriority.INFO) {
+                                            "Re-downloaded plugin '$nameWithoutExtension' successfully (len=${fresh.length})"
+                                        }
+                                    } else {
+                                        logcat(LogPriority.WARN) {
+                                            "Re-download for '$nameWithoutExtension' returned unexpected content (len=${fresh.length})"
+                                        }
                                     }
                                 } else {
                                     logcat(LogPriority.WARN) {
-                                        "Re-download for '$nameWithoutExtension' returned unexpected content (len=${fresh.length})"
+                                        "Re-download failed for '$nameWithoutExtension': HTTP ${resp.code}"
                                     }
-                                }
-                            } else {
-                                logcat(LogPriority.WARN) {
-                                    "Re-download failed for '$nameWithoutExtension': HTTP ${response.code}"
                                 }
                             }
                         } catch (e: Exception) {

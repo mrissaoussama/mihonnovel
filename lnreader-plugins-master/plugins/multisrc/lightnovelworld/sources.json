@@ -1,0 +1,17 @@
+[
+    {
+        "id": "webnovelworld",
+        "sourceName": "Web Novel Pub",
+        "sourceSite": "https://www.webnovelworld.org/"
+    }, 
+    {
+        "id": "lightnovelpubvip",
+        "sourceName": "LightNovelPub Vip",
+        "sourceSite": "https://lightnovelpub.vip/"
+    },
+    {
+        "id": "lightnovelcave",
+        "sourceName": "LightNovelCave",
+        "sourceSite": "https://www.lightnovelcave.com/"
+    }
+]

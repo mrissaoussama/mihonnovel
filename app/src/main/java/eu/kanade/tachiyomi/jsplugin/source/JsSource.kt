@@ -111,14 +111,16 @@ class JsSource(
                 "JsSource[${plugin.id}]: plugin code looks truncated (len=${original.length}); re-downloading from $url"
             }
             val response = networkHelper.client.newCall(GET(url)).execute()
-            if (!response.isSuccessful) {
-                logcat(LogPriority.WARN) { "JsSource[${plugin.id}]: re-download failed HTTP ${response.code}" }
-                return original
+            response.use { resp ->
+                if (!resp.isSuccessful) {
+                    logcat(LogPriority.WARN) { "JsSource[${plugin.id}]: re-download failed HTTP ${resp.code}" }
+                    return original
+                }
+                val fresh = resp.body?.string().orEmpty()
+                if (fresh.isBlank()) return original
+                logcat(LogPriority.INFO) { "JsSource[${plugin.id}]: re-downloaded plugin code (len=${fresh.length})" }
+                fresh
             }
-            val fresh = response.body?.string().orEmpty()
-            if (fresh.isBlank()) return original
-            logcat(LogPriority.INFO) { "JsSource[${plugin.id}]: re-downloaded plugin code (len=${fresh.length})" }
-            fresh
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "JsSource[${plugin.id}]: re-download failed" }
             original

@@ -178,12 +178,12 @@ class GoogleTranslateScraperEngine : TranslationEngine {
 
             val request = GET(url)
             val response = client.newCall(request).execute()
+            val body = response.use { it.body.string() }
 
             if (!response.isSuccessful) {
                 return text
             }
 
-            val body = response.body.string()
             val jsonArray = json.parseToJsonElement(body).jsonArray
 
             val result = StringBuilder()
@@ -267,7 +267,7 @@ class GoogleTranslateScraperEngine : TranslationEngine {
         try {
             val request = GET("https://translate.google.com")
             val response = client.newCall(request).execute()
-            val body = response.body.string()
+            val body = response.use { it.body.string() }
 
             // Regex to find TKK: "tkk":"427110.1469889687"
             val regex = "tkk\":\"(\\d+\\.\\d+)\"".toRegex()

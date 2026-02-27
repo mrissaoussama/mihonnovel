@@ -27,13 +27,14 @@ class ChapterImageEmbedder(
     private val client: OkHttpClient get() = networkHelper.client
 
     // Regex patterns for finding image URLs in HTML
+    // Pattern requires whitespace between img and src, handles various attribute orderings
     private val imgSrcPattern = Pattern.compile(
-        """<img[^>]+src\s*=\s*["']([^"']+)["'][^>]*>""",
+        """<img\s+[^>]*?src\s*=\s*["']([^"']+)["'][^>]*>""",
         Pattern.CASE_INSENSITIVE,
     )
 
     private val imgSrcsetPattern = Pattern.compile(
-        """<img[^>]+srcset\s*=\s*["']([^"']+)["'][^>]*>""",
+        """<img\s+[^>]*?srcset\s*=\s*["']([^"']+)["'][^>]*>""",
         Pattern.CASE_INSENSITIVE,
     )
 
@@ -156,37 +157,38 @@ class ChapterImageEmbedder(
                 .build()
 
             val response = client.newCall(request).execute()
+            response.use { resp ->
+                if (!resp.isSuccessful) {
+                    logcat(LogPriority.WARN) { "ChapterImageEmbedder: Failed to download $url - ${resp.code}" }
+                    return@withContext null
+                }
 
-            if (!response.isSuccessful) {
-                logcat(LogPriority.WARN) { "ChapterImageEmbedder: Failed to download $url - ${response.code}" }
-                return@withContext null
+                val contentType = resp.header("Content-Type") ?: "image/jpeg"
+                val mimeType = when {
+                    contentType.contains("png") -> "image/png"
+                    contentType.contains("gif") -> "image/gif"
+                    contentType.contains("webp") -> "image/webp"
+                    contentType.contains("svg") -> "image/svg+xml"
+                    else -> "image/jpeg"
+                }
+
+                val imageBytes = resp.body.bytes()
+
+                // Check if compression is needed
+                val maxSizeKb = novelDownloadPreferences.maxImageSizeKb().get()
+                val compressionQuality = novelDownloadPreferences.imageCompressionQuality().get()
+
+                val finalBytes = if (maxSizeKb > 0 && imageBytes.size > maxSizeKb * 1024 && mimeType != "image/svg+xml") {
+                    compressImage(imageBytes, compressionQuality, maxSizeKb)
+                } else {
+                    imageBytes
+                }
+
+                val base64 = Base64.encodeToString(finalBytes, Base64.NO_WRAP)
+                val finalMimeType = if (finalBytes !== imageBytes) "image/jpeg" else mimeType
+
+                "data:$finalMimeType;base64,$base64"
             }
-
-            val contentType = response.header("Content-Type") ?: "image/jpeg"
-            val mimeType = when {
-                contentType.contains("png") -> "image/png"
-                contentType.contains("gif") -> "image/gif"
-                contentType.contains("webp") -> "image/webp"
-                contentType.contains("svg") -> "image/svg+xml"
-                else -> "image/jpeg"
-            }
-
-            val imageBytes = response.body.bytes()
-
-            // Check if compression is needed
-            val maxSizeKb = novelDownloadPreferences.maxImageSizeKb().get()
-            val compressionQuality = novelDownloadPreferences.imageCompressionQuality().get()
-
-            val finalBytes = if (maxSizeKb > 0 && imageBytes.size > maxSizeKb * 1024 && mimeType != "image/svg+xml") {
-                compressImage(imageBytes, compressionQuality, maxSizeKb)
-            } else {
-                imageBytes
-            }
-
-            val base64 = Base64.encodeToString(finalBytes, Base64.NO_WRAP)
-            val finalMimeType = if (finalBytes !== imageBytes) "image/jpeg" else mimeType
-
-            "data:$finalMimeType;base64,$base64"
         } catch (e: Exception) {
             logcat(LogPriority.WARN, e) { "ChapterImageEmbedder: Error downloading image $url" }
             null

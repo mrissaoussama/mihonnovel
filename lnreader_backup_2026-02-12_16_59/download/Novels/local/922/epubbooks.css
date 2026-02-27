@@ -1,0 +1,50 @@
+.center { text-align: center; }
+
+h1, h2, .titlepage * { text-align: center; }
+
+.titlepage { margin-bottom: 3em; }
+.subtitle {
+  font-style: italic;
+}
+.title { font-variant: small-caps; }
+.titlepage .copyright, .titlepage .legalnotice p { text-align: left; }
+.titlepage .copyright {
+  border-top: 1px solid #eee;
+  margin-top: 1em;
+  padding-top: 1em;
+}
+.titlepage .authorgroup .editor h3 {
+  margin: 0;
+  font-weight: normal;
+  font-size: 90%;
+}
+.titlepage .authorgroup h4.editedby {
+  margin-bottom: 0;
+}
+
+.toc .toc-title {
+  font-size: 1.5em;
+  text-align: center;
+}
+
+.mediaobject {
+  text-align: center;
+}
+.mediaobject img {
+  display: block !important;
+  clear: both;
+  margin: 0 auto;
+}
+.mediaobject .caption {
+  margin-bottom: 2em;
+  font-size: 90%;
+  font-style: italic;
+}
+
+table.simplelist {
+  margin: 0 2em;
+  margin-bottom: 1em;
+}
+table.simplelist tr td {
+  padding: 0;
+}

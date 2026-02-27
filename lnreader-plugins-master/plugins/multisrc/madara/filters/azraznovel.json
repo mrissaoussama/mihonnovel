@@ -1,0 +1,224 @@
+{
+  "filters": {
+    "genre[]": {
+      "type": "Checkbox",
+      "label": "Genre",
+      "value": [],
+      "options": [
+        {
+          "label": "Aksiyon",
+          "value": "aksiyon"
+        },
+        {
+          "label": "Bilimkurgu",
+          "value": "bilimkurgu"
+        },
+        {
+          "label": "Doğaüstü",
+          "value": "dogaustu"
+        },
+        {
+          "label": "Dövüş Sanatları",
+          "value": "dovus-sanatlari"
+        },
+        {
+          "label": "Dram",
+          "value": "dram"
+        },
+        {
+          "label": "Ecchi",
+          "value": "ecchi"
+        },
+        {
+          "label": "Fantastik",
+          "value": "fantastik"
+        },
+        {
+          "label": "Gender-bender",
+          "value": "gender-bender"
+        },
+        {
+          "label": "Gizem",
+          "value": "gizem"
+        },
+        {
+          "label": "Harem",
+          "value": "harem"
+        },
+        {
+          "label": "Hayattan Kesitler",
+          "value": "hayattan-kesitler"
+        },
+        {
+          "label": "İsekai",
+          "value": "isekai"
+        },
+        {
+          "label": "Josei",
+          "value": "josei"
+        },
+        {
+          "label": "Komedi",
+          "value": "komedi"
+        },
+        {
+          "label": "Korku",
+          "value": "korku"
+        },
+        {
+          "label": "Macera",
+          "value": "macera"
+        },
+        {
+          "label": "Mecha",
+          "value": "mecha"
+        },
+        {
+          "label": "Novel",
+          "value": "novel"
+        },
+        {
+          "label": "Okul Hayatı",
+          "value": "okul-hayati"
+        },
+        {
+          "label": "Oneshot",
+          "value": "oneshot"
+        },
+        {
+          "label": "Oyun",
+          "value": "oyun"
+        },
+        {
+          "label": "Psikolojik",
+          "value": "psikolojik"
+        },
+        {
+          "label": "Renkli",
+          "value": "renkli"
+        },
+        {
+          "label": "Romantizm",
+          "value": "romantizm"
+        },
+        {
+          "label": "Sci-fi",
+          "value": "sci-fi"
+        },
+        {
+          "label": "Seinen",
+          "value": "seinen"
+        },
+        {
+          "label": "Shoujo",
+          "value": "shoujo"
+        },
+        {
+          "label": "Shoujo-ai",
+          "value": "shoujo-ai"
+        },
+        {
+          "label": "Shounen",
+          "value": "shounen"
+        },
+        {
+          "label": "Tarihi",
+          "value": "tarihi"
+        },
+        {
+          "label": "Trajedi",
+          "value": "trajedi"
+        },
+        {
+          "label": "Xuanhuan",
+          "value": "xuanhuan"
+        },
+        {
+          "label": "Yetişkin",
+          "value": "yetiskin"
+        }
+      ]
+    },
+    "op": {
+      "type": "Switch",
+      "label": "VE seçilen tüm türlere sahip olmak",
+      "value": false
+    },
+    "author": {
+      "type": "Text",
+      "label": "Yazar",
+      "value": ""
+    },
+    "artist": {
+      "type": "Text",
+      "label": "Sanatçı",
+      "value": ""
+    },
+    "release": {
+      "type": "Text",
+      "label": "Çıkış Yılı",
+      "value": ""
+    },
+    "adult": {
+      "type": "Picker",
+      "label": "Yetişkinlere yönelik içerik",
+      "value": "",
+      "options": [
+        {
+          "label": "Tüm",
+          "value": ""
+        },
+        {
+          "label": "Yetişkinlere uygun içerik yok",
+          "value": "0"
+        },
+        {
+          "label": "Yalnızca yetişkinlere yönelik içerik",
+          "value": "1"
+        }
+      ]
+    },
+    "status[]": {
+      "type": "Checkbox",
+      "label": "Durum",
+      "value": [],
+      "options": [
+        {
+          "label": "devam eden",
+          "value": "on-going"
+        },
+        {
+          "label": "Tamamlandı",
+          "value": "end"
+        },
+        {
+          "label": "İptal edildi",
+          "value": "canceled"
+        },
+        {
+          "label": "Beklemede",
+          "value": "on-hold"
+        },
+        {
+          "label": "Yaklaşan",
+          "value": "upcoming"
+        }
+      ]
+    },
+    "m_orderby": {
+      "type": "Picker",
+      "label": "Sipariş ver",
+      "value": "",
+      "options": [
+        {
+          "label": "Alaka",
+          "value": ""
+        },
+        {
+          "label": "En son",
+          "value": "latest"
+        }
+      ]
+    }
+  }
+}

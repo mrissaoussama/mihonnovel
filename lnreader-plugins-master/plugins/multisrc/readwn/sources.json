@@ -1,0 +1,57 @@
+[
+  {
+    "id": "wuxiap",
+    "sourceSite": "https://www.wuxiabox.com",
+    "sourceName": "Wuxiabox"
+  },
+  {
+    "id": "wuxiacity",
+    "sourceSite": "https://www.wuxiafox.com",
+    "sourceName": "Wuxiafox",
+    "options": {
+      "down": true,
+      "downSince": 1768289212969
+    }
+  },
+  {
+    "id": "ltnovel",
+    "sourceSite": "https://www.ltnovels.com",
+    "sourceName": "Ltnovel",
+    "options": {
+      "versionIncrements": 1
+    }
+  },
+  {
+    "id": "wuxiamtl",
+    "sourceSite": "https://www.fanmtl.com",
+    "sourceName": "Fans MTL",
+    "options": {
+      "versionIncrements": 2
+    }
+  },
+  {
+    "id": "fannovel",
+    "sourceSite": "https://www.fanmtl.com",
+    "sourceName": "FanNovel",
+    "options": {
+      "versionIncrements": 2
+    }
+  },
+  {
+    "id": "wuxiaspace",
+    "sourceSite": "https://www.wuxiaspot.com",
+    "sourceName": "Wuxia Space",
+    "options": {
+      "versionIncrements": 1
+    }
+  },
+  {
+    "id": "wuxiav",
+    "sourceSite": "https://www.wuxiav.com",
+    "sourceName": "WuxiaV",
+    "options": {
+      "down": true,
+      "downSince": 1768289212940
+    }
+  }
+]

@@ -1595,7 +1595,7 @@ class MangaScreenModel(
                     manga.thumbnailUrl?.let { url ->
                         val client = Injekt.get<eu.kanade.tachiyomi.network.NetworkHelper>().client
                         val request = okhttp3.Request.Builder().url(url).build()
-                        client.newCall(request).execute().body.bytes()
+                        client.newCall(request).execute().use { it.body.bytes() }
                     }
                 } catch (e: Exception) {
                     logcat(LogPriority.WARN, e) { "Failed to fetch cover image" }

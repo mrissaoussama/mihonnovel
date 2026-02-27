@@ -141,7 +141,7 @@ Rules:
             .build()
 
         val response = client.newCall(httpRequest).execute()
-        val responseBody = response.body.string()
+        val responseBody = response.use { it.body.string() }
 
         if (!response.isSuccessful) {
             val errorCode = when (response.code) {

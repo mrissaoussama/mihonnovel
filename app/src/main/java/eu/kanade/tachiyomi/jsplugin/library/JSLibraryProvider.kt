@@ -155,22 +155,24 @@ class JSLibraryProvider(
                 }
 
                 val response = client.newCall(requestBuilder.build()).execute()
-                val responseBody = response.body?.string() ?: ""
+                response.use { resp ->
+                    val responseBody = resp.body?.string() ?: ""
 
-                // Build response headers map
-                val responseHeaders = mutableMapOf<String, String>()
-                response.headers.forEach { (name, value) ->
-                    responseHeaders[name.lowercase()] = value
+                    // Build response headers map
+                    val responseHeaders = mutableMapOf<String, String>()
+                    resp.headers.forEach { (name, value) ->
+                        responseHeaders[name.lowercase()] = value
+                    }
+
+                    FetchResponse(
+                        ok = resp.isSuccessful,
+                        status = resp.code,
+                        statusText = resp.message,
+                        url = resp.request.url.toString(),
+                        text = responseBody,
+                        headers = responseHeaders,
+                    )
                 }
-
-                FetchResponse(
-                    ok = response.isSuccessful,
-                    status = response.code,
-                    statusText = response.message,
-                    url = response.request.url.toString(),
-                    text = responseBody,
-                    headers = responseHeaders
-                )
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "[$pluginId] Fetch error: $url" }
                 FetchResponse(

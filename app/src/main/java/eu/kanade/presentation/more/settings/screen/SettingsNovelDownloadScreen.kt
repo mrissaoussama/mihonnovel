@@ -12,6 +12,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -309,8 +310,12 @@ object SettingsNovelDownloadScreen : SearchableSettings {
         onAddNew: () -> Unit,
         onEdit: (SourceOverride) -> Unit,
     ) {
+        val sourceManager = remember { Injekt.get<SourceManager>() }
         val overrides = remember(prefs.sourceOverrides().collectAsState().value) {
             prefs.getAllSourceOverrides()
+                .sortedBy { override ->
+                    sourceManager.get(override.sourceId)?.name?.lowercase() ?: "zzz_${override.sourceId}"
+                }
         }
 
         AlertDialog(
@@ -336,13 +341,15 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                             verticalArrangement = Arrangement.spacedBy(8.dp),
                         ) {
                             items(overrides, key = { it.sourceId }) { override ->
+                                val sourceName = sourceManager.get(override.sourceId)?.name
+                                    ?: "Unknown (#${override.sourceId})"
                                 Row(
                                     modifier = Modifier.fillMaxWidth(),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Column(modifier = Modifier.weight(1f)) {
                                         Text(
-                                            "Source #${override.sourceId}",
+                                            sourceName,
                                             style = MaterialTheme.typography.bodyMedium,
                                         )
                                         val details = buildList {
@@ -361,7 +368,7 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                                     }
                                     IconButton(onClick = { onEdit(override) }) {
                                         Icon(
-                                            Icons.Outlined.Add,
+                                            Icons.Outlined.Edit,
                                             contentDescription = "Edit",
                                             tint = MaterialTheme.colorScheme.primary,
                                         )

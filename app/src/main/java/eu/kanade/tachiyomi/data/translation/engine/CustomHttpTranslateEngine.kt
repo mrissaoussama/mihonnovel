@@ -138,15 +138,15 @@ class CustomHttpTranslateEngine(
             requestBuilder.header("Authorization", "Bearer $apiKey")
         }
 
-        val response = client.newCall(requestBuilder.build()).execute()
+        return client.newCall(requestBuilder.build()).execute().use { response ->
+            if (!response.isSuccessful) {
+                val errorBody = response.body?.string() ?: "Unknown error"
+                throw Exception("HTTP ${response.code}: $errorBody")
+            }
 
-        if (!response.isSuccessful) {
-            val errorBody = response.body?.string() ?: "Unknown error"
-            throw Exception("HTTP ${response.code}: $errorBody")
+            val responseBody = response.body?.string() ?: throw Exception("Empty response")
+            parseResponse(responseBody, responsePath, texts.size)
         }
-
-        val responseBody = response.body?.string() ?: throw Exception("Empty response")
-        return parseResponse(responseBody, responsePath, texts.size)
     }
 
     /**
