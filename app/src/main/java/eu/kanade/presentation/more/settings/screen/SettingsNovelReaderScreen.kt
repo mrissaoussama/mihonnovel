@@ -307,8 +307,8 @@ object SettingsNovelReaderScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.novelTextSelectable(),
-                    title = "Text selectable",
-                    subtitle = "Allow selecting and copying text",
+                    title = "Text selectable (WebView)",
+                    subtitle = "Allow selecting and copying text in the WebView reader",
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.novelShowRawHtml(),

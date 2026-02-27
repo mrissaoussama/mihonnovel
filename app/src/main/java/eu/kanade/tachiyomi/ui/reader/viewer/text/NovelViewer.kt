@@ -362,6 +362,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             }
 
             override fun onSingleTapConfirmed(e: MotionEvent): Boolean {
+                // Never toggle menu while the user has text selected
+                if (loadedChapters.any { it.textView.hasSelection() }) return false
+
                 val viewWidth = container.width.toFloat()
                 val viewHeight = container.height.toFloat()
                 val x = e.x
@@ -412,85 +415,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
 
     private fun initViews() {
         scrollView = object : NestedScrollView(activity) {
-            private var isTextSelectionMode = false
-            private var selectionStartX = 0f
-            private var selectionStartY = 0f
-            private var touchedTextView: TextView? = null
-
             override fun dispatchTouchEvent(ev: MotionEvent): Boolean {
-                val hasActiveSelection = preferences.novelTextSelectable().get() &&
-                    (isTextSelectionMode || loadedChapters.any { it.textView.hasSelection() })
-                if (!hasActiveSelection) {
-                    gestureDetector.onTouchEvent(ev)
-                }
+                gestureDetector.onTouchEvent(ev)
                 return super.dispatchTouchEvent(ev)
-            }
-
-            private fun findTextViewAt(x: Float, y: Float): TextView? {
-                loadedChapters.forEach { loaded ->
-                    val textView = loaded.textView
-                    val location = IntArray(2)
-                    textView.getLocationOnScreen(location)
-                    val scrollViewLocation = IntArray(2)
-                    this.getLocationOnScreen(scrollViewLocation)
-
-                    val relativeTop = location[1] - scrollViewLocation[1]
-                    val relativeBottom = relativeTop + textView.height
-
-                    if (y >= relativeTop && y <= relativeBottom) {
-                        return textView
-                    }
-                }
-                return null
-            }
-
-            override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
-                // If text selection is enabled, we need to be careful about intercepting
-                if (preferences.novelTextSelectable().get()) {
-                    when (ev.action) {
-                        MotionEvent.ACTION_DOWN -> {
-                            isTextSelectionMode = false
-                            selectionStartX = ev.x
-                            selectionStartY = ev.y
-                            touchedTextView = findTextViewAt(ev.x, ev.y)
-                        }
-                        MotionEvent.ACTION_MOVE -> {
-                            // If text selection mode is active, don't intercept
-                            if (isTextSelectionMode) {
-                                return false
-                            }
-
-                            val deltaX = kotlin.math.abs(ev.x - selectionStartX)
-                            val deltaY = kotlin.math.abs(ev.y - selectionStartY)
-
-                            // If horizontal movement is greater than vertical, likely text selection
-                            if (deltaX > deltaY && deltaX > 10) {
-                                isTextSelectionMode = true
-                                return false
-                            }
-
-                            // Check for small movements (likely text selection vs scroll)
-                            if (deltaY < 20 && deltaX < 20) {
-                                // Very small movement - might be selecting text, don't intercept
-                                return false
-                            }
-                        }
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
-                            touchedTextView = null
-                        }
-                    }
-
-                    // Check if any child TextView has an active text selection.
-                    // Only check hasSelection(), NOT isFocused — a focused-but-
-                    // no-selection view should still allow normal scrolling.
-                    loadedChapters.forEach { loaded ->
-                        if (loaded.textView.hasSelection()) {
-                            isTextSelectionMode = true
-                            return false
-                        }
-                    }
-                }
-                return super.onInterceptTouchEvent(ev)
             }
         }.apply {
             isFillViewport = true
@@ -925,27 +852,6 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 }
         }
 
-        // Observe text selection preference separately.
-        // Toggling setTextIsSelectable(false) on a TextView that has an active Editor
-        // fires Android's internal "Selection cancelled" warning.  Rather than updating
-        // existing TextViews (which are about to be destroyed anyway), just reload.
-        scope.launch {
-            preferences.novelTextSelectable().changes()
-                .drop(1) // Drop initial value
-                .collectLatest {
-                    activity.runOnUiThread {
-                        // Fully reload chapters — TextViews will be recreated
-                        // with the correct selection state from the start.
-                        currentChapters?.let {
-                            contentContainer.removeAllViews()
-                            loadedChapters.clear()
-                            currentChapterIndex = 0
-                            setChapters(it)
-                        }
-                    }
-                }
-        }
-
         // Observe force lowercase preference - reload content to reapply transformation
         scope.launch {
             preferences.novelForceTextLowercase().changes()
@@ -998,60 +904,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         }
     }
 
-    @SuppressLint("ClickableViewAccessibility")
     private fun createSelectableTextView(): TextView {
         return TextView(activity).apply {
-            val isSelectable = preferences.novelTextSelectable().get()
-
-            // Set explicit layout params with MATCH_PARENT width for text selection to work
             layoutParams = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             )
-
-            // setTextIsSelectable MUST be called and we should NOT override movementMethod
-            // Android internally sets up the correct movement method for selection when this is true
-            setTextIsSelectable(isSelectable)
-            
-            // Prevent TextView.setText from implicitly swapping out our movementMethod
-            // with LinkMovementMethod when it detects ClickableSpans (which causes selection cancellation logs).
+            // Text selection is not supported in the native text viewer.
+            // Use the WebView reader for copy/selection functionality.
+            setTextIsSelectable(false)
             linksClickable = false
-
-            // For text selection to work, we need to ensure the textview can receive focus
-            if (isSelectable) {
-                isFocusable = true
-                isFocusableInTouchMode = true
-                // DO NOT set movementMethod here - setTextIsSelectable already sets up the correct one
-                // Setting ArrowKeyMovementMethod was breaking touch-based selection
-                // Enable long click for selection
-                isLongClickable = true
-            } else {
-                // When not selectable, use LinkOnlyMovementMethod for clicking links.
-                // LinkMovementMethod would trigger "TextView does not support text selection"
-                // warnings because it calls Selection.extendSelection on non-selectable TextViews.
-                movementMethod = LinkOnlyMovementMethod
-            }
-
-            setOnTouchListener { v, event ->
-                val textView = v as TextView
-                if (preferences.novelTextSelectable().get() && textView.hasSelection()) {
-                    when (event.action) {
-                        MotionEvent.ACTION_DOWN -> v.parent?.requestDisallowInterceptTouchEvent(true)
-                        MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> v.parent?.requestDisallowInterceptTouchEvent(false)
-                    }
-                }
-                false // Let the TextView handle the event
-            }
-
-            // Set up long click listener for text selection
-            if (isSelectable) {
-                setOnLongClickListener {
-                    // Request focus and start selection mode
-                    requestFocus()
-                    parent?.requestDisallowInterceptTouchEvent(true)
-                    false // Let default behavior handle selection
-                }
-            }
+            movementMethod = LinkOnlyMovementMethod
         }
     }
 
@@ -1494,7 +1357,6 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             setPadding(16, 32, 16, 16)
             // Never show a chapter boundary indicator during infinite scroll.
             isVisible = false
-            setTextIsSelectable(preferences.novelTextSelectable().get())
         }
 
         // Create text view for content
@@ -1535,7 +1397,6 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 setTextColor(0xFF888888.toInt())
                 gravity = Gravity.CENTER
                 setPadding(16, 48, 16, 48)
-                setTextIsSelectable(preferences.novelTextSelectable().get())
                 layoutParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT,

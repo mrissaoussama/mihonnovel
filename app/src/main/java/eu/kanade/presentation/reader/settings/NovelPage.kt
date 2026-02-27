@@ -516,7 +516,7 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
         pref = screenModel.preferences.novelSwipeNavigation(),
     )
 
-    // Text Selection
+    // Text Selection (WebView reader only)
     CheckboxItem(
         label = stringResource(MR.strings.pref_novel_text_selectable),
         pref = screenModel.preferences.novelTextSelectable(),

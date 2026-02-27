@@ -400,8 +400,13 @@ fun TextItem(label: String, value: String, onChange: (String) -> Unit) {
 
 @Composable
 fun SettingsChipRow(labelRes: StringResource, content: @Composable FlowRowScope.() -> Unit) {
+    SettingsChipRow(stringResource(labelRes), content)
+}
+
+@Composable
+fun SettingsChipRow(label: String, content: @Composable FlowRowScope.() -> Unit) {
     Column {
-        HeadingItem(labelRes)
+        HeadingItem(label)
         FlowRow(
             modifier = Modifier.padding(
                 start = SettingsItemsPaddings.Horizontal,
