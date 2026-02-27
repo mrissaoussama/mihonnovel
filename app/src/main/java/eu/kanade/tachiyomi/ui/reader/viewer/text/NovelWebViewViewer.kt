@@ -326,7 +326,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                 preferences.novelCustomCssSnippets().changes(),
                 preferences.novelUseOriginalFonts().changes(),
                 preferences.novelHideChapterTitle().changes(),
-            ).drop(19) // Drop initial emissions from all 19 preferences
+                preferences.novelTextSelectable().changes(),
+            ).drop(20) // Drop initial emissions from all 20 preferences
                 .collect {
                     injectCustomStyles()
                 }
@@ -452,6 +453,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                 color: $textColorHex !important;
                 background-color: $bgColorHex !important;
                 text-align: $textAlign;
+                -webkit-user-select: ${if (preferences.novelTextSelectable().get()) "text" else "none"};
+                user-select: ${if (preferences.novelTextSelectable().get()) "text" else "none"};
             }
             p {
                 text-indent: ${paragraphIndent}em;
@@ -1260,6 +1263,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
             ""
         }
 
+        val userSelectCss = if (preferences.novelTextSelectable().get()) "text" else "none"
+
         val html = """
             <!DOCTYPE html>
             <html>
@@ -1272,8 +1277,8 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
                         padding: 16px;
                         background-color: $bgColorHex;
                         color: $textColorHex;
-                        -webkit-user-select: text;
-                        user-select: text;
+                        -webkit-user-select: $userSelectCss;
+                        user-select: $userSelectCss;
                     }
                     .chapter-divider {
                         height: 1px;
