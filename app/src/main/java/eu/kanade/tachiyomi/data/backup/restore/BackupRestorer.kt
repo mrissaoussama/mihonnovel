@@ -100,9 +100,14 @@ class BackupRestorer(
         }
 
         coroutineScope {
-            if (options.categories) {
+            // Categories MUST be restored before preferences because preference restoration
+            // maps backup category IDs → current DB category IDs by name.  Running both
+            // concurrently causes restoreAppPreferences to see an empty categories table.
+            val categoriesJob = if (options.categories) {
                 restoreCategories(summary.backupCategories)
-            }
+            } else null
+            categoriesJob?.join()
+
             if (options.appSettings) {
                 restoreAppPreferences(summary.backupPreferences, summary.backupCategories.takeIf { options.categories })
             }
