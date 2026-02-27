@@ -1387,6 +1387,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 scope.launch {
                     val translatedContent = activity.translateContentIfEnabled(content)
                     withContext(Dispatchers.Main) {
+                        if (!textView.isAttachedToWindow) return@withContext
                         setTextViewContent(textView, translatedContent)
                     }
                 }
@@ -1847,6 +1848,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         val showRawHtml = preferences.novelShowRawHtml().get()
         if (showRawHtml) {
             // Display raw HTML tags without parsing
+            if (!textView.isAttachedToWindow) return
             clearTextViewSelection(textView)
             textView.text = content
             return
@@ -1953,36 +1955,20 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             }
 
             withContext(Dispatchers.Main) {
-                val selectable = preferences.novelTextSelectable().get()
+                // Skip if the view was detached (e.g. preference change triggered
+                // a full reload while this coroutine was in-flight).
+                if (!textView.isAttachedToWindow) return@withContext
 
-                // Clear any existing selection state first
+                // Clear any existing selection state before replacing text.
                 clearTextViewSelection(textView)
 
-                if (selectable) {
-                    // Ensure isTextSelectable=true BEFORE setText so that Android's
-                    // Editor.onSetText() sees a selectable view and does NOT fire the
-                    // "TextView does not support text selection. Selection cancelled." warning.
-                    // (The warning only fires when isTextSelectable()==false AND setText
-                    // internally tries to position the selection cursor.)
-                    textView.setTextIsSelectable(true)
-                    textView.isFocusable = true
-                    textView.isFocusableInTouchMode = true
-                    // Now set text — Editor.onSetText() will see isTextSelectable=true, no warning.
-                    textView.setText(spannable, TextView.BufferType.SPANNABLE)
-                } else {
-                    // When NOT selectable:
-                    // Set text FIRST with SPANNABLE buffer so ImageSpans from Html.fromHtml are
-                    // preserved in the text buffer. Setting setTextIsSelectable(false) BEFORE
-                    // setText causes Android's Editor.checkSelectionPositions() to fire during
-                    // setText, producing spurious "Selection cancelled" warnings.
-                    textView.setText(spannable, TextView.BufferType.SPANNABLE)
-                    // THEN disable selection/focus so the Editor doesn't conflict during setText.
-                    textView.setTextIsSelectable(false)
-                    textView.isFocusable = false
-                    textView.isFocusableInTouchMode = false
-                    // Set link handler last so it doesn't re-create the text buffer.
-                    textView.movementMethod = LinkOnlyMovementMethod
-                }
+                // The view's selectable/focusable state was already configured in
+                // createSelectableTextView().  Do NOT toggle setTextIsSelectable()
+                // here — calling setTextIsSelectable(false) on a view that has an
+                // active Editor internally calls setText(mText, NORMAL) with
+                // mTextIsSelectable=false, which fires Android's
+                // "Selection cancelled" warning on API 34+.
+                textView.setText(spannable, TextView.BufferType.SPANNABLE)
             }
         }
     }
