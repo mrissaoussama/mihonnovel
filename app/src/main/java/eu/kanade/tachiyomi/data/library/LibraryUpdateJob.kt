@@ -361,6 +361,18 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         notifier.cancelProgressNotification()
 
+        // Update the in-memory library state so badges (unread/total) reflect the new chapters
+        // discovered during this update run — without this, users need a full app restart to
+        // see updated counts in the library grid.
+        if (newUpdates.isNotEmpty()) {
+            val batchUpdates = newUpdates.associate { (manga, newChapters) ->
+                manga.id to { m: LibraryManga ->
+                    m.copy(totalChapters = m.totalChapters + newChapters.size)
+                }
+            }
+            getLibraryManga.applyBatchChapterUpdates(batchUpdates)
+        }
+
         if (newUpdates.isNotEmpty()) {
             notifier.showUpdateNotifications(newUpdates)
             if (hasDownloads.load()) {

@@ -8,6 +8,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.asFlow
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
@@ -22,6 +23,7 @@ import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.download.service.DownloadPreferences
+import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
@@ -40,12 +42,26 @@ class DownloadManager(
     private val getCategories: GetCategories = Injekt.get(),
     private val sourceManager: SourceManager = Injekt.get(),
     private val downloadPreferences: DownloadPreferences = Injekt.get(),
+    private val getLibraryManga: GetLibraryManga = Injekt.get(),
 ) {
 
     /**
      * Downloader whose only task is to download chapters.
      */
     private val downloader = Downloader(context, provider, cache)
+
+    init {
+        // Keep in-memory library download badges in sync when downloads complete or are deleted
+        launchIO {
+            statusFlow()
+                .filter { it.status == Download.State.DOWNLOADED }
+                .collect { download ->
+                    getLibraryManga.applyBatchChapterUpdates(
+                        mapOf(download.mangaId to { copy(downloadCount = downloadCount + 1) }),
+                    )
+                }
+        }
+    }
 
     val isRunning: Boolean
         get() = downloader.isRunning
@@ -246,6 +262,10 @@ class DownloadManager(
             val (mangaDir, chapterDirs) = provider.findChapterDirs(filteredChapters, manga, source)
             chapterDirs.forEach { it.delete() }
             cache.removeChapters(filteredChapters, manga)
+            // Decrement in-memory badge count so library reflects the deletion immediately
+            getLibraryManga.applyBatchChapterUpdates(
+                mapOf(manga.id to { copy(downloadCount = maxOf(0, downloadCount - filteredChapters.size)) }),
+            )
 
             // Delete manga directory if empty
             if (mangaDir?.listFiles()?.isEmpty() == true) {

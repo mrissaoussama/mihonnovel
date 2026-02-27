@@ -1400,7 +1400,7 @@ class LibraryScreenModel(
                         val coverImage = try {
                             manga.thumbnailUrl?.let { url ->
                                 val request = okhttp3.Request.Builder().url(url).build()
-                                networkHelper.client.newCall(request).execute().body.bytes()
+                                networkHelper.client.newCall(request).execute().use { it.body.bytes() }
                             }
                         } catch (e: Exception) {
                             null
