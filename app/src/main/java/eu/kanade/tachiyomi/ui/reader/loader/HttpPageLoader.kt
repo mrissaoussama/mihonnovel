@@ -206,21 +206,19 @@ internal class HttpPageLoader(
             }
 
             // For manga sources (or novel sources with image pages), handle images
-            if (page.imageUrl.isNullOrEmpty()) {
+            // Match mihon: only call getImageUrl when imageUrl is null (not just empty).
+            // Sources like MadTheme set imageUrl="" (empty string) to indicate "no two-step
+            // URL fetch needed" — calling getImageUrl on those would invoke imageUrlRequest(page)
+            // with page.url="" and OkHttp would throw IllegalArgumentException.
+            if (page.imageUrl == null) {
                 page.status = Page.State.LoadPage
-                // Need to fetch imageUrl from page.url
-                // Some sources set imageUrl directly in pageListParse, others need getImageUrl
-                if (page.url.isNotBlank()) {
-                    page.imageUrl = source.getImageUrl(page)
-                } else {
-                    // Page has no URL and no imageUrl - cannot load this page
-                    throw IllegalStateException(
-                        "Page ${page.index} has no URL and no imageUrl. " +
-                            "Check that the source's pageListParse returns valid pages.",
-                    )
-                }
+                // Call getImageUrl — extensions like MadTheme override this method and don't
+                // rely on page.url, so it's safe to call when imageUrl was never set.
+                page.imageUrl = source.getImageUrl(page)
             }
-            val imageUrl = page.imageUrl!!
+            val imageUrl = page.imageUrl ?: run {
+                throw IllegalStateException("Page ${page.index}: getImageUrl returned null")
+            }
 
             // Validate the image URL
             if (imageUrl.isBlank()) {
