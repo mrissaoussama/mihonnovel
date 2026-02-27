@@ -59,6 +59,8 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import logcat.LogPriority
 import tachiyomi.core.common.preference.toggle
 import tachiyomi.core.common.util.lang.launchIO
@@ -76,6 +78,7 @@ import tachiyomi.domain.history.interactor.UpsertHistory
 import tachiyomi.domain.history.model.HistoryUpdate
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.interactor.GetManga
+import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.translation.service.TranslationPreferences
@@ -109,6 +112,7 @@ class ReaderViewModel @JvmOverloads constructor(
     private val libraryPreferences: LibraryPreferences = Injekt.get(),
     private val translationPreferences: TranslationPreferences = Injekt.get(),
     private val translationService: TranslationService = Injekt.get(),
+    private val getLibraryManga: GetLibraryManga = Injekt.get(),
 ) : ViewModel() {
 
     private val mutableState = MutableStateFlow(State())
@@ -236,6 +240,9 @@ class ReaderViewModel @JvmOverloads constructor(
 
     private val incognitoMode: Boolean by lazy { getIncognitoState.await(manga?.source) }
     private val downloadAheadAmount = downloadPreferences.autoDownloadWhileReading().get()
+
+    /** Serializes novel progress saves to prevent concurrent saves racing each other. */
+    private val novelProgressMutex = Mutex()
 
     init {
         // To save state
@@ -647,9 +654,11 @@ class ReaderViewModel @JvmOverloads constructor(
     /**
      * Updates the chapter shown in the novel top app bar based on scroll position.
      * This does NOT change the active chapter or reload the viewer.
+     * Also triggers auto-download of ahead chapters on chapter change.
      */
     fun setNovelVisibleChapter(chapter: Chapter?) {
         mutableState.update { it.copy(novelVisibleChapter = chapter) }
+        downloadNextChapters()
     }
 
     /**
@@ -662,36 +671,57 @@ class ReaderViewModel @JvmOverloads constructor(
         if (incognitoMode) return
 
         viewModelScope.launchNonCancellable {
-            val clampedProgress = progressPercentage.coerceIn(0, 100)
-            val currentProgress = selectedChapter.chapter.last_page_read
+            // Serialize saves so concurrent calls don't race each other and save
+            // old progress values over newer ones (e.g. multiple chapters in flight).
+            novelProgressMutex.withLock {
+                val clampedProgress = progressPercentage.coerceIn(0, 100)
+                val currentProgress = selectedChapter.chapter.last_page_read
 
-            // Don't decrease progress (unless explicitly resetting or user scrolled back significantly)
-            // Allow small decreases (within 5%) for minor scroll adjustments
-            if (clampedProgress < currentProgress - 5 && clampedProgress > 0) {
-                logcat(LogPriority.DEBUG) {
-                    "NovelProgress: Skipping save - new progress $clampedProgress% is less than current $currentProgress%"
+                // Skip save if progress hasn't changed at all
+                if (clampedProgress == currentProgress) return@withLock
+
+                // Don't decrease progress unless user scrolled back significantly (>10%)
+                if (clampedProgress < currentProgress - 10 && clampedProgress > 0) {
+                    logcat(LogPriority.DEBUG) {
+                        "NovelProgress: Skipping save - new progress $clampedProgress% is much less than current $currentProgress%"
+                    }
+                    return@withLock
                 }
-                return@launchNonCancellable
-            }
 
-            selectedChapter.chapter.last_page_read = clampedProgress
+                selectedChapter.chapter.last_page_read = clampedProgress
 
-            // Mark as read if at the end (95% or more)
-            if (clampedProgress >= 95 && !selectedChapter.chapter.read) {
-                selectedChapter.chapter.read = true
-                updateTrackChapterRead(selectedChapter)
-                deleteChapterIfNeeded(selectedChapter)
-            }
+                // Mark as read if at the end (95% or more)
+                val wasRead = selectedChapter.chapter.read
+                if (clampedProgress >= 95 && !wasRead) {
+                    selectedChapter.chapter.read = true
+                    updateTrackChapterRead(selectedChapter)
+                    deleteChapterIfNeeded(selectedChapter)
+                }
 
-            updateChapter.await(
-                ChapterUpdate(
-                    id = selectedChapter.chapter.id!!,
-                    read = selectedChapter.chapter.read,
-                    lastPageRead = selectedChapter.chapter.last_page_read.toLong(),
-                ),
-            )
+                updateChapter.await(
+                    ChapterUpdate(
+                        id = selectedChapter.chapter.id!!,
+                        read = selectedChapter.chapter.read,
+                        lastPageRead = selectedChapter.chapter.last_page_read.toLong(),
+                    ),
+                )
 
-            logcat(LogPriority.DEBUG) { "NovelProgress: Saved $clampedProgress% for ${selectedChapter.chapter.name}" }
+                // Notify library of badge changes (important for unread count accuracy)
+                if (selectedChapter.chapter.read != wasRead) {
+                    manga?.let { m ->
+                        val chapters = getChaptersByMangaId.await(m.id)
+                        val readCount = chapters.count { it.read }.toLong()
+                        val totalCount = chapters.size.toLong()
+                        getLibraryManga.applyChapterUpdates(
+                            mangaId = m.id,
+                            totalChapters = totalCount,
+                            readCount = readCount,
+                        )
+                    }
+                }
+
+                logcat(LogPriority.DEBUG) { "NovelProgress: Saved $clampedProgress% for ${selectedChapter.chapter.name}" }
+            } // end mutex
         }
     }
 
@@ -804,6 +834,18 @@ class ReaderViewModel @JvmOverloads constructor(
         readerChapter.chapter.read = true
         updateTrackChapterRead(readerChapter)
         deleteChapterIfNeeded(readerChapter)
+
+        // Notify library of badge changes so unread counts update immediately
+        manga?.let { m ->
+            val chapters = getChaptersByMangaId.await(m.id)
+            val readCount = chapters.count { it.read }.toLong()
+            val totalCount = chapters.size.toLong()
+            getLibraryManga.applyChapterUpdates(
+                mangaId = m.id,
+                totalChapters = totalCount,
+                readCount = readCount,
+            )
+        }
 
         val markDuplicateAsRead = libraryPreferences.markDuplicateReadChapterAsRead().get()
             .contains(LibraryPreferences.MARK_DUPLICATE_CHAPTER_READ_EXISTING)

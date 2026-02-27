@@ -153,13 +153,17 @@ private class CoilImageGetter(
                     val bitmap = android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)
                     if (bitmap != null) {
                         val drawable = android.graphics.drawable.BitmapDrawable(activity.resources, bitmap)
-                        val maxWidth = textView.width - textView.paddingLeft - textView.paddingRight
+                        val contentWidth = textView.width - textView.paddingLeft - textView.paddingRight
+                        // Fallback to display width when view not yet laid out (first render)
+                        val maxWidth = if (contentWidth > 0) contentWidth else
+                            activity.resources.displayMetrics.widthPixels
                         val imgWidth = drawable.intrinsicWidth
                         val imgHeight = drawable.intrinsicHeight
                         if (imgWidth > 0 && imgHeight > 0) {
-                            val width = if (maxWidth > 0 && imgWidth > maxWidth) maxWidth else imgWidth
+                            // Always scale images to fill available width
+                            val width = maxWidth.coerceAtLeast(1)
                             val ratio = width.toFloat() / imgWidth.toFloat()
-                            val height = (imgHeight * ratio).toInt()
+                            val height = (imgHeight * ratio).toInt().coerceAtLeast(1)
                             drawable.setBounds(0, 0, width, height)
                             wrapper.innerDrawable = drawable
                             wrapper.setBounds(0, 0, width, height)
@@ -190,16 +194,19 @@ private class CoilImageGetter(
                 val result = activity.imageLoader.execute(request)
                 val drawable = result.image?.asDrawable(activity.resources) ?: return@launch
 
-                // Scale to fit TextView width
-                val maxWidth = textView.width - textView.paddingLeft - textView.paddingRight
+                // Scale image to fill TextView width (or display width before first layout)
+                val contentWidth = textView.width - textView.paddingLeft - textView.paddingRight
+                val maxWidth = if (contentWidth > 0) contentWidth else
+                    activity.resources.displayMetrics.widthPixels
                 val imgWidth = drawable.intrinsicWidth
                 val imgHeight = drawable.intrinsicHeight
 
                 if (imgWidth <= 0 || imgHeight <= 0) return@launch
 
-                val width = if (maxWidth > 0 && imgWidth > maxWidth) maxWidth else imgWidth
+                // Always fill available width
+                val width = maxWidth.coerceAtLeast(1)
                 val ratio = width.toFloat() / imgWidth.toFloat()
-                val height = (imgHeight * ratio).toInt()
+                val height = (imgHeight * ratio).toInt().coerceAtLeast(1)
 
                 drawable.setBounds(0, 0, width, height)
                 wrapper.innerDrawable = drawable
@@ -508,7 +515,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             val previousChapterIndex = currentChapterIndex
 
             // Update current chapter based on scroll position first
-            updateCurrentChapterFromScroll(scrollY)
+            // Skip when isRestoringScroll is set (e.g. cleanupDistantChapters adjusts scroll)
+            // to avoid spurious chapter detection from stale TextVIew layout coordinates.
+            if (!isRestoringScroll) {
+                updateCurrentChapterFromScroll(scrollY)
+            }
 
             // If chapter changed, skip progress update (onChapterChanged already sent initialProgress)
             val chapterChanged = previousChapterIndex != currentChapterIndex
@@ -545,6 +556,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
      * Calculates progress within the current chapter using only the text view bounds.
      * The header and separator are excluded so that entering a chapter always reads 0%
      *
+     * When the chapter text fits entirely within the viewport, returns 1.0 immediately
+     * since the user can see all content without scrolling.
+     *
      * When scrollY < textTop  → 0%  (separator / heading still visible above text)
      * When scrollY = textTop  → 0%
      * When scrollY = textTop + scrollableHeight → 100%
@@ -553,21 +567,31 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         val loaded = loadedChapters.getOrNull(currentChapterIndex) ?: return 0f
         val textTop = loaded.textView.top
         val textBottom = loaded.textView.bottom
-        val scrollableHeight = (textBottom - textTop - scrollView.height).coerceAtLeast(1)
+        val textHeight = textBottom - textTop
+
+        // Guard: if the textView hasn't been laid out yet, its height will be 0.
+        // Returning 1f (100%) here would cause a spurious progress jump; keep last known progress.
+        if (textHeight <= 0) return lastSavedProgress.coerceIn(0f, 1f)
+
+        // If the chapter text fits entirely within the viewport, it's 100% visible
+        if (textHeight <= scrollView.height) return 1f
+
+        val scrollableHeight = (textHeight - scrollView.height).coerceAtLeast(1)
         val scrollInText = (scrollY - textTop).coerceIn(0, scrollableHeight)
         return (scrollInText.toFloat() / scrollableHeight).coerceIn(0f, 1f)
     }
 
     private fun scheduleProgressSave(progress: Float) {
-        // Only save if progress changed significantly
-        if (kotlin.math.abs(progress - lastSavedProgress) < 0.01f) return
+        // Convert to integer percentage to avoid excessive saves for sub-percent jitter.
+        val intPercent = (progress * 100f).roundToInt().coerceIn(0, 100)
+        val lastIntPercent = (lastSavedProgress * 100f).roundToInt().coerceIn(0, 100)
+        if (intPercent == lastIntPercent) return
 
+        // Save immediately - every integer-percent change is persisted without debounce
+        // so the reader bar stays accurate and chapters are reliably marked as read.
         progressSaveJob?.cancel()
-        progressSaveJob = scope.launch {
-            delay(500) // Debounce
-            saveProgress(progress)
-            lastSavedProgress = progress
-        }
+        saveProgress(progress)
+        lastSavedProgress = progress
     }
 
     private fun saveProgress(progress: Float) {
@@ -596,8 +620,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
     }
 
     private fun onChapterChanged(oldIndex: Int, newIndex: Int) {
+        // Minimal guard to prevent re-entrant within the same scroll frame
         val now = System.currentTimeMillis()
-        if (now - lastChapterSwitchTime < 350L) return
+        if (now - lastChapterSwitchTime < 50L) return
         lastChapterSwitchTime = now
 
         currentChapterIndex = newIndex
@@ -605,6 +630,16 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         val initialProgress = if (newIndex > oldIndex) 0f else 1f
         lastSavedProgress = initialProgress
         chapterEntryTime = System.currentTimeMillis()
+
+        // When moving forward, mark the previous chapter as complete
+        if (newIndex > oldIndex) {
+            loadedChapters.getOrNull(oldIndex)?.chapter?.pages?.firstOrNull()?.let { page ->
+                activity.saveNovelProgress(page, 100)
+                logcat(LogPriority.DEBUG) {
+                    "NovelViewer: Marking chapter $oldIndex as 100% (moved forward)"
+                }
+            }
+        }
 
         if (newIndex > oldIndex + 1) {
             for (skipped in (oldIndex + 1) until newIndex) {
@@ -870,7 +905,8 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                 preferences.novelRegexReplacements().changes(),
                 preferences.novelAutoSplitText().changes(),
                 preferences.novelAutoSplitWordCount().changes(),
-            ).drop(6)
+                preferences.novelBlockMedia().changes(),
+            ).drop(7)
                 .collect {
                     // Reload content to apply new formatting
                     activity.runOnUiThread {
@@ -900,10 +936,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                             loaded.textView.isFocusable = selectable
                             loaded.textView.isFocusableInTouchMode = selectable
                             loaded.textView.isLongClickable = selectable
-                            // Only set LinkMovementMethod when NOT selectable
+                            // Only set LinkOnlyMovementMethod when NOT selectable
                             // When selectable, setTextIsSelectable sets up the correct movement method
                             if (!selectable) {
-                                loaded.textView.movementMethod = android.text.method.LinkMovementMethod.getInstance()
+                                loaded.textView.movementMethod = LinkOnlyMovementMethod
                             }
                         }
                         // Also reload to ensure consistent state
@@ -944,6 +980,25 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
                             loadedChapters.clear()
                             currentChapterIndex = 0
                             setChapters(it)
+                        }
+                    }
+                }
+        }
+
+        // Observe infinite scroll toggle - add/remove next chapter button
+        scope.launch {
+            preferences.novelInfiniteScroll().changes()
+                .drop(1)
+                .collectLatest { infiniteEnabled ->
+                    activity.runOnUiThread {
+                        if (infiniteEnabled) {
+                            // Remove the next chapter button when switching to infinite scroll
+                            contentContainer.findViewWithTag<View>(NEXT_CHAPTER_BUTTON_TAG)?.let {
+                                contentContainer.removeView(it)
+                            }
+                        } else {
+                            // Add the next chapter button when switching away from infinite scroll
+                            addNextChapterButton()
                         }
                     }
                 }
@@ -1600,7 +1655,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             // Adjust scroll position to prevent visual jump
             // Content shifted UP by removedHeight, so we must scroll UP by the same amount
             // to keep the viewport on the same content.
+            // Set isRestoringScroll=true so the scroll listener skips chapter detection
+            // while the view hasn't remeasured yet (stale coordinates → wrong chapter index).
+            isRestoringScroll = true
             scrollView.scrollBy(0, -removedHeight)
+            isRestoringScroll = false
 
             // The scrollBy above fires a scroll event before the layout remeasures,
             // so headerView.top coordinates are stale. Suppress progress/threshold
@@ -1896,8 +1955,36 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             }
 
             withContext(Dispatchers.Main) {
+                val selectable = preferences.novelTextSelectable().get()
+
+                // Clear any existing selection state first
                 clearTextViewSelection(textView)
-                textView.setText(spannable, TextView.BufferType.SPANNABLE)
+
+                if (selectable) {
+                    // Ensure isTextSelectable=true BEFORE setText so that Android's
+                    // Editor.onSetText() sees a selectable view and does NOT fire the
+                    // "TextView does not support text selection. Selection cancelled." warning.
+                    // (The warning only fires when isTextSelectable()==false AND setText
+                    // internally tries to position the selection cursor.)
+                    textView.setTextIsSelectable(true)
+                    textView.isFocusable = true
+                    textView.isFocusableInTouchMode = true
+                    // Now set text — Editor.onSetText() will see isTextSelectable=true, no warning.
+                    textView.setText(spannable, TextView.BufferType.SPANNABLE)
+                } else {
+                    // When NOT selectable:
+                    // Set text FIRST with SPANNABLE buffer so ImageSpans from Html.fromHtml are
+                    // preserved in the text buffer. Setting setTextIsSelectable(false) BEFORE
+                    // setText causes Android's Editor.checkSelectionPositions() to fire during
+                    // setText, producing spurious "Selection cancelled" warnings.
+                    textView.setText(spannable, TextView.BufferType.SPANNABLE)
+                    // THEN disable selection/focus so the Editor doesn't conflict during setText.
+                    textView.setTextIsSelectable(false)
+                    textView.isFocusable = false
+                    textView.isFocusableInTouchMode = false
+                    // Set link handler last so it doesn't re-create the text buffer.
+                    textView.movementMethod = LinkOnlyMovementMethod
+                }
             }
         }
     }
@@ -1939,37 +2026,13 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
 
     /**
      * Dismiss any active text selection (action mode / handles) without toggling
-     * [TextView.setTextIsSelectable].  Toggling selectable state on every
+     * [TextView.setTextIsSelectable].  Only removes the selection markers and clears focus —
+     * no hidden API reflection needed.
      */
     private fun clearTextViewSelection(textView: TextView) {
-        try {
-            // Cancel any active action mode (floating toolbar)
-            val actionModeField = android.widget.TextView::class.java.getDeclaredField("mEditor")
-            actionModeField.isAccessible = true
-            val editor = actionModeField.get(textView)
-            if (editor != null) {
-                try {
-                    val hideMethod = editor.javaClass.getDeclaredMethod("hideControllers")
-                    hideMethod.isAccessible = true
-                    hideMethod.invoke(editor)
-                } catch (_: Exception) {}
-                try {
-                    val stopMethod = editor.javaClass.getDeclaredMethod("stopTextActionMode")
-                    stopMethod.isAccessible = true
-                    stopMethod.invoke(editor)
-                } catch (_: Exception) {
-                    try {
-                        val stopMethod = editor.javaClass.getDeclaredMethod("stopSelectionActionMode")
-                        stopMethod.isAccessible = true
-                        stopMethod.invoke(editor)
-                    } catch (_: Exception) {}
-                }
-            }
-        } catch (_: Exception) {
-        }
-        val spannable = textView.text
-        if (spannable is android.text.Spannable) {
-            android.text.Selection.removeSelection(spannable)
+        val text = textView.text
+        if (text is android.text.Spannable && android.text.Selection.getSelectionStart(text) >= 0) {
+            android.text.Selection.removeSelection(text)
         }
         textView.clearFocus()
     }
