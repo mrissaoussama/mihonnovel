@@ -366,11 +366,38 @@ private fun MangaScreenSmallImpl(
                     scrollScope.launch { chapterListState.animateScrollToItem(0) }
                 },
                 onClickScrollToLastRead = {
-                    val lastReadIndex = listItem.indexOfFirst { it is ChapterList.Item && it.chapter.read }
-                    if (lastReadIndex != -1) {
-                        scrollScope.launch {
-                            val halfHeight = chapterListState.layoutInfo.viewportSize.height / 2
-                            chapterListState.animateScrollToItem(lastReadIndex + 4, scrollOffset = -halfHeight)
+                    // Find the reading frontier: partially-read chapter or the last-read chapter
+                    val partiallyRead = chapters.find {
+                        !it.chapter.read && it.chapter.lastPageRead > 0L
+                    }
+                    val lastRead = chapters
+                        .filter { it.chapter.read }
+                        .maxByOrNull { it.chapter.sourceOrder }
+                    val target = partiallyRead ?: lastRead
+
+                    android.util.Log.d(
+                        "ScrollToLastRead",
+                        "Small | chapters=${chapters.size}, listItems=${listItem.size}, " +
+                            "sortDesc=${state.manga.sortDescending()}, sorting=${state.manga.sorting}, " +
+                            "readCount=${chapters.count { it.chapter.read }}, " +
+                            "partiallyRead=${partiallyRead?.chapter?.name} (#${partiallyRead?.chapter?.chapterNumber}), " +
+                            "lastRead=${lastRead?.chapter?.name} (#${lastRead?.chapter?.chapterNumber}), " +
+                            "target=${target?.chapter?.name} (id=${target?.chapter?.id})",
+                    )
+
+                    if (target != null) {
+                        val targetIndex = listItem.indexOfFirst {
+                            it is ChapterList.Item && it.chapter.id == target.chapter.id
+                        }
+                        android.util.Log.d(
+                            "ScrollToLastRead",
+                            "Small | targetIndex=$targetIndex, lazyIndex=${targetIndex + 4}",
+                        )
+                        if (targetIndex != -1) {
+                            scrollScope.launch {
+                                val halfHeight = chapterListState.layoutInfo.viewportSize.height / 2
+                                chapterListState.animateScrollToItem(targetIndex + 4, scrollOffset = -halfHeight)
+                            }
                         }
                     }
                 },
@@ -653,11 +680,38 @@ fun MangaScreenLargeImpl(
                     scrollScope.launch { chapterListState.animateScrollToItem(0) }
                 },
                 onClickScrollToLastRead = {
-                    val lastReadIndex = listItem.indexOfFirst { it is ChapterList.Item && it.chapter.read }
-                    if (lastReadIndex != -1) {
-                        scrollScope.launch {
-                            val halfHeight = chapterListState.layoutInfo.viewportSize.height / 2
-                            chapterListState.animateScrollToItem(lastReadIndex + 1, scrollOffset = -halfHeight)
+                    // Find the reading frontier: partially-read chapter or the last-read chapter
+                    val partiallyRead = chapters.find {
+                        !it.chapter.read && it.chapter.lastPageRead > 0L
+                    }
+                    val lastRead = chapters
+                        .filter { it.chapter.read }
+                        .maxByOrNull { it.chapter.sourceOrder }
+                    val target = partiallyRead ?: lastRead
+
+                    android.util.Log.d(
+                        "ScrollToLastRead",
+                        "Large | chapters=${chapters.size}, listItems=${listItem.size}, " +
+                            "sortDesc=${state.manga.sortDescending()}, sorting=${state.manga.sorting}, " +
+                            "readCount=${chapters.count { it.chapter.read }}, " +
+                            "partiallyRead=${partiallyRead?.chapter?.name} (#${partiallyRead?.chapter?.chapterNumber}), " +
+                            "lastRead=${lastRead?.chapter?.name} (#${lastRead?.chapter?.chapterNumber}), " +
+                            "target=${target?.chapter?.name} (id=${target?.chapter?.id})",
+                    )
+
+                    if (target != null) {
+                        val targetIndex = listItem.indexOfFirst {
+                            it is ChapterList.Item && it.chapter.id == target.chapter.id
+                        }
+                        android.util.Log.d(
+                            "ScrollToLastRead",
+                            "Large | targetIndex=$targetIndex, lazyIndex=${targetIndex + 1}",
+                        )
+                        if (targetIndex != -1) {
+                            scrollScope.launch {
+                                val halfHeight = chapterListState.layoutInfo.viewportSize.height / 2
+                                chapterListState.animateScrollToItem(targetIndex + 1, scrollOffset = -halfHeight)
+                            }
                         }
                     }
                 },
