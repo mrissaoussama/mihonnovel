@@ -12,6 +12,7 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.FrameLayout
+import androidx.annotation.Keep
 import eu.kanade.presentation.reader.settings.CodeSnippet
 import eu.kanade.presentation.reader.settings.RegexReplacement
 import eu.kanade.tachiyomi.source.model.Page
@@ -1568,6 +1569,7 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
     /**
      * JavaScript interface for communication from WebView
      */
+    @Keep
     inner class WebViewInterface {
         @JavascriptInterface
         fun onScrollProgress(progress: Float) {
