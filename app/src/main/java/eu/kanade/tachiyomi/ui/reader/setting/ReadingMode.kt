@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.NovelViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.text.NovelWebViewViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import uy.kohesive.injekt.injectLazy
 
 enum class ReadingMode(

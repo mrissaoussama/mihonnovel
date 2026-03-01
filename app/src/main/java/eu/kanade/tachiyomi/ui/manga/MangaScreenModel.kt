@@ -93,6 +93,7 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracks
 import tachiyomi.domain.translation.repository.TranslatedChapterRepository
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -1531,7 +1532,7 @@ class MangaScreenModel(
 
                     withUIContext {
                         snackbarHostState.showSnackbar(
-                            context.stringResource(MR.strings.export_epub_progress, index + 1, sortedChapters.size),
+                            context.stringResource(TDMR.strings.export_epub_progress, index + 1, sortedChapters.size),
                             duration = SnackbarDuration.Short,
                         )
                     }
@@ -1624,14 +1625,14 @@ class MangaScreenModel(
 
                 withUIContext {
                     snackbarHostState.showSnackbar(
-                        context.stringResource(MR.strings.export_epub_success),
+                        context.stringResource(TDMR.strings.export_epub_success),
                     )
                 }
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR, e) { "Failed to export EPUB" }
                 withUIContext {
                     snackbarHostState.showSnackbar(
-                        context.stringResource(MR.strings.export_epub_error, e.message ?: "Unknown error"),
+                        context.stringResource(TDMR.strings.export_epub_error, e.message ?: "Unknown error"),
                     )
                 }
             }

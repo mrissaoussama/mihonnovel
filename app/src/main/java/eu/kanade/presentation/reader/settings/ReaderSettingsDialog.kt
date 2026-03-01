@@ -18,6 +18,7 @@ import eu.kanade.presentation.components.TabbedDialogPaddings
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderSettingsScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 
@@ -104,10 +105,10 @@ private fun NovelReaderSettingsDialog(
 ) {
     val renderingMode by screenModel.preferences.novelRenderingMode().collectAsState()
     val tabTitles = persistentListOf(
-        stringResource(MR.strings.novel_tab_reading),
-        stringResource(MR.strings.novel_tab_appearance),
-        stringResource(MR.strings.novel_tab_controls),
-        stringResource(MR.strings.novel_tab_advanced),
+        stringResource(TDMR.strings.novel_tab_reading),
+        stringResource(TDMR.strings.novel_tab_appearance),
+        stringResource(TDMR.strings.novel_tab_controls),
+        stringResource(TDMR.strings.novel_tab_advanced),
     )
     val pagerState = rememberPagerState { tabTitles.size }
 

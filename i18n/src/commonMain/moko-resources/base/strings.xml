@@ -4,70 +4,6 @@
 
     <string name="pref_font_size">Font size</string>
     <string name="pref_font_family">Font family</string>
-    <string name="pref_novel_theme">Theme</string>
-    <string name="pref_category_novel">Novel</string>
-    <string name="pref_novel_custom_css">Custom CSS</string>
-    <string name="pref_novel_custom_js">Custom JavaScript</string>
-    <string name="pref_novel_line_height">Line height</string>
-    <string name="pref_novel_text_align">Text alignment</string>
-    <string name="pref_novel_auto_scroll">Auto scroll</string>
-    <string name="pref_novel_auto_scroll_speed">Auto scroll speed</string>
-    <string name="pref_novel_volume_keys_scroll">Volume keys scroll</string>
-    <string name="pref_novel_tap_to_scroll">Tap to scroll</string>
-    <string name="pref_novel_text_selectable">Enable text selection</string>
-    <string name="pref_novel_hide_chapter_title">Hide chapter title in content</string>
-    <string name="pref_novel_chapter_title_display">Chapter title format</string>
-    <string name="pref_novel_use_original_fonts">Use source\'s original fonts</string>
-    <string name="pref_novel_margin_left">Left margin</string>
-    <string name="pref_novel_margin_right">Right margin</string>
-    <string name="pref_novel_margin_top">Top margin</string>
-    <string name="pref_novel_margin_bottom">Bottom margin</string>
-    <string name="pref_novel_font_color">Font color</string>
-    <string name="pref_novel_background_color">Background color</string>
-    <string name="pref_novel_paragraph_indent">Paragraph indent</string>
-    <string name="pref_novel_paragraph_spacing">Paragraph spacing</string>
-    <string name="pref_novel_block_media">Block images and videos</string>
-    <string name="pref_novel_show_raw_html">Show raw HTML</string>
-    <string name="pref_novel_keep_screen_on">Keep screen on</string>
-    <string name="pref_novel_swipe_navigation">Swipe to change chapters</string>
-    <string name="pref_novel_rendering_mode">Rendering mode</string>
-    <string name="pref_novel_auto_load_next_at">Auto-load next chapter at %</string>
-    <string name="pref_novel_tts">Text to speech</string>
-    <string name="novel_tab_reading">Reading</string>
-    <string name="novel_tab_appearance">Appearance</string>
-    <string name="novel_tab_controls">Controls</string>
-    <string name="novel_tab_advanced">Advanced</string>
-    <string name="novel_advanced_webview_only">Advanced settings are only available in WebView rendering mode.</string>
-    <string name="action_reload_chapter">Reload chapter</string>
-    <string name="action_reload_local">Reload from local</string>
-    <string name="action_reload_source">Reload from source</string>
-    <string name="action_scroll_to_top">Scroll to top</string>
-    <string name="action_scroll_to_bottom">Scroll to bottom</string>
-    <string name="action_translate">Translate</string>
-    <string name="action_translate_downloaded">Translate downloaded chapters</string>
-    <string name="action_export_epub">Export as EPUB</string>
-    <string name="action_export_epub_bulk">Export selected as EPUB</string>
-    <string name="export_epub_progress">Exporting %1$d of %2$d chapters…</string>
-    <string name="export_epub_success">EPUB exported successfully</string>
-    <string name="export_epub_error">Failed to export EPUB: %s</string>
-    <string name="action_remove_chapters">Remove chapters</string>
-    <string name="action_clear_covers">Clear covers</string>
-    <string name="action_clear_descriptions">Clear descriptions</string>
-    <string name="action_clear_tags">Clear tags</string>
-    <string name="action_start_auto_scroll">Start auto-scroll</string>
-    <string name="action_stop_auto_scroll">Stop auto-scroll</string>
-    <string name="action_copy_links">Copy links</string>
-    <string name="action_mass_import">Mass import</string>
-    <string name="action_add_to_library">Add to library</string>
-    <string name="novel_snippet_title">Snippet title</string>
-    <string name="novel_snippet_code">Code</string>
-    <string name="novel_add_snippet">Add snippet</string>
-    <string name="novel_edit_snippet">Edit snippet</string>
-    <string name="novel_delete_snippet">Delete snippet</string>
-    <string name="pref_novel_infinite_scroll">Infinite scroll (auto-load next chapter)</string>
-    <string name="pref_novel_chapter_sort_order">Chapter order</string>
-    <string name="pref_novel_progress_slider">Show progress slider</string>
-    <string name="pref_novel_css_snippets">CSS Snippets</string>
     <string name="pref_novel_js_snippets">JavaScript Snippets</string>
     <string name="novel_add_css_snippet">Add CSS snippet</string>
     <string name="novel_edit_css_snippet">Edit CSS snippet</string>
@@ -329,7 +265,6 @@
     <string name="pref_library_summary">Categories, global update, chapter swipe</string>
     <string name="pref_reader_summary">Reading mode, display, navigation</string>
     <string name="pref_manga_reader_summary">Manga reading mode, display, navigation</string>
-    <string name="pref_novel_reader_summary">Novel reading mode, fonts, colors</string>
     <string name="pref_downloads_summary">Automatic download, download ahead</string>
     <string name="pref_tracking_summary">One-way progress sync, enhanced sync</string>
     <string name="pref_browse_summary">Sources, extensions, global search</string>
@@ -643,34 +578,13 @@
     <string name="pref_download_concurrent_pages">Concurrent page downloads</string>
     <string name="pref_download_concurrent_pages_summary">Pages downloaded simultaneously per source</string>
 
-    <!-- Novel Download Throttling -->
+    <!-- Novel Download Throttling (category headers only) -->
     <string name="pref_category_novel_downloads">Novel Downloads</string>
-    <string name="pref_novel_download_throttling">Enable throttling</string>
-    <string name="pref_novel_download_throttling_summary">Add delays between downloads to avoid rate limiting</string>
-    <string name="pref_novel_download_delay">Download delay</string>
-    <string name="pref_novel_download_delay_summary">Base delay between chapter downloads (ms)</string>
-    <string name="pref_novel_random_delay">Random delay range</string>
-    <string name="pref_novel_random_delay_summary">Additional random delay (0 to this value in ms)</string>
-    <string name="pref_novel_update_throttling">Update throttling</string>
-    <string name="pref_novel_update_throttling_summary">Add delays during library updates for novels</string>
-    <string name="pref_novel_update_delay">Update delay</string>
-    <string name="pref_novel_update_delay_summary">Delay between checking novels during updates (ms)</string>
-    <string name="pref_novel_mass_import_throttling">Mass import throttling</string>
-    <string name="pref_novel_mass_import_throttling_summary">Add delays during mass import operations</string>
-    <string name="pref_novel_mass_import_delay">Mass import delay</string>
-    <string name="pref_novel_mass_import_delay_summary">Delay between imports (ms)</string>
-    <string name="pref_novel_parallel_downloads">Parallel novel downloads</string>
     <string name="pref_novel_source_overrides">Source-specific overrides</string>
     <string name="pref_novel_source_overrides_summary">Configure delays for specific sources</string>
 
-    <!-- Novel Image Embedding -->
+    <!-- Novel Image Embedding (category header only) -->
     <string name="pref_category_novel_images">Chapter Images</string>
-    <string name="pref_novel_download_images">Download chapter images</string>
-    <string name="pref_novel_download_images_summary">Embed images from chapter HTML as base64 for offline viewing</string>
-    <string name="pref_novel_max_image_size">Max image size</string>
-    <string name="pref_novel_max_image_size_summary">Images larger than this will be compressed (0 = no limit)</string>
-    <string name="pref_novel_image_quality">Compression quality</string>
-    <string name="pref_novel_image_quality_summary">Quality for compressed images (higher = larger file)</string>
 
     <!-- Translation Services -->
     <string name="pref_category_translation">Translation</string>

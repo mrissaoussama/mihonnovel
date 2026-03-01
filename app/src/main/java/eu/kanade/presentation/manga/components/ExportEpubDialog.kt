@@ -24,7 +24,9 @@ import androidx.compose.ui.unit.dp
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
+import dev.icerock.moko.resources.format
 
 @Composable
 fun ExportEpubDialog(
@@ -46,7 +48,7 @@ fun ExportEpubDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(MR.strings.action_export_epub)) },
+        title = { Text(stringResource(TDMR.strings.action_export_epub)) },
         text = {
             Column(
                 modifier = Modifier
@@ -54,7 +56,7 @@ fun ExportEpubDialog(
                     .verticalScroll(rememberScrollState()),
             ) {
                 Text(
-                    text = "${chapters.size} chapter(s) will be exported.",
+                    text = stringResource(TDMR.strings.epub_chapters_export_count, chapters.size),
                     style = MaterialTheme.typography.bodyMedium,
                 )
 
@@ -63,7 +65,7 @@ fun ExportEpubDialog(
                 OutlinedTextField(
                     value = filename,
                     onValueChange = { filename = it },
-                    label = { Text("Filename") },
+                    label = { Text(stringResource(TDMR.strings.epub_filename)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
@@ -71,8 +73,7 @@ fun ExportEpubDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Note: Downloaded chapters will be included. " +
-                        "Chapters not yet downloaded will be fetched from the source.",
+                    text = stringResource(TDMR.strings.epub_export_note),
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -83,7 +84,7 @@ fun ExportEpubDialog(
                     launcher.launch(filename)
                 },
             ) {
-                Text(stringResource(MR.strings.action_export_epub))
+                Text(stringResource(TDMR.strings.action_export_epub))
             }
         },
         dismissButton = {

@@ -66,8 +66,10 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.domain.translation.service.TranslationPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
 import tachiyomi.presentation.core.components.SettingsChipRow
@@ -94,61 +96,61 @@ data class RegexReplacement(
 )
 
 private val novelThemes = listOf(
-    "App" to "app",
-    "Light" to "light",
-    "Dark" to "dark",
-    "Sepia" to "sepia",
-    "Black" to "black",
-    "Grey" to "grey",
-    "Custom" to "custom",
+    TDMR.strings.novel_theme_app to "app",
+    TDMR.strings.novel_theme_light to "light",
+    TDMR.strings.novel_theme_dark to "dark",
+    TDMR.strings.novel_theme_sepia to "sepia",
+    TDMR.strings.novel_theme_black to "black",
+    TDMR.strings.novel_theme_grey to "grey",
+    TDMR.strings.novel_theme_custom to "custom",
 )
 
 // System fonts - always available
 private val systemFonts = listOf(
-    "Sans Serif" to "sans-serif",
-    "Serif" to "serif",
-    "Monospace" to "monospace",
-    "Georgia" to "Georgia, serif",
-    "Times New Roman" to "Times New Roman, serif",
-    "Arial" to "Arial, sans-serif",
+    TDMR.strings.novel_font_sans_serif to "sans-serif",
+    TDMR.strings.novel_font_serif to "serif",
+    TDMR.strings.novel_font_monospace to "monospace",
+    TDMR.strings.novel_font_georgia to "Georgia, serif",
+    TDMR.strings.novel_font_times to "Times New Roman, serif",
+    TDMR.strings.novel_font_arial to "Arial, sans-serif",
 )
 
 private val textAlignments = listOf(
-    "Left" to "left",
-    "Center" to "center",
-    "Right" to "right",
-    "Justify" to "justify",
+    TDMR.strings.novel_align_left to "left",
+    TDMR.strings.novel_align_center to "center",
+    TDMR.strings.novel_align_right to "right",
+    TDMR.strings.novel_align_justify to "justify",
 )
 
 private val renderingModes = listOf(
-    "Default (TextView)" to "default",
-    "WebView" to "webview",
+    TDMR.strings.novel_render_default to "default",
+    TDMR.strings.novel_render_webview to "webview",
 )
 
 // Predefined font colors (ARGB int format, 0 = theme default, Int.MIN_VALUE = custom)
 private val fontColors = listOf(
-    "Default" to 0,
-    "Black" to 0xFF000000.toInt(),
-    "White" to 0xFFFFFFFF.toInt(),
-    "Gray" to 0xFF808080.toInt(),
-    "Dark Gray" to 0xFF404040.toInt(),
-    "Light Gray" to 0xFFC0C0C0.toInt(),
-    "OffWhite" to 0xFFCCCCCC.toInt(),
-    "Sepia" to 0xFF5C4033.toInt(),
-    "Custom" to Int.MIN_VALUE,
+    TDMR.strings.novel_color_default to 0,
+    TDMR.strings.novel_color_black to 0xFF000000.toInt(),
+    TDMR.strings.novel_color_white to 0xFFFFFFFF.toInt(),
+    TDMR.strings.novel_color_gray to 0xFF808080.toInt(),
+    TDMR.strings.novel_color_dark_gray to 0xFF404040.toInt(),
+    TDMR.strings.novel_color_light_gray to 0xFFC0C0C0.toInt(),
+    TDMR.strings.novel_color_off_white to 0xFFCCCCCC.toInt(),
+    TDMR.strings.novel_color_sepia to 0xFF5C4033.toInt(),
+    TDMR.strings.novel_color_custom to Int.MIN_VALUE,
 )
 
 // Predefined background colors (ARGB int format, 0 = theme default, Int.MIN_VALUE = custom)
 private val backgroundColors = listOf(
-    "Default" to 0,
-    "White" to 0xFFFFFFFF.toInt(),
-    "Black" to 0xFF000000.toInt(),
-    "Light Gray" to 0xFFF5F5F5.toInt(),
-    "Dark Gray" to 0xFF1A1A1A.toInt(),
-    "Sepia" to 0xFFF4ECD8.toInt(),
-    "Cream" to 0xFFFFFDD0.toInt(),
-    "Charcoal" to 0xFF292832.toInt(),
-    "Custom" to Int.MIN_VALUE,
+    TDMR.strings.novel_color_default to 0,
+    TDMR.strings.novel_color_white to 0xFFFFFFFF.toInt(),
+    TDMR.strings.novel_color_black to 0xFF000000.toInt(),
+    TDMR.strings.novel_color_light_gray to 0xFFF5F5F5.toInt(),
+    TDMR.strings.novel_color_dark_gray to 0xFF1A1A1A.toInt(),
+    TDMR.strings.novel_color_sepia to 0xFFF4ECD8.toInt(),
+    TDMR.strings.novel_color_cream to 0xFFFFFDD0.toInt(),
+    TDMR.strings.novel_color_charcoal to 0xFF292832.toInt(),
+    TDMR.strings.novel_color_custom to Int.MIN_VALUE,
 )
 
 @Composable
@@ -169,20 +171,21 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Load custom fonts from FontManager
     val fontManager = remember { FontManager(context) }
-    val allFonts by produceState(initialValue = systemFonts) {
+    val resolvedSystemFonts = systemFonts.map { (labelRes, value) -> stringResource(labelRes) to value }
+    val allFonts by produceState(initialValue = resolvedSystemFonts) {
         val customFonts = fontManager.getInstalledFonts().map { font ->
             font.name to font.path
         }
-        value = systemFonts + customFonts
+        value = resolvedSystemFonts + customFonts
     }
 
     // Rendering Mode
-    SettingsChipRow(MR.strings.pref_novel_rendering_mode) {
-        renderingModes.map { (label, value) ->
+    SettingsChipRow(TDMR.strings.pref_novel_rendering_mode) {
+        renderingModes.map { (labelRes, value) ->
             FilterChip(
                 selected = renderingMode == value,
                 onClick = { screenModel.preferences.novelRenderingMode().set(value) },
-                label = { Text(label) },
+                label = { Text(stringResource(labelRes)) },
             )
         }
     }
@@ -197,7 +200,7 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Line Height
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_line_height),
+        label = stringResource(TDMR.strings.pref_novel_line_height),
         value = (lineHeight * 10).toInt(),
         valueRange = 10..30,
         onChange = { screenModel.preferences.novelLineHeight().set(it / 10f) },
@@ -205,7 +208,7 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Paragraph Indentation
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_paragraph_indent),
+        label = stringResource(TDMR.strings.pref_novel_paragraph_indent),
         value = (paragraphIndent * 10).toInt(),
         valueRange = 0..100,
         onChange = { screenModel.preferences.novelParagraphIndent().set(it / 10f) },
@@ -213,7 +216,7 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Paragraph Spacing
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_paragraph_spacing),
+        label = stringResource(TDMR.strings.pref_novel_paragraph_spacing),
         value = (paragraphSpacing * 10).toInt(),
         valueRange = 0..30,
         onChange = { screenModel.preferences.novelParagraphSpacing().set(it / 10f) },
@@ -221,25 +224,25 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Margins
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_margin_left),
+        label = stringResource(TDMR.strings.pref_novel_margin_left),
         value = marginLeft,
         valueRange = 0..100,
         onChange = { screenModel.preferences.novelMarginLeft().set(it) },
     )
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_margin_right),
+        label = stringResource(TDMR.strings.pref_novel_margin_right),
         value = marginRight,
         valueRange = 0..100,
         onChange = { screenModel.preferences.novelMarginRight().set(it) },
     )
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_margin_top),
+        label = stringResource(TDMR.strings.pref_novel_margin_top),
         value = marginTop,
         valueRange = 0..300,
         onChange = { screenModel.preferences.novelMarginTop().set(it) },
     )
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_margin_bottom),
+        label = stringResource(TDMR.strings.pref_novel_margin_bottom),
         value = marginBottom,
         valueRange = 0..300,
         onChange = { screenModel.preferences.novelMarginBottom().set(it) },
@@ -259,18 +262,18 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
     // Use Original Fonts (WebView mode only)
     if (renderingMode == "webview") {
         CheckboxItem(
-            label = stringResource(MR.strings.pref_novel_use_original_fonts),
+            label = stringResource(TDMR.strings.pref_novel_use_original_fonts),
             pref = screenModel.preferences.novelUseOriginalFonts(),
         )
     }
 
     // Text Alignment
-    SettingsChipRow(MR.strings.pref_novel_text_align) {
-        textAlignments.map { (label, value) ->
+    SettingsChipRow(TDMR.strings.pref_novel_text_align) {
+        textAlignments.map { (labelRes, value) ->
             FilterChip(
                 selected = textAlign == value,
                 onClick = { screenModel.preferences.novelTextAlign().set(value) },
-                label = { Text(label) },
+                label = { Text(stringResource(labelRes)) },
             )
         }
     }
@@ -279,14 +282,14 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Auto-split paragraphs
     CheckboxItem(
-        label = "Auto-split long chapters",
+        label = stringResource(TDMR.strings.novel_auto_split),
         pref = screenModel.preferences.novelAutoSplitText(),
     )
 
     // Word count threshold (only shown when enabled)
     if (autoSplitEnabled) {
         SliderItem(
-            label = "Split word count (×50)",
+            label = stringResource(TDMR.strings.novel_split_word_count),
             value = autoSplitWordCount / 50,
             valueRange = 1..40,
             onChange = { screenModel.preferences.novelAutoSplitWordCount().set(it * 50) },
@@ -305,7 +308,7 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
     // Color picker dialogs
     if (showFontColorPicker) {
         ColorPickerDialog(
-            title = stringResource(MR.strings.pref_novel_font_color),
+            title = stringResource(TDMR.strings.pref_novel_font_color),
             initialColor = if (fontColor != 0) fontColor else 0xFF000000.toInt(),
             onDismiss = { showFontColorPicker = false },
             onConfirm = { color ->
@@ -317,7 +320,7 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
 
     if (showBgColorPicker) {
         ColorPickerDialog(
-            title = stringResource(MR.strings.pref_novel_background_color),
+            title = stringResource(TDMR.strings.pref_novel_background_color),
             initialColor = if (backgroundColor != 0) backgroundColor else 0xFFFFFFFF.toInt(),
             onDismiss = { showBgColorPicker = false },
             onConfirm = { color ->
@@ -329,19 +332,19 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
     }
 
     // Theme
-    SettingsChipRow(MR.strings.pref_novel_theme) {
-        novelThemes.map { (label, value) ->
+    SettingsChipRow(TDMR.strings.pref_novel_theme) {
+        novelThemes.map { (labelRes, value) ->
             FilterChip(
                 selected = theme == value,
                 onClick = { screenModel.preferences.novelTheme().set(value) },
-                label = { Text(label) },
+                label = { Text(stringResource(labelRes)) },
             )
         }
     }
 
     // Font Color
-    SettingsChipRow(MR.strings.pref_novel_font_color) {
-        fontColors.map { (label, colorValue) ->
+    SettingsChipRow(TDMR.strings.pref_novel_font_color) {
+        fontColors.map { (labelRes, colorValue) ->
             val isCustom = colorValue == Int.MIN_VALUE
             val isSelected = if (isCustom) {
                 fontColors.none { it.second == fontColor } && fontColor != 0
@@ -381,7 +384,7 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
                             )
                         }
                         Text(
-                            label,
+                            stringResource(labelRes),
                             modifier = Modifier.padding(
                                 start = if (displayColor != null ||
                                     isCustom
@@ -399,8 +402,8 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
     }
 
     // Background Color
-    SettingsChipRow(MR.strings.pref_novel_background_color) {
-        backgroundColors.map { (label, colorValue) ->
+    SettingsChipRow(TDMR.strings.pref_novel_background_color) {
+        backgroundColors.map { (labelRes, colorValue) ->
             val isCustom = colorValue == Int.MIN_VALUE
             val isSelected = if (isCustom) {
                 backgroundColors.none { it.second == backgroundColor } && backgroundColor != 0
@@ -443,7 +446,7 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
                             )
                         }
                         Text(
-                            label,
+                            stringResource(labelRes),
                             modifier = Modifier.padding(
                                 start = if (displayColor != null ||
                                     isCustom
@@ -480,7 +483,7 @@ internal fun ColumnScope.NovelAppearanceTab(screenModel: ReaderSettingsScreenMod
 
     // Keep Screen On
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_keep_screen_on),
+        label = stringResource(TDMR.strings.pref_novel_keep_screen_on),
         pref = screenModel.preferences.novelKeepScreenOn(),
     )
 }
@@ -492,7 +495,7 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
 
     // Auto Scroll Speed
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_auto_scroll_speed),
+        label = stringResource(TDMR.strings.pref_novel_auto_scroll_speed),
         value = autoScrollSpeed,
         valueRange = 1..10,
         onChange = { screenModel.preferences.novelAutoScrollSpeed().set(it) },
@@ -500,50 +503,50 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
 
     // Volume Keys to Scroll
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_volume_keys_scroll),
+        label = stringResource(TDMR.strings.pref_novel_volume_keys_scroll),
         pref = screenModel.preferences.novelVolumeKeysScroll(),
     )
 
     // Tap to Scroll
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_tap_to_scroll),
+        label = stringResource(TDMR.strings.pref_novel_tap_to_scroll),
         pref = screenModel.preferences.novelTapToScroll(),
     )
 
     // Swipe Navigation
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_swipe_navigation),
+        label = stringResource(TDMR.strings.pref_novel_swipe_navigation),
         pref = screenModel.preferences.novelSwipeNavigation(),
     )
 
     // Text Selection (WebView reader only)
     if (renderingMode == "webview") {
         CheckboxItem(
-            label = stringResource(MR.strings.pref_novel_text_selectable),
+            label = stringResource(TDMR.strings.pref_novel_text_selectable),
             pref = screenModel.preferences.novelTextSelectable(),
         )
     }
 
     // Hide Chapter Title in Content
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_hide_chapter_title),
+        label = stringResource(TDMR.strings.pref_novel_hide_chapter_title),
         pref = screenModel.preferences.novelHideChapterTitle(),
     )
 
     // Force Lowercase Text
     CheckboxItem(
-        label = "Force text to lowercase",
+        label = stringResource(TDMR.strings.novel_force_lowercase),
         pref = screenModel.preferences.novelForceTextLowercase(),
     )
 
     // Chapter Title Display Format
     val chapterTitleDisplay by screenModel.preferences.novelChapterTitleDisplay().collectAsState()
     val titleDisplayOptions = listOf(
-        "Name only" to 0,
-        "Number only" to 1,
-        "Both" to 2,
+        stringResource(TDMR.strings.novel_chapter_display_name) to 0,
+        stringResource(TDMR.strings.novel_chapter_display_number) to 1,
+        stringResource(TDMR.strings.novel_chapter_display_both) to 2,
     )
-    SettingsChipRow(MR.strings.pref_novel_chapter_title_display) {
+    SettingsChipRow(TDMR.strings.pref_novel_chapter_title_display) {
         titleDisplayOptions.map { (label, value) ->
             FilterChip(
                 selected = chapterTitleDisplay == value,
@@ -555,14 +558,14 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
 
     // Progress Slider
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_progress_slider),
+        label = stringResource(TDMR.strings.pref_novel_progress_slider),
         pref = screenModel.preferences.novelShowProgressSlider(),
     )
 
     // Infinite Scroll
     val infiniteScrollEnabled by screenModel.preferences.novelInfiniteScroll().collectAsState()
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_infinite_scroll),
+        label = stringResource(TDMR.strings.pref_novel_infinite_scroll),
         checked = infiniteScrollEnabled,
         onClick = { screenModel.preferences.novelInfiniteScroll().set(!infiniteScrollEnabled) },
     )
@@ -578,7 +581,7 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
     if (infiniteScrollEnabled) {
         val effectiveAutoLoadAt = if (autoLoadAt > 0) autoLoadAt else 95
         SliderItem(
-            label = stringResource(MR.strings.pref_novel_auto_load_next_at),
+            label = stringResource(TDMR.strings.pref_novel_auto_load_next_at),
             value = effectiveAutoLoadAt,
             valueRange = 1..99,
             valueString = "$effectiveAutoLoadAt%",
@@ -588,24 +591,24 @@ internal fun ColumnScope.NovelControlsTab(screenModel: ReaderSettingsScreenModel
 
     // Block Media (images, videos, audio)
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_block_media),
+        label = stringResource(TDMR.strings.pref_novel_block_media),
         pref = screenModel.preferences.novelBlockMedia(),
     )
 
     // Show Raw HTML (TextView only) - for debugging
     if (renderingMode == "default") {
         CheckboxItem(
-            label = stringResource(MR.strings.pref_novel_show_raw_html),
+            label = stringResource(TDMR.strings.pref_novel_show_raw_html),
             pref = screenModel.preferences.novelShowRawHtml(),
         )
     }
 
     // Chapter Sort Order
     val sortOrderOptions = listOf(
-        "Source order" to "source",
-        "Chapter number" to "chapter_number",
+        stringResource(TDMR.strings.novel_sort_source) to "source",
+        stringResource(TDMR.strings.novel_sort_chapter) to "chapter_number",
     )
-    SettingsChipRow(MR.strings.pref_novel_chapter_sort_order) {
+    SettingsChipRow(TDMR.strings.pref_novel_chapter_sort_order) {
         sortOrderOptions.map { (label, value) ->
             FilterChip(
                 selected = chapterSortOrder == value,
@@ -631,11 +634,11 @@ private fun ColumnScope.TranslationSettingsSection() {
     val selectedEngineId by translationPreferences.selectedEngineId().collectAsState()
     val targetLanguage by translationPreferences.targetLanguage().collectAsState()
 
-    HeadingItem(MR.strings.pref_novel_translation_settings)
+    HeadingItem(TDMR.strings.pref_novel_translation_settings)
 
     // Enable Translation Feature
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_translation_enabled),
+        label = stringResource(TDMR.strings.pref_novel_translation_enabled),
         checked = translationEnabled,
         onClick = { translationPreferences.translationEnabled().set(!translationEnabled) },
     )
@@ -643,7 +646,7 @@ private fun ColumnScope.TranslationSettingsSection() {
     if (translationEnabled) {
         // Real-time Translation Toggle
         CheckboxItem(
-            label = stringResource(MR.strings.pref_novel_realtime_translation),
+            label = stringResource(TDMR.strings.pref_novel_realtime_translation),
             checked = realtimeEnabled,
             onClick = { translationPreferences.realTimeTranslation().set(!realtimeEnabled) },
         )
@@ -657,7 +660,7 @@ private fun ColumnScope.TranslationSettingsSection() {
         ) {
             Column {
                 Text(
-                    text = stringResource(MR.strings.pref_novel_translation_engine_label),
+                    text = stringResource(TDMR.strings.pref_novel_translation_engine_label),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -665,7 +668,7 @@ private fun ColumnScope.TranslationSettingsSection() {
                     text = if (selectedEngineId >
                         0L
                     ) {
-                        "Engine #$selectedEngineId"
+                        stringResource(TDMR.strings.novel_engine_format, selectedEngineId)
                     } else {
                         stringResource(MR.strings.not_configured)
                     },
@@ -674,7 +677,7 @@ private fun ColumnScope.TranslationSettingsSection() {
             }
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = stringResource(MR.strings.pref_novel_translation_target_label),
+                    text = stringResource(TDMR.strings.pref_novel_translation_target_label),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -687,7 +690,7 @@ private fun ColumnScope.TranslationSettingsSection() {
 
         // Hint to configure in settings
         Text(
-            text = stringResource(MR.strings.pref_novel_translation_hint),
+            text = stringResource(TDMR.strings.pref_novel_translation_hint),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
@@ -729,7 +732,7 @@ internal fun ColumnScope.NovelAdvancedTab(screenModel: ReaderSettingsScreenModel
 
     // CSS Snippets Section
     SnippetSection(
-        title = stringResource(MR.strings.pref_novel_css_snippets),
+        title = stringResource(TDMR.strings.pref_novel_css_snippets),
         snippets = cssSnippets,
         onAddClick = { showCssDialog = true },
         onEditClick = { index, snippet -> editingCssSnippet = index to snippet },
@@ -747,7 +750,7 @@ internal fun ColumnScope.NovelAdvancedTab(screenModel: ReaderSettingsScreenModel
 
     // JS Snippets Section
     SnippetSection(
-        title = stringResource(MR.strings.pref_novel_js_snippets),
+        title = stringResource(TDMR.strings.pref_novel_js_snippets),
         snippets = jsSnippets,
         onAddClick = { showJsDialog = true },
         onEditClick = { index, snippet -> editingJsSnippet = index to snippet },
@@ -767,9 +770,9 @@ internal fun ColumnScope.NovelAdvancedTab(screenModel: ReaderSettingsScreenModel
     if (showCssDialog || editingCssSnippet != null) {
         SnippetEditDialog(
             title = if (editingCssSnippet != null) {
-                stringResource(MR.strings.novel_edit_css_snippet)
+                stringResource(TDMR.strings.novel_edit_css_snippet)
             } else {
-                stringResource(MR.strings.novel_add_css_snippet)
+                stringResource(TDMR.strings.novel_add_css_snippet)
             },
             initialSnippet = editingCssSnippet?.second,
             onDismiss = {
@@ -794,9 +797,9 @@ internal fun ColumnScope.NovelAdvancedTab(screenModel: ReaderSettingsScreenModel
     if (showJsDialog || editingJsSnippet != null) {
         SnippetEditDialog(
             title = if (editingJsSnippet != null) {
-                stringResource(MR.strings.novel_edit_js_snippet)
+                stringResource(TDMR.strings.novel_edit_js_snippet)
             } else {
-                stringResource(MR.strings.novel_add_js_snippet)
+                stringResource(TDMR.strings.novel_add_js_snippet)
             },
             initialSnippet = editingJsSnippet?.second,
             onDismiss = {
@@ -845,7 +848,7 @@ private fun SnippetSection(
                 )
             }
             IconButton(onClick = onAddClick) {
-                Icon(Icons.Outlined.Add, contentDescription = stringResource(MR.strings.novel_add_snippet))
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(TDMR.strings.novel_add_snippet))
             }
         }
 
@@ -874,7 +877,7 @@ private fun SnippetSection(
                             },
                         )
                         Text(
-                            text = if (snippet.enabled) "Enabled" else "Disabled",
+                            text = if (snippet.enabled) stringResource(TDMR.strings.novel_enabled) else stringResource(TDMR.strings.novel_disabled),
                             style = MaterialTheme.typography.bodySmall,
                             color = if (snippet.enabled) {
                                 MaterialTheme.colorScheme.primary
@@ -887,13 +890,13 @@ private fun SnippetSection(
                         IconButton(onClick = { onEditClick(index, snippet) }) {
                             Icon(
                                 Icons.Outlined.Edit,
-                                contentDescription = stringResource(MR.strings.novel_edit_snippet),
+                                contentDescription = stringResource(TDMR.strings.novel_edit_snippet),
                             )
                         }
                         IconButton(onClick = { onDeleteClick(index) }) {
                             Icon(
                                 Icons.Outlined.Delete,
-                                contentDescription = stringResource(MR.strings.novel_delete_snippet),
+                                contentDescription = stringResource(TDMR.strings.novel_delete_snippet),
                             )
                         }
                     }
@@ -903,7 +906,7 @@ private fun SnippetSection(
 
         if (snippets.isEmpty()) {
             Text(
-                text = "No snippets added",
+                text = stringResource(TDMR.strings.novel_no_snippets),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -930,14 +933,14 @@ private fun SnippetEditDialog(
                 OutlinedTextField(
                     value = snippetTitle,
                     onValueChange = { snippetTitle = it },
-                    label = { Text(stringResource(MR.strings.novel_snippet_title)) },
+                    label = { Text(stringResource(TDMR.strings.novel_snippet_title)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = snippetCode,
                     onValueChange = { snippetCode = it },
-                    label = { Text(stringResource(MR.strings.novel_snippet_code)) },
+                    label = { Text(stringResource(TDMR.strings.novel_snippet_code)) },
                     minLines = 5,
                     maxLines = 10,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -995,12 +998,12 @@ private fun ColumnScope.RegexReplacementSection(screenModel: ReaderSettingsScree
                     modifier = Modifier.padding(end = 8.dp),
                 )
                 Text(
-                    text = "Regex Find & Replace",
+                    text = stringResource(TDMR.strings.novel_regex_find_replace),
                     style = MaterialTheme.typography.titleMedium,
                 )
             }
             IconButton(onClick = { showAddDialog = true }) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add rule")
+                Icon(Icons.Outlined.Add, contentDescription = stringResource(TDMR.strings.novel_add_rule))
             }
         }
 
@@ -1056,13 +1059,13 @@ private fun ColumnScope.RegexReplacementSection(screenModel: ReaderSettingsScree
                     }
                     Row {
                         IconButton(onClick = { editingRule = index to rule }) {
-                            Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                            Icon(Icons.Outlined.Edit, contentDescription = stringResource(MR.strings.action_edit))
                         }
                         IconButton(onClick = {
                             val updated = rules.toMutableList().apply { removeAt(index) }
                             screenModel.preferences.novelRegexReplacements().set(Json.encodeToString(updated))
                         }) {
-                            Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                            Icon(Icons.Outlined.Delete, contentDescription = stringResource(MR.strings.action_delete))
                         }
                     }
                 }
@@ -1071,7 +1074,7 @@ private fun ColumnScope.RegexReplacementSection(screenModel: ReaderSettingsScree
 
         if (rules.isEmpty()) {
             Text(
-                text = "No rules added. Rules apply to chapter content before rendering.",
+                text = stringResource(TDMR.strings.novel_no_rules),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -1115,17 +1118,22 @@ private fun RegexEditDialog(
     var testOutput by remember { mutableStateOf<String?>(null) }
     var testError by remember { mutableStateOf<String?>(null) }
 
+    // Pre-compute strings for non-composable onClick callbacks
+    val patternEmptyText = stringResource(TDMR.strings.novel_pattern_empty)
+    val invalidRegexText = stringResource(TDMR.strings.novel_invalid_regex)
+    val invalidRegexFormatText = stringResource(TDMR.strings.novel_invalid_regex_format, "%s")
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
-            Text(if (initialRule != null) "Edit Rule" else "Add Find & Replace Rule")
+            Text(if (initialRule != null) stringResource(TDMR.strings.novel_edit_rule) else stringResource(TDMR.strings.novel_add_rule_title))
         },
         text = {
             Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
                 OutlinedTextField(
                     value = title,
                     onValueChange = { title = it },
-                    label = { Text("Title") },
+                    label = { Text(stringResource(TDMR.strings.novel_rule_title)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -1136,7 +1144,7 @@ private fun RegexEditDialog(
                         testOutput = null
                         testError = null
                     },
-                    label = { Text(if (isRegex) "Regex Pattern" else "Find Text") },
+                    label = { Text(if (isRegex) stringResource(TDMR.strings.novel_regex_pattern) else stringResource(TDMR.strings.novel_find_text)) },
                     singleLine = false,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -1147,7 +1155,7 @@ private fun RegexEditDialog(
                         replacement = it
                         testOutput = null
                     },
-                    label = { Text("Replace With (empty = remove)") },
+                    label = { Text(stringResource(TDMR.strings.novel_replace_with)) },
                     singleLine = false,
                     maxLines = 3,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -1164,13 +1172,13 @@ private fun RegexEditDialog(
                             testError = null
                         },
                     )
-                    Text("Use Regex", modifier = Modifier.padding(start = 4.dp))
+                    Text(stringResource(TDMR.strings.novel_use_regex), modifier = Modifier.padding(start = 4.dp))
                 }
 
                 // Test section
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 Text(
-                    text = "Test",
+                    text = stringResource(TDMR.strings.novel_test),
                     style = MaterialTheme.typography.titleSmall,
                 )
                 OutlinedTextField(
@@ -1180,7 +1188,7 @@ private fun RegexEditDialog(
                         testOutput = null
                         testError = null
                     },
-                    label = { Text("Sample Input") },
+                    label = { Text(stringResource(TDMR.strings.novel_sample_input)) },
                     minLines = 2,
                     maxLines = 4,
                     modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
@@ -1188,7 +1196,7 @@ private fun RegexEditDialog(
                 TextButton(
                     onClick = {
                         if (pattern.isBlank()) {
-                            testError = "Pattern is empty"
+                            testError = patternEmptyText
                             return@TextButton
                         }
                         try {
@@ -1200,17 +1208,17 @@ private fun RegexEditDialog(
                             }
                             testError = null
                         } catch (e: Exception) {
-                            testError = e.message ?: "Invalid regex"
+                            testError = e.message ?: invalidRegexText
                             testOutput = null
                         }
                     },
                     modifier = Modifier.padding(top = 4.dp),
                 ) {
-                    Text("Run Test")
+                    Text(stringResource(TDMR.strings.novel_run_test))
                 }
                 testOutput?.let {
                     Text(
-                        text = "Output: $it",
+                        text = stringResource(TDMR.strings.novel_output_format, it),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.primary,
                         modifier = Modifier.padding(top = 4.dp),
@@ -1218,7 +1226,7 @@ private fun RegexEditDialog(
                 }
                 testError?.let {
                     Text(
-                        text = "Error: $it",
+                        text = stringResource(TDMR.strings.novel_error_format, it),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
                         modifier = Modifier.padding(top = 4.dp),
@@ -1234,7 +1242,7 @@ private fun RegexEditDialog(
                             try {
                                 Regex(pattern)
                             } catch (e: Exception) {
-                                testError = "Invalid regex: ${e.message}"
+                                testError = invalidRegexFormatText.replace("%s", e.message ?: "")
                                 return@TextButton
                             }
                         }
@@ -1274,7 +1282,7 @@ private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenMode
                 ttsReady = true
                 val voices = tts?.voices ?: emptySet()
                 availableVoices.clear()
-                availableVoices.add("" to "Default (System)")
+                availableVoices.add("" to context.stringResource(TDMR.strings.novel_tts_default_voice))
                 voices.filter { !it.isNetworkConnectionRequired }
                     .sortedBy { "${it.locale.displayLanguage} (${it.name})" }
                     .forEach { voice ->
@@ -1292,7 +1300,7 @@ private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenMode
 
     // Section Header
     Text(
-        text = stringResource(MR.strings.pref_novel_tts_section),
+        text = stringResource(TDMR.strings.pref_novel_tts_section),
         style = MaterialTheme.typography.titleMedium,
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
@@ -1306,7 +1314,7 @@ private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenMode
 
         Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
             Text(
-                text = stringResource(MR.strings.pref_novel_tts_voice),
+                text = stringResource(TDMR.strings.pref_novel_tts_voice),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Spacer(modifier = Modifier.height(4.dp))
@@ -1343,7 +1351,7 @@ private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenMode
 
     // Speech Speed Slider (0.5x to 2.0x)
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_tts_speed),
+        label = stringResource(TDMR.strings.pref_novel_tts_speed),
         value = (ttsSpeed * 10).toInt(),
         valueRange = 5..20,
         onChange = { screenModel.preferences.novelTtsSpeed().set(it / 10f) },
@@ -1352,7 +1360,7 @@ private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenMode
 
     // Speech Pitch Slider (0.5x to 2.0x)
     SliderItem(
-        label = stringResource(MR.strings.pref_novel_tts_pitch),
+        label = stringResource(TDMR.strings.pref_novel_tts_pitch),
         value = (ttsPitch * 10).toInt(),
         valueRange = 5..20,
         onChange = { screenModel.preferences.novelTtsPitch().set(it / 10f) },
@@ -1361,7 +1369,7 @@ private fun ColumnScope.TtsSettingsSection(screenModel: ReaderSettingsScreenMode
 
     // Auto-play next chapter
     CheckboxItem(
-        label = stringResource(MR.strings.pref_novel_tts_auto_next),
+        label = stringResource(TDMR.strings.pref_novel_tts_auto_next),
         pref = screenModel.preferences.novelTtsAutoNextChapter(),
     )
 }

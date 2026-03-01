@@ -47,6 +47,7 @@ import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
@@ -193,7 +194,7 @@ object SettingsMainScreen : Screen() {
         ),
         Item(
             titleRes = MR.strings.pref_category_novel_reader,
-            subtitleRes = MR.strings.pref_novel_reader_summary,
+            subtitleRes = TDMR.strings.pref_novel_reader_summary,
             icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsNovelReaderScreen,
         ),
@@ -205,7 +206,7 @@ object SettingsMainScreen : Screen() {
         ),
         Item(
             titleRes = MR.strings.pref_category_novel_downloads,
-            subtitleRes = MR.strings.pref_novel_download_throttling_summary,
+            subtitleRes = TDMR.strings.pref_novel_download_throttling_summary,
             icon = Icons.Outlined.GetApp,
             screen = SettingsNovelDownloadScreen,
         ),

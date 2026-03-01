@@ -44,6 +44,7 @@ import tachiyomi.domain.download.service.NovelDownloadPreferences
 import tachiyomi.domain.download.service.NovelDownloadPreferences.Companion.SourceOverride
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -137,14 +138,14 @@ object SettingsNovelDownloadScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.enableThrottling(),
-                    title = stringResource(MR.strings.pref_novel_download_throttling),
-                    subtitle = stringResource(MR.strings.pref_novel_download_throttling_summary),
+                    title = stringResource(TDMR.strings.pref_novel_download_throttling),
+                    subtitle = stringResource(TDMR.strings.pref_novel_download_throttling_summary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = downloadDelay,
                     valueRange = 0..30000,
-                    title = stringResource(MR.strings.pref_novel_download_delay),
-                    subtitle = stringResource(MR.strings.pref_novel_download_delay_summary),
+                    title = stringResource(TDMR.strings.pref_novel_download_delay),
+                    subtitle = stringResource(TDMR.strings.pref_novel_download_delay_summary),
                     valueString = "${downloadDelay}ms",
                     onValueChanged = { prefs.downloadDelay().set(it) },
                     enabled = enabled,
@@ -152,8 +153,8 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = randomDelay,
                     valueRange = 0..5000,
-                    title = stringResource(MR.strings.pref_novel_random_delay),
-                    subtitle = stringResource(MR.strings.pref_novel_random_delay_summary),
+                    title = stringResource(TDMR.strings.pref_novel_random_delay),
+                    subtitle = stringResource(TDMR.strings.pref_novel_random_delay_summary),
                     valueString = "0-${randomDelay}ms",
                     onValueChanged = { prefs.randomDelayRange().set(it) },
                     enabled = enabled,
@@ -161,7 +162,7 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = parallelDownloads,
                     valueRange = 1..50,
-                    title = stringResource(MR.strings.pref_novel_parallel_downloads),
+                    title = stringResource(TDMR.strings.pref_novel_parallel_downloads),
                     onValueChanged = { prefs.parallelNovelDownloads().set(it) },
                 ),
             ),
@@ -181,14 +182,14 @@ object SettingsNovelDownloadScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.downloadChapterImages(),
-                    title = stringResource(MR.strings.pref_novel_download_images),
-                    subtitle = stringResource(MR.strings.pref_novel_download_images_summary),
+                    title = stringResource(TDMR.strings.pref_novel_download_images),
+                    subtitle = stringResource(TDMR.strings.pref_novel_download_images_summary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = maxSizeKb,
                     valueRange = 0..2000,
-                    title = stringResource(MR.strings.pref_novel_max_image_size),
-                    subtitle = stringResource(MR.strings.pref_novel_max_image_size_summary),
+                    title = stringResource(TDMR.strings.pref_novel_max_image_size),
+                    subtitle = stringResource(TDMR.strings.pref_novel_max_image_size_summary),
                     valueString = if (maxSizeKb == 0) stringResource(MR.strings.no_limit) else "${maxSizeKb}KB",
                     onValueChanged = { prefs.maxImageSizeKb().set(it) },
                     enabled = enabled,
@@ -196,8 +197,8 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = compressionQuality,
                     valueRange = 10..100,
-                    title = stringResource(MR.strings.pref_novel_image_quality),
-                    subtitle = stringResource(MR.strings.pref_novel_image_quality_summary),
+                    title = stringResource(TDMR.strings.pref_novel_image_quality),
+                    subtitle = stringResource(TDMR.strings.pref_novel_image_quality_summary),
                     valueString = "$compressionQuality%",
                     onValueChanged = { prefs.imageCompressionQuality().set(it) },
                     enabled = enabled,
@@ -219,13 +220,13 @@ object SettingsNovelDownloadScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.enableUpdateThrottling(),
-                    title = stringResource(MR.strings.pref_novel_update_throttling),
-                    subtitle = stringResource(MR.strings.pref_novel_update_throttling_summary),
+                    title = stringResource(TDMR.strings.pref_novel_update_throttling),
+                    subtitle = stringResource(TDMR.strings.pref_novel_update_throttling_summary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = updateDelay,
                     valueRange = 0..15000,
-                    title = stringResource(MR.strings.pref_novel_update_delay),
+                    title = stringResource(TDMR.strings.pref_novel_update_delay),
                     subtitle = "Delay between novels for the same extension",
                     valueString = "${updateDelay}ms",
                     onValueChanged = { prefs.updateDelay().set(it) },
@@ -255,13 +256,13 @@ object SettingsNovelDownloadScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.enableMassImportThrottling(),
-                    title = stringResource(MR.strings.pref_novel_mass_import_throttling),
+                    title = stringResource(TDMR.strings.pref_novel_mass_import_throttling),
                     subtitle = "Apply delays between novels from the same source only",
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = massImportDelay,
                     valueRange = 0..15000,
-                    title = stringResource(MR.strings.pref_novel_mass_import_delay),
+                    title = stringResource(TDMR.strings.pref_novel_mass_import_delay),
                     subtitle = "Delay between imports from the same source (different sources run concurrently)",
                     valueString = "${massImportDelay}ms",
                     onValueChanged = { prefs.massImportDelay().set(it) },

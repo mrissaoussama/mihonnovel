@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import eu.kanade.presentation.components.AdaptiveSheet
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -110,7 +111,7 @@ private fun DialogContent(
             .padding(MaterialTheme.padding.medium),
     ) {
         Text(
-            text = stringResource(MR.strings.action_translate),
+            text = stringResource(TDMR.strings.action_translate),
             style = MaterialTheme.typography.titleLarge,
             modifier = Modifier.padding(bottom = MaterialTheme.padding.medium),
         )

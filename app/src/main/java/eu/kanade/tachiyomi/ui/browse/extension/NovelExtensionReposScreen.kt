@@ -42,6 +42,7 @@ import eu.kanade.presentation.util.Screen
 import eu.kanade.tachiyomi.jsplugin.model.JsPluginRepository
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen

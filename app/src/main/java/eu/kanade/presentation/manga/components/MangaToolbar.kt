@@ -26,6 +26,7 @@ import eu.kanade.presentation.components.DownloadDropdownMenu
 import eu.kanade.presentation.manga.DownloadAction
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
 
@@ -122,7 +123,7 @@ fun MangaToolbar(
                     if (onClickScrollToTop != null) {
                         add(
                             AppBar.Action(
-                                title = stringResource(MR.strings.action_scroll_to_top),
+                                title = stringResource(TDMR.strings.action_scroll_to_top),
                                 icon = Icons.Outlined.ArrowUpward,
                                 onClick = onClickScrollToTop,
                             ),
@@ -140,7 +141,7 @@ fun MangaToolbar(
                     if (onClickScrollToBottom != null) {
                         add(
                             AppBar.Action(
-                                title = stringResource(MR.strings.action_scroll_to_bottom),
+                                title = stringResource(TDMR.strings.action_scroll_to_bottom),
                                 icon = Icons.Outlined.ArrowDownward,
                                 onClick = onClickScrollToBottom,
                             ),
@@ -244,7 +245,7 @@ fun MangaToolbar(
                     if (onClickTranslate != null) {
                         add(
                             AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_translate),
+                                title = stringResource(TDMR.strings.action_translate),
                                 onClick = onClickTranslate,
                             ),
                         )
@@ -252,7 +253,7 @@ fun MangaToolbar(
                     if (onClickTranslateDownloaded != null) {
                         add(
                             AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_translate_downloaded),
+                                title = stringResource(TDMR.strings.action_translate_downloaded),
                                 onClick = onClickTranslateDownloaded,
                             ),
                         )
@@ -260,7 +261,7 @@ fun MangaToolbar(
                     if (onClickExportEpub != null) {
                         add(
                             AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_export_epub),
+                                title = stringResource(TDMR.strings.action_export_epub),
                                 onClick = onClickExportEpub,
                             ),
                         )
