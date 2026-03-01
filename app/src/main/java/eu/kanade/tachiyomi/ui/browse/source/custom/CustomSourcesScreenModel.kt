@@ -1,11 +1,11 @@
 package eu.kanade.tachiyomi.ui.browse.source.custom
 
+import android.app.Application
 import cafe.adriel.voyager.core.model.ScreenModel
 import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import eu.kanade.tachiyomi.source.custom.CustomSourceConfig
 import eu.kanade.tachiyomi.source.custom.CustomSourceManager
-import eu.kanade.tachiyomi.source.custom.CustomSourceTemplates
 import eu.kanade.tachiyomi.source.custom.SourceTestResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -13,6 +13,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.novel.TDMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -44,7 +46,8 @@ class CustomSourcesScreenModel(
                     _customSources.value = sources
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to load sources: ${e.message}"
+                val context = Injekt.get<Application>()
+                _errorMessage.value = context.stringResource(TDMR.strings.custom_source_load_failed, e.message ?: "")
             } finally {
                 _isLoading.value = false
             }
@@ -59,14 +62,14 @@ class CustomSourcesScreenModel(
     }
 
     /**
-     * Create a new source config from a template
+     * Create a blank source config with name and base URL.
+     * Use the WebView wizard to fill in selectors, or edit manually.
      */
-    fun createFromTemplate(
-        templateName: String,
+    fun createBlankConfig(
         name: String,
         baseUrl: String,
-    ): CustomSourceConfig? {
-        return customSourceManager.fromTemplate(templateName, name, baseUrl)
+    ): CustomSourceConfig {
+        return customSourceManager.createBlankConfig(name, baseUrl)
     }
 
     /**
@@ -110,7 +113,8 @@ class CustomSourcesScreenModel(
             try {
                 customSourceManager.deleteSource(sourceId)
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to delete source: ${e.message}"
+                val context = Injekt.get<Application>()
+                _errorMessage.value = context.stringResource(TDMR.strings.custom_source_delete_failed, e.message ?: "")
             }
         }
     }
@@ -122,7 +126,8 @@ class CustomSourcesScreenModel(
         return try {
             customSourceManager.exportSource(sourceId)
         } catch (e: Exception) {
-            _errorMessage.value = "Failed to export source: ${e.message}"
+            val context = Injekt.get<Application>()
+            _errorMessage.value = context.stringResource(TDMR.strings.custom_source_export_failed, e.message ?: "")
             null
         }
     }

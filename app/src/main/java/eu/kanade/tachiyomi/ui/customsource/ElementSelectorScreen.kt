@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.webkit.JavascriptInterface
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
+import androidx.annotation.Keep
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -84,106 +85,91 @@ import com.kevinnzou.web.rememberWebViewNavigator
 import com.kevinnzou.web.rememberWebViewState
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.tachiyomi.util.system.setDefaultSettings
+import dev.icerock.moko.resources.StringResource
 import kotlinx.coroutines.launch
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
+import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.components.material.Scaffold as TachiyomiScaffold
 
 /**
  * Element Selector Wizard Steps
  * Reordered to collect essential selectors (cover/title/link) early for popular/latest/search
  */
-enum class SelectorWizardStep(val title: String, val description: String, val detailedHelp: String = "") {
-    // Step 1: Navigate to popular/trending section
+enum class SelectorWizardStep(
+    val titleRes: StringResource,
+    val descriptionRes: StringResource,
+    val detailedHelpRes: StringResource,
+) {
     TRENDING(
-        "Trending Section",
-        "Navigate to the trending/popular novels section",
-        "Find the section showing popular or trending novels on the homepage",
+        TDMR.strings.selector_step_trending_title,
+        TDMR.strings.selector_step_trending_desc,
+        TDMR.strings.selector_step_trending_detail,
     ),
-
-    // Step 2: ESSENTIAL - Select cover/title/link elements for novel cards (moved up!)
     NOVEL_CARD(
-        "Novel Card Elements",
-        "Select: 1) Cover IMAGE, 2) TITLE text, 3) Novel URL link",
-        "These elements will be used to display novels in popular/latest/search lists",
+        TDMR.strings.selector_step_novel_card_title,
+        TDMR.strings.selector_step_novel_card_desc,
+        TDMR.strings.selector_step_novel_card_detail,
     ),
-
-    // Step 3: Select individual novels from trending
     TRENDING_NOVELS(
-        "Trending Novels",
-        "Select 3 novel items: Click on TITLE element of each novel",
-        "Click on the title text of 3 different trending novels.",
+        TDMR.strings.selector_step_trending_novels_title,
+        TDMR.strings.selector_step_trending_novels_desc,
+        TDMR.strings.selector_step_trending_novels_detail,
     ),
-
-    // Step 4: Navigate to latest section
     NEW_NOVELS_SECTION(
-        "New Novels Section",
-        "Navigate to the new/latest novels section",
-        "Find the section showing recently updated novels",
+        TDMR.strings.selector_step_new_section_title,
+        TDMR.strings.selector_step_new_section_desc,
+        TDMR.strings.selector_step_new_section_detail,
     ),
-
-    // Step 5: Select new novel items
     NEW_NOVELS(
-        "New Novels",
-        "Select 3 novel items: Select the TITLE element for each",
-        "Click on the title text of 3 different latest novels",
+        TDMR.strings.selector_step_new_novels_title,
+        TDMR.strings.selector_step_new_novels_desc,
+        TDMR.strings.selector_step_new_novels_detail,
     ),
-
-    // Step 6-8: Optional search and pagination
     SEARCH(
-        "Search Page (Optional)",
-        "Skip or search for 'a' (single letter) to identify search URL pattern",
-        "Search for a single letter like 'a' or 'the'. Look at the URL to find how the search term is passed (e.g., ?s=, ?q=, /search/)",
+        TDMR.strings.selector_step_search_title,
+        TDMR.strings.selector_step_search_desc,
+        TDMR.strings.selector_step_search_detail,
     ),
     SEARCH_URL_PATTERN(
-        "Search URL Pattern",
-        "Identify where the search keyword appears in the URL",
-        "Look for your search term in the URL. Common patterns: ?s=keyword, ?q=keyword, /search/keyword",
+        TDMR.strings.selector_step_search_url_title,
+        TDMR.strings.selector_step_search_url_desc,
+        TDMR.strings.selector_step_search_url_detail,
     ),
     PAGINATION(
-        "Pagination (Optional)",
-        "Navigate to page 2 to identify pagination pattern",
-        "Click on page 2 link. Look for page number in URL (e.g., /page/2, ?page=2, ?p=2)",
+        TDMR.strings.selector_step_pagination_title,
+        TDMR.strings.selector_step_pagination_desc,
+        TDMR.strings.selector_step_pagination_detail,
     ),
-
-    // Step 9: Navigate to novel details page
     NOVEL_PAGE(
-        "Novel Details Page",
-        "Click on a novel to open its details page",
-        "Navigate to any novel's main page",
+        TDMR.strings.selector_step_novel_page_title,
+        TDMR.strings.selector_step_novel_page_desc,
+        TDMR.strings.selector_step_novel_page_detail,
     ),
-
-    // Step 10: Select novel details elements
     NOVEL_DETAILS(
-        "Novel Details",
-        "Select: 1) Title, 2) Description/Summary, 3) Cover image, 4) Tags/Genres (optional)",
-        "Select each element that shows novel information on the details page",
+        TDMR.strings.selector_step_novel_details_title,
+        TDMR.strings.selector_step_novel_details_desc,
+        TDMR.strings.selector_step_novel_details_detail,
     ),
-
-    // Step 11: Select chapter list elements
     CHAPTER_LIST(
-        "Chapter List",
-        "Select chapter items: Click on the TITLE/LINK of chapters",
-        "Select at least one chapter item (more improves accuracy)",
+        TDMR.strings.selector_step_chapter_list_title,
+        TDMR.strings.selector_step_chapter_list_desc,
+        TDMR.strings.selector_step_chapter_list_detail,
     ),
-
-    // Step 12: Navigate to chapter page
     CHAPTER_PAGE(
-        "Chapter Page",
-        "Open a chapter to identify the content element",
-        "Click on any chapter to open its reading page",
+        TDMR.strings.selector_step_chapter_page_title,
+        TDMR.strings.selector_step_chapter_page_desc,
+        TDMR.strings.selector_step_chapter_page_detail,
     ),
-
-    // Step 13: Select chapter content element
     CHAPTER_CONTENT(
-        "Chapter Content",
-        "Select the main text container element",
-        "Click on the element containing the actual chapter text/content",
+        TDMR.strings.selector_step_chapter_content_title,
+        TDMR.strings.selector_step_chapter_content_desc,
+        TDMR.strings.selector_step_chapter_content_detail,
     ),
-
-    // Step 14: Complete
     COMPLETE(
-        "Complete",
-        "Review and save your custom source configuration",
-        "Verify your selections and save",
+        TDMR.strings.selector_step_complete_title,
+        TDMR.strings.selector_step_complete_desc,
+        TDMR.strings.selector_step_complete_detail,
     ),
     ;
 
@@ -220,6 +206,7 @@ data class SelectorConfig(
 /**
  * JavaScript interface for element selection communication
  */
+@Keep
 class ElementSelectorJSInterface(
     private val onElementSelected: (String, String, String, String) -> Unit,
     private val onSelectionModeChanged: (Boolean) -> Unit,
@@ -242,13 +229,21 @@ class ElementSelectorJSInterface(
 @Composable
 fun ElementSelectorScreen(
     initialUrl: String,
+    initialSourceName: String = "",
     onNavigateUp: () -> Unit,
     onSaveConfig: (SelectorConfig) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
 
     var currentStep by remember { mutableStateOf(SelectorWizardStep.TRENDING) }
-    var config by remember { mutableStateOf(SelectorConfig(baseUrl = initialUrl)) }
+    var config by remember {
+        mutableStateOf(
+            SelectorConfig(
+                sourceName = initialSourceName,
+                baseUrl = initialUrl,
+            ),
+        )
+    }
     var selectionModeEnabled by remember { mutableStateOf(false) }
     var lastSelectedElement by remember { mutableStateOf<SelectedElement?>(null) }
     var showSelectorDialog by remember { mutableStateOf(false) }
@@ -405,19 +400,19 @@ fun ElementSelectorScreen(
             Column {
                 // Top App Bar
                 AppBar(
-                    title = "Element Selector - ${currentStep.title}",
+                    title = stringResource(TDMR.strings.selector_title_format, stringResource(currentStep.titleRes)),
                     subtitle = "${currentStep.ordinal + 1}/${SelectorWizardStep.totalSteps}",
                     navigateUp = onNavigateUp,
                     navigationIcon = Icons.Outlined.Close,
                     actions = {
                         IconButton(onClick = { navigator.reload() }) {
-                            Icon(Icons.Outlined.Refresh, "Refresh")
+                            Icon(Icons.Outlined.Refresh, stringResource(TDMR.strings.action_refresh))
                         }
                         IconButton(onClick = {
                             // Show name dialog before saving
                             showSourceNameDialog = true
                         }) {
-                            Icon(Icons.Outlined.Save, "Save")
+                            Icon(Icons.Outlined.Save, stringResource(MR.strings.action_save))
                         }
                     },
                 )
@@ -457,11 +452,11 @@ fun ElementSelectorScreen(
                 icon = {
                     Icon(
                         if (selectionModeEnabled) Icons.Filled.TouchApp else Icons.Filled.Edit,
-                        contentDescription = "Select Element",
+                        contentDescription = stringResource(TDMR.strings.selector_select_element),
                     )
                 },
                 text = {
-                    Text(if (selectionModeEnabled) "Selection ON" else "Select Element")
+                    Text(if (selectionModeEnabled) stringResource(TDMR.strings.selector_selection_on) else stringResource(TDMR.strings.selector_select_element))
                 },
             )
         },
@@ -546,7 +541,7 @@ fun ElementSelectorScreen(
                             .padding(horizontal = 16.dp, vertical = 8.dp),
                     ) {
                         Text(
-                            "Tap an element to select it",
+                            stringResource(TDMR.strings.selector_tap_to_select),
                             color = MaterialTheme.colorScheme.onPrimary,
                             style = MaterialTheme.typography.labelMedium,
                         )
@@ -722,14 +717,14 @@ private fun StepInstructionCard(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        text = step.description,
+                        text = stringResource(step.descriptionRes),
                         style = MaterialTheme.typography.bodyMedium,
                         fontWeight = FontWeight.Medium,
                     )
-                    if (step.detailedHelp.isNotEmpty()) {
+                    if (true) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = step.detailedHelp,
+                            text = stringResource(step.detailedHelpRes),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
                         )
@@ -737,7 +732,7 @@ private fun StepInstructionCard(
                     if (selectedCount > 0) {
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = "$selectedCount element(s) selected",
+                            text = stringResource(TDMR.strings.selector_elements_selected, selectedCount),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -746,12 +741,12 @@ private fun StepInstructionCard(
                 Row {
                     if (onSkipStep != null) {
                         TextButton(onClick = onSkipStep) {
-                            Text("Skip", color = MaterialTheme.colorScheme.tertiary)
+                            Text(stringResource(TDMR.strings.custom_selector_skip), color = MaterialTheme.colorScheme.tertiary)
                         }
                     }
                     if (selectedCount > 0) {
                         IconButton(onClick = onClearSelections) {
-                            Icon(Icons.Filled.Delete, "Clear selections")
+                            Icon(Icons.Filled.Delete, stringResource(TDMR.strings.selector_clear_selections))
                         }
                     }
                 }
@@ -776,7 +771,7 @@ private fun StepInstructionCard(
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
-                            text = "Detected: ${detectedFramework.displayName}",
+                            text = stringResource(TDMR.strings.selector_detected_format, detectedFramework.displayName),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary,
                         )
@@ -788,7 +783,7 @@ private fun StepInstructionCard(
                             modifier = Modifier.size(16.dp),
                         )
                         Spacer(modifier = Modifier.width(4.dp))
-                        Text("Suggestions")
+                        Text(stringResource(TDMR.strings.custom_selector_suggestions))
                     }
                 }
             }
@@ -816,10 +811,10 @@ private fun NavigationBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack, enabled = canGoBack) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowBack, "Back")
+            Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(TDMR.strings.action_previous))
         }
         IconButton(onClick = onForward, enabled = canGoForward) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowForward, "Forward")
+            Icon(Icons.AutoMirrored.Outlined.ArrowForward, stringResource(TDMR.strings.action_next))
         }
 
         OutlinedTextField(
@@ -836,7 +831,7 @@ private fun NavigationBar(
                         onUrlSubmit(urlText)
                     },
                 ) {
-                    Icon(Icons.Outlined.Search, "Go")
+                    Icon(Icons.Outlined.Search, stringResource(MR.strings.action_search))
                 }
             },
         )
@@ -856,7 +851,7 @@ private fun SelectedElementsPanel(
     ) {
         Column(modifier = Modifier.padding(8.dp)) {
             Text(
-                text = "Selected Elements",
+                text = stringResource(TDMR.strings.selector_selected_elements),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = FontWeight.Bold,
             )
@@ -888,10 +883,10 @@ private fun SelectedElementsPanel(
                     }
                     Row {
                         IconButton(onClick = { onHighlight(element) }) {
-                            Icon(Icons.Filled.TouchApp, "Highlight", Modifier.height(20.dp))
+                            Icon(Icons.Filled.TouchApp, stringResource(TDMR.strings.selector_select_element), Modifier.height(20.dp))
                         }
                         IconButton(onClick = { onRemove(element) }) {
-                            Icon(Icons.Filled.Delete, "Remove", Modifier.height(20.dp))
+                            Icon(Icons.Filled.Delete, stringResource(MR.strings.action_delete), Modifier.height(20.dp))
                         }
                     }
                 }
@@ -923,7 +918,7 @@ private fun StepNavigationBar(
             onClick = onPrevious,
             enabled = !isFirstStep,
         ) {
-            Text("Previous")
+            Text(stringResource(TDMR.strings.custom_selector_previous))
         }
 
         if (isLastStep) {
@@ -935,14 +930,14 @@ private fun StepNavigationBar(
             ) {
                 Icon(Icons.Filled.CheckCircle, null)
                 Spacer(Modifier.width(8.dp))
-                Text("Save Source")
+                Text(stringResource(TDMR.strings.custom_selector_save_source))
             }
         } else {
             Button(
                 onClick = onNext,
                 enabled = canProceed,
             ) {
-                Text("Next Step")
+                Text(stringResource(TDMR.strings.custom_selector_next_step))
             }
         }
     }
@@ -959,7 +954,7 @@ private fun SelectorConfirmDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Confirm Selection") },
+        title = { Text(stringResource(TDMR.strings.custom_selector_confirm_selection)) },
         text = {
             Column(
                 modifier = Modifier.verticalScroll(rememberScrollState()),
@@ -992,7 +987,7 @@ private fun SelectorConfirmDialog(
                 // Parent selectors options
                 if (element.parentSelectors.isNotEmpty()) {
                     Text(
-                        text = "Select Parent Element:",
+                        text = stringResource(TDMR.strings.selector_select_parent),
                         style = MaterialTheme.typography.labelMedium,
                         color = MaterialTheme.colorScheme.primary,
                     )
@@ -1004,7 +999,12 @@ private fun SelectorConfirmDialog(
                                 onClick = { editedSelector = selector },
                                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
                             ) {
-                                Text("Select Parent <${tag.uppercase()}>")
+                                Text(
+                                    stringResource(
+                                        TDMR.strings.custom_selector_select_parent_format,
+                                        tag.uppercase(),
+                                    ),
+                                )
                             }
                         }
                     }
@@ -1015,7 +1015,7 @@ private fun SelectorConfirmDialog(
                 OutlinedTextField(
                     value = editedSelector,
                     onValueChange = { editedSelector = it },
-                    label = { Text("CSS Selector") },
+                    label = { Text(stringResource(TDMR.strings.custom_selector_css_selector)) },
                     modifier = Modifier.fillMaxWidth(),
                     textStyle = MaterialTheme.typography.bodySmall.copy(fontFamily = FontFamily.Monospace),
                     singleLine = true,
@@ -1039,7 +1039,7 @@ private fun SelectorConfirmDialog(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Text(
-                        text = if (showHtml) "Hide HTML" else "Show HTML",
+                        text = if (showHtml) stringResource(TDMR.strings.selector_hide_html) else stringResource(TDMR.strings.selector_show_html),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -1074,12 +1074,12 @@ private fun SelectorConfirmDialog(
             Button(onClick = { onConfirm(editedSelector) }) {
                 Icon(Icons.Filled.CheckCircle, contentDescription = null, modifier = Modifier.size(18.dp))
                 Spacer(modifier = Modifier.width(4.dp))
-                Text("Add")
+                Text(stringResource(MR.strings.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(MR.strings.action_cancel))
             }
         },
     )
@@ -1093,16 +1093,17 @@ private fun SourceNameDialog(
     onDismiss: () -> Unit,
 ) {
     // Extract domain name as default suggestion
-    val suggestedName = remember(baseUrl) {
+    val customSourceFallback = stringResource(TDMR.strings.selector_custom_source)
+    val suggestedName = remember(baseUrl, customSourceFallback) {
         try {
             val host = java.net.URI(baseUrl).host ?: baseUrl
             host.removePrefix("www.")
                 .split(".")
                 .firstOrNull()
                 ?.replaceFirstChar { it.uppercase() }
-                ?: "Custom Source"
+                ?: customSourceFallback
         } catch (e: Exception) {
-            "Custom Source"
+            customSourceFallback
         }
     }
 
@@ -1110,11 +1111,11 @@ private fun SourceNameDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save Custom Source") },
+        title = { Text(stringResource(TDMR.strings.custom_selector_save_custom_source)) },
         text = {
             Column {
                 Text(
-                    text = "Enter a name for your custom source:",
+                    text = stringResource(TDMR.strings.selector_enter_name),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
@@ -1123,7 +1124,7 @@ private fun SourceNameDialog(
                     value = sourceName,
                     onValueChange = { sourceName = it },
                     modifier = Modifier.fillMaxWidth(),
-                    label = { Text("Source Name *") },
+                    label = { Text(stringResource(TDMR.strings.custom_selector_source_name_required)) },
                     placeholder = { Text(suggestedName) },
                     singleLine = true,
                     isError = sourceName.isBlank(),
@@ -1131,7 +1132,7 @@ private fun SourceNameDialog(
 
                 if (sourceName.isBlank()) {
                     Text(
-                        text = "Name is required",
+                        text = stringResource(TDMR.strings.selector_name_required),
                         color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(top = 4.dp),
@@ -1140,7 +1141,7 @@ private fun SourceNameDialog(
 
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
-                    text = "Base URL: $baseUrl",
+                    text = stringResource(TDMR.strings.selector_base_url_format, baseUrl),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -1151,12 +1152,12 @@ private fun SourceNameDialog(
                 onClick = { onSave(sourceName) },
                 enabled = sourceName.isNotBlank(),
             ) {
-                Text("Save")
+                Text(stringResource(MR.strings.action_save))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(MR.strings.action_cancel))
             }
         },
     )
@@ -1286,7 +1287,7 @@ private fun PatternLibraryDialog(
         onDismissRequest = onDismiss,
         title = {
             Column {
-                Text("Pattern Library")
+                Text(stringResource(TDMR.strings.custom_selector_pattern_library))
                 Text(
                     text = framework.displayName,
                     style = MaterialTheme.typography.bodySmall,
@@ -1302,13 +1303,13 @@ private fun PatternLibraryDialog(
             ) {
                 if (suggestions.isEmpty()) {
                     Text(
-                        text = "No specific patterns available for this step and framework.",
+                        text = stringResource(TDMR.strings.selector_no_patterns),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
                     Text(
-                        text = "Suggested selectors for ${currentStep.title}:",
+                        text = stringResource(TDMR.strings.selector_suggested_format, stringResource(currentStep.titleRes)),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Bold,
                     )
@@ -1359,12 +1360,12 @@ private fun PatternLibraryDialog(
                                             TextButton(
                                                 onClick = { onSelectPattern(preset.selector) },
                                             ) {
-                                                Text("Test")
+                                                Text(stringResource(TDMR.strings.custom_selector_test))
                                             }
                                             TextButton(
                                                 onClick = { onApplySelector(preset.selector) },
                                             ) {
-                                                Text("Use")
+                                                Text(stringResource(TDMR.strings.custom_selector_use))
                                             }
                                         }
                                     }
@@ -1390,7 +1391,7 @@ private fun PatternLibraryDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Available Frameworks:",
+                    text = stringResource(TDMR.strings.selector_available_frameworks),
                     style = MaterialTheme.typography.labelMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -1411,7 +1412,7 @@ private fun PatternLibraryDialog(
         },
         confirmButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(MR.strings.action_close))
             }
         },
     )
@@ -1575,7 +1576,20 @@ private val ELEMENT_SELECTOR_JS = """
  * Returns Pair(searchUrlPattern, detectedKeyword) or null if not detected
  */
 private fun detectSearchUrl(url: String, baseUrl: String): Pair<String, String>? {
-    val baseUrlTrimmed = baseUrl.trimEnd('/')
+    val baseUri = try {
+        java.net.URI(baseUrl.trimEnd('/'))
+    } catch (e: Exception) {
+        null
+    }
+    val currentUri = try {
+        java.net.URI(url)
+    } catch (e: Exception) {
+        null
+    }
+
+    if (baseUri != null && currentUri != null && baseUri.host != null && currentUri.host != null) {
+        if (!currentUri.host.equals(baseUri.host, ignoreCase = true)) return null
+    }
 
     // Common search parameter patterns
     val searchParams = listOf(
@@ -1588,16 +1602,15 @@ private fun detectSearchUrl(url: String, baseUrl: String): Pair<String, String>?
         "term" to Regex("""[?&]term=([^&]+)"""),
     )
 
-    // Try each pattern
+    // Try each query-param pattern
     for ((param, regex) in searchParams) {
         val match = regex.find(url)
         if (match != null) {
             val keyword = java.net.URLDecoder.decode(match.groupValues[1], "UTF-8")
-            // Build the search URL pattern
+            if (keyword.isBlank()) continue
+
             val searchUrlPattern = url
                 .replace(match.groupValues[1], "{query}")
-                .replace(Regex("""[?&]page=\d+"""), "&page={page}")
-                .let { if (!it.contains("{page}")) "$it&page={page}" else it }
                 .replace("&&", "&")
                 .replace("?&", "?")
 
@@ -1616,9 +1629,9 @@ private fun detectSearchUrl(url: String, baseUrl: String): Pair<String, String>?
         val match = regex.find(url)
         if (match != null) {
             val keyword = java.net.URLDecoder.decode(match.groupValues[2], "UTF-8")
+            if (keyword.isBlank()) continue
             val searchUrlPattern = url
                 .replace(match.groupValues[2], "{query}")
-                .let { if (!it.contains("{page}")) "$it?page={page}" else it }
 
             return Pair(searchUrlPattern, keyword)
         }

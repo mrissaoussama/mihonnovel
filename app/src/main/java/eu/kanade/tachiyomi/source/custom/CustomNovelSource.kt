@@ -13,9 +13,13 @@ import eu.kanade.tachiyomi.util.asJsoup
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import okhttp3.Headers
+import okhttp3.Request
 import okhttp3.Response
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
+import tachiyomi.domain.source.service.SourceManager
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 
 /**
  * Custom Novel Extension - User-defined novel source
@@ -33,7 +37,7 @@ class CustomNovelSource(
 ) : HttpSource(), NovelSource {
 
     // Mark this as a novel source for HttpPageLoader detection
-    override val isNovelSource: Boolean = true
+    override val isNovelSource: Boolean = config.isNovel
 
     override val name: String = config.name
     override val baseUrl: String = config.baseUrl
@@ -43,18 +47,65 @@ class CustomNovelSource(
 
     override val client = if (config.useCloudflare) network.cloudflareClient else network.client
 
+    /**
+     * When basedOnSourceId is set, we delegate all fetching/parsing to the base
+     * extension source but substitute our own baseUrl in requests.
+     */
+    private val baseSource: HttpSource? by lazy {
+        config.basedOnSourceId?.let { sourceId ->
+            try {
+                Injekt.get<SourceManager>().get(sourceId) as? HttpSource
+            } catch (_: Exception) {
+                null
+            }
+        }
+    }
+
     override fun headersBuilder(): Headers.Builder = super.headersBuilder().apply {
         config.headers.forEach { (key, value) ->
             add(key, value)
         }
     }
 
+    // ======================== Extension Delegation ========================
+    // When basedOnSourceId is set, delegate to the base source's public API
+    // (protected request/parse methods aren't accessible on external instances)
+
+    override suspend fun getPopularManga(page: Int): MangasPage {
+        baseSource?.let { return it.getPopularManga(page) }
+        return super.getPopularManga(page)
+    }
+
+    override suspend fun getLatestUpdates(page: Int): MangasPage {
+        baseSource?.let { return it.getLatestUpdates(page) }
+        return super.getLatestUpdates(page)
+    }
+
+    override suspend fun getSearchManga(page: Int, query: String, filters: FilterList): MangasPage {
+        baseSource?.let { return it.getSearchManga(page, query, filters) }
+        return super.getSearchManga(page, query, filters)
+    }
+
+    override suspend fun getMangaDetails(manga: SManga): SManga {
+        baseSource?.let { return it.getMangaDetails(manga) }
+        return super.getMangaDetails(manga)
+    }
+
+    override suspend fun getChapterList(manga: SManga): List<SChapter> {
+        baseSource?.let { return it.getChapterList(manga) }
+        return super.getChapterList(manga)
+    }
+
+    override suspend fun getPageList(chapter: SChapter): List<Page> {
+        baseSource?.let { return it.getPageList(chapter) }
+        return super.getPageList(chapter)
+    }
+
     // ======================== Popular ========================
 
-    override fun popularMangaRequest(page: Int) = GET(
-        config.popularUrl.buildUrl(baseUrl, page),
-        headers,
-    )
+    override fun popularMangaRequest(page: Int): Request {
+        return GET(config.popularUrl.buildUrl(baseUrl, page), headers)
+    }
 
     override fun popularMangaParse(response: Response): MangasPage {
         val document = response.asJsoup()
@@ -63,19 +114,22 @@ class CustomNovelSource(
 
     // ======================== Latest ========================
 
-    override fun latestUpdatesRequest(page: Int) = GET(
-        (config.latestUrl ?: config.popularUrl).buildUrl(baseUrl, page),
-        headers,
-    )
+    override fun latestUpdatesRequest(page: Int): Request {
+        return GET(
+            (config.latestUrl ?: config.popularUrl).buildUrl(baseUrl, page),
+            headers,
+        )
+    }
 
-    override fun latestUpdatesParse(response: Response) = popularMangaParse(response)
+    override fun latestUpdatesParse(response: Response): MangasPage {
+        return popularMangaParse(response)
+    }
 
     // ======================== Search ========================
 
-    override fun searchMangaRequest(page: Int, query: String, filters: FilterList) = GET(
-        config.searchUrl.buildSearchUrl(baseUrl, query, page),
-        headers,
-    )
+    override fun searchMangaRequest(page: Int, query: String, filters: FilterList): Request {
+        return GET(config.searchUrl.buildSearchUrl(baseUrl, query, page), headers)
+    }
 
     override fun searchMangaParse(response: Response): MangasPage {
         val document = response.asJsoup()
@@ -164,10 +218,21 @@ class CustomNovelSource(
     }
 
     override suspend fun fetchPageText(page: Page): String {
+        val bs = baseSource
+        if (bs is NovelSource) {
+            return bs.fetchPageText(page)
+        }
+
+        // If based on extension but source unavailable/incompatible, return empty
+        if (config.basedOnSourceId != null) return ""
+
         val response = client.newCall(GET(baseUrl + page.url, headers)).awaitSuccess()
         val document = response.asJsoup()
 
         val selectors = config.selectors.content
+
+        // Guard against empty selector (Jsoup throws on empty string)
+        if (selectors.primary.isBlank()) return ""
 
         // Try primary selector
         var element = document.selectFirst(selectors.primary)
@@ -201,7 +266,10 @@ class CustomNovelSource(
 
     override fun imageUrlParse(response: Response) = ""
 
-    override fun getFilterList() = FilterList()
+    override fun getFilterList(): FilterList {
+        baseSource?.let { return it.getFilterList() }
+        return FilterList()
+    }
 
     // ======================== Helper Functions ========================
 
@@ -384,8 +452,9 @@ data class CustomSourceConfig(
     val novelIdPattern: String? = null,
     val reverseChapters: Boolean = false,
     val useCloudflare: Boolean = true,
-    val useNewChapterEndpoint: Boolean = false,
     val postSearch: Boolean = false,
+    val basedOnSourceId: Long? = null,
+    val isNovel: Boolean = true,
 )
 
 @Serializable
@@ -432,311 +501,5 @@ data class ContentSelectors(
     val removeSelectors: List<String>? = null,
 )
 
-// ======================== Config Templates ========================
-
-/**
- * Pre-built configuration templates for common site structures
- */
-object CustomSourceTemplates {
-
-    /**
-     * Template for Madara WordPress theme (most common novel theme)
-     * Uses AJAX for chapter loading
-     */
-    val MADARA = CustomSourceConfig(
-        name = "Madara Theme Site",
-        baseUrl = "https://example.com",
-        sourceType = CustomSourceType.MADARA,
-        popularUrl = "{baseUrl}/page/{page}/?s=&post_type=wp-manga",
-        latestUrl = "{baseUrl}/page/{page}/?s=&post_type=wp-manga&m_orderby=latest",
-        searchUrl = "{baseUrl}/page/{page}/?s={query}&post_type=wp-manga",
-        selectors = SourceSelectors(
-            popular = MangaListSelectors(
-                list = ".page-item-detail, .c-tabs-item__content, div.col-4, " +
-                    "div.col-md-2, div.col-12.col-md-4, div.hover-details",
-                link = ".post-title a, a",
-                title = ".post-title, a[title]",
-                cover = "img",
-                nextPage = ".pagination a:contains(next)",
-            ),
-            details = DetailSelectors(
-                title = ".post-title h1, h1.entry-title, #manga-title",
-                author = ".manga-authors a, .author-content a",
-                description = "div.summary__content, .manga-excerpt, #tab-manga-about",
-                genre = ".genres-content a",
-                status = ".post-status .summary-content",
-                cover = ".summary_image img",
-            ),
-            chapters = ChapterSelectors(
-                list = ".wp-manga-chapter",
-                link = "a",
-                name = "a",
-                date = ".chapter-release-date",
-            ),
-            content = ContentSelectors(
-                primary = ".text-left",
-                fallbacks = listOf(
-                    ".text-right",
-                    ".entry-content",
-                    ".c-blog-post > div > div:nth-child(2)",
-                    ".reading-content",
-                    ".chapter-content",
-                ),
-                removeSelectors = listOf(
-                    "div.ads",
-                    ".unlock-buttons",
-                    "script",
-                    "ins",
-                    ".adsbygoogle",
-                    ".code-block",
-                    "noscript",
-                    "iframe",
-                ),
-            ),
-        ),
-        useNewChapterEndpoint = false, // Set to true for sites using /ajax/chapters/ endpoint
-        reverseChapters = true,
-    )
-
-    /**
-     * Template for LightNovelWP theme
-     */
-    val LIGHTNOVELWP = CustomSourceConfig(
-        name = "LightNovelWP Theme Site",
-        baseUrl = "https://example.com",
-        sourceType = CustomSourceType.LIGHTNOVELWP,
-        popularUrl = "{baseUrl}/series?page={page}",
-        latestUrl = "{baseUrl}/series?page={page}&order=latest",
-        searchUrl = "{baseUrl}/series?page={page}&s={query}",
-        selectors = SourceSelectors(
-            popular = MangaListSelectors(
-                list = "article",
-                link = "a[title]",
-                title = "a[title]",
-                cover = ".ts-post-image img, .ts-post-image, img.ts-post-image, img",
-                nextPage = ".pagination .next, .pagination a.next",
-            ),
-            details = DetailSelectors(
-                title = ".entry-title",
-                author = ".spe span:contains(Author) + span, .serl:contains(Author)",
-                description = ".entry-content, [itemprop=description]",
-                genre = ".genxed a, .sertogenre a",
-                status = ".sertostat, .spe:contains(Status), .serl:contains(Status)",
-                cover = ".thumb img, .thumbook img, img.ts-post-image",
-            ),
-            chapters = ChapterSelectors(
-                list = ".eplister li",
-                link = "a",
-                name = ".epl-title, .epl-num span:first-child",
-                date = ".epl-date",
-            ),
-            content = ContentSelectors(
-                primary = ".epcontent.entry-content",
-                fallbacks = listOf(
-                    ".epcontent",
-                    ".entry-content",
-                    "#chapter-content",
-                    ".reading-content",
-                    ".text-left",
-                ),
-                removeSelectors = listOf(
-                    ".unlock-buttons",
-                    ".ads",
-                    "script",
-                    "style",
-                    ".sharedaddy",
-                    ".code-block",
-                    ".su-spoiler-title",
-                ),
-            ),
-        ),
-        reverseChapters = true,
-    )
-
-    /**
-     * Template for ReadNovelFull-style sites
-     */
-    val READNOVELFULL = CustomSourceConfig(
-        name = "ReadNovelFull Style Site",
-        baseUrl = "https://example.com",
-        sourceType = CustomSourceType.READNOVELFULL,
-        popularUrl = "{baseUrl}/most-popular?page={page}",
-        latestUrl = "{baseUrl}/latest-release-novel?page={page}",
-        searchUrl = "{baseUrl}/search?keyword={query}&page={page}",
-        selectors = SourceSelectors(
-            popular = MangaListSelectors(
-                list = "div.col-novel-main div.list-novel div.row, div.archive div.row, " +
-                    "div.index-intro div.item, div.ul-list1 div.li",
-                link = "h3.novel-title a, .novel-title a, a.cover, h3.tit a",
-                title = "h3.novel-title a, .novel-title a, h3.tit a",
-                cover = "img",
-                nextPage = "li.next:not(.disabled), ul.pagination li.active + li a",
-            ),
-            details = DetailSelectors(
-                title = "h3.title, h1.tit",
-                author = "div.info div:contains(Author) a, ul.info-meta li:contains(Author) a",
-                description = "div.desc-text, div.inner, div.desc, div.m-desc div.txt div.inner",
-                genre = "div.info div:contains(Genre) a, ul.info-meta li:contains(Genre) a",
-                status = "div.info div:contains(Status), ul.info-meta li:contains(Status)",
-                cover = "div.books img, div.book img, div.m-imgtxt img",
-            ),
-            chapters = ChapterSelectors(
-                list = "ul.list-chapter li, ul#idData li",
-                link = "a",
-                name = "a",
-            ),
-            content = ContentSelectors(
-                primary = "div#chr-content",
-                fallbacks = listOf(
-                    "div#chr-content.chr-c",
-                    "div#chapter-content",
-                    "div#article",
-                    "div.txt",
-                    "div.chapter-content",
-                    "div.content",
-                ),
-                removeSelectors = listOf("div.ads", ".unlock-buttons", "script", "ins", ".adsbygoogle"),
-            ),
-        ),
-        chapterAjax = "{baseUrl}/ajax/chapter-archive?novelId={novelId}",
-        novelIdPattern = "/novel/([^/]+)",
-    )
-
-    /**
-     * Template for ReadWN-style sites
-     */
-    val READWN = CustomSourceConfig(
-        name = "ReadWN Style Site",
-        baseUrl = "https://example.com",
-        sourceType = CustomSourceType.READWN,
-        popularUrl = "{baseUrl}/list/all/all-newstime-{page}.html",
-        latestUrl = "{baseUrl}/list/all/all-lastdotime-{page}.html",
-        searchUrl = "{baseUrl}/e/search/index.php",
-        postSearch = true,
-        selectors = SourceSelectors(
-            popular = MangaListSelectors(
-                list = "li.novel-item",
-                link = "a[href]",
-                title = "h4",
-                cover = ".novel-cover img",
-                nextPage = ".pagination a.next",
-            ),
-            details = DetailSelectors(
-                title = "h1.novel-title",
-                author = "span[itemprop=author]",
-                description = ".summary",
-                genre = "div.categories ul li",
-                status = "div.header-stats span:has(small:contains(Status)) strong",
-                cover = "figure.cover img",
-            ),
-            chapters = ChapterSelectors(
-                list = ".chapter-list li",
-                link = "a",
-                name = "a .chapter-title",
-                date = "a .chapter-update",
-            ),
-            content = ContentSelectors(
-                primary = ".chapter-content",
-                removeSelectors = listOf(".ads", "script"),
-            ),
-        ),
-    )
-
-    /**
-     * Template for WordPress-based novel sites (common structure)
-     */
-    val WORDPRESS_NOVEL = CustomSourceConfig(
-        name = "WordPress Novel Site",
-        baseUrl = "https://example.com",
-        sourceType = CustomSourceType.GENERIC,
-        popularUrl = "{baseUrl}/novel/?m_orderby=rating&page={page}",
-        latestUrl = "{baseUrl}/novel/?m_orderby=latest&page={page}",
-        searchUrl = "{baseUrl}/?s={query}&post_type=wp-manga&page={page}",
-        selectors = SourceSelectors(
-            popular = MangaListSelectors(
-                list = "div.page-item-detail, div.c-tabs-item__content",
-                link = "a[href*=/novel/]",
-                title = "h3.h5, .post-title a",
-                cover = "img",
-                nextPage = "a.nextpostslink, .nav-next a",
-            ),
-            details = DetailSelectors(
-                title = ".post-title h1, h1.entry-title",
-                author = ".author-content a, .manga-authors a",
-                description = ".description-summary, .summary__content",
-                genre = ".genres-content a",
-                status = ".post-status .summary-content",
-                cover = ".summary_image img",
-            ),
-            chapters = ChapterSelectors(
-                list = "li.wp-manga-chapter, ul.main li",
-                link = "a",
-                name = "a",
-                date = ".chapter-release-date",
-            ),
-            content = ContentSelectors(
-                primary = ".text-left, .reading-content, .entry-content",
-                fallbacks = listOf(".chapter-content", "#chapter-content", ".content"),
-                removeSelectors = listOf(".ads", ".sharedaddy", ".code-block", "script"),
-            ),
-        ),
-    )
-
-    /**
-     * Template for generic novel sites
-     */
-    val GENERIC = CustomSourceConfig(
-        name = "Generic Novel Site",
-        baseUrl = "https://example.com",
-        sourceType = CustomSourceType.GENERIC,
-        popularUrl = "{baseUrl}/novels?page={page}",
-        searchUrl = "{baseUrl}/search?q={query}&page={page}",
-        selectors = SourceSelectors(
-            popular = MangaListSelectors(
-                list = ".novel-list .novel-item, .book-list .book-item",
-                link = "a[href]",
-                title = ".title, .name, h3, h4",
-                cover = "img",
-                nextPage = ".pagination .next, a[rel=next]",
-            ),
-            details = DetailSelectors(
-                title = "h1, .novel-title",
-                author = ".author, .writer",
-                description = ".description, .synopsis, .summary",
-                genre = ".genres a, .tags a",
-                status = ".status",
-                cover = ".cover img, .thumbnail img",
-            ),
-            chapters = ChapterSelectors(
-                list = ".chapter-list li, .chapters .chapter",
-                link = "a",
-                name = "a, .chapter-title",
-                date = ".date, .time, time",
-            ),
-            content = ContentSelectors(
-                primary = ".chapter-content, .novel-content, .text-content, article",
-                fallbacks = listOf(".content", "#content", "main"),
-                removeSelectors = listOf(".ads", "script", "style", ".hidden", ".navigation"),
-            ),
-        ),
-    )
-
-    /**
-     * Get all available templates
-     */
-    fun getAll(): Map<String, CustomSourceConfig> = mapOf(
-        "Madara Theme" to MADARA,
-        "LightNovelWP Theme" to LIGHTNOVELWP,
-        "ReadNovelFull Style" to READNOVELFULL,
-        "ReadWN Style" to READWN,
-        "WordPress Novel" to WORDPRESS_NOVEL,
-        "Generic" to GENERIC,
-    )
-
-    /**
-     * Convert a template to editable JSON
-     */
-    fun toJson(config: CustomSourceConfig): String {
-        return Json { prettyPrint = true }.encodeToString(config)
-    }
-}
+// Templates removed — use extension repos for pre-built novel source themes
+// (Madara, LightNovelWP, ReadNovelFull, ReadWN, WordPress Novel)

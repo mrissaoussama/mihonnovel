@@ -22,6 +22,7 @@ import uy.kohesive.injekt.api.get
  */
 class ElementSelectorScreenModel(
     private val initialUrl: String,
+    private val initialSourceName: String = "",
     private val customSourceManager: CustomSourceManager = Injekt.get(),
 ) : StateScreenModel<ElementSelectorScreenModel.State>(State()) {
 
@@ -39,7 +40,12 @@ class ElementSelectorScreenModel(
     )
 
     init {
-        mutableState.update { it.copy(baseUrl = initialUrl) }
+        mutableState.update {
+            it.copy(
+                sourceName = initialSourceName,
+                baseUrl = initialUrl,
+            )
+        }
     }
 
     fun updateSourceName(name: String) {
@@ -99,12 +105,14 @@ class ElementSelectorScreenModel(
         val baseUrl = selectorConfig.baseUrl.trimEnd('/')
 
         return CustomSourceConfig(
-            name = selectorConfig.sourceName.ifEmpty { "Custom Source" },
+            name = selectorConfig.sourceName.ifEmpty {
+                initialSourceName.ifEmpty { "Custom Source" }
+            },
             baseUrl = baseUrl,
             language = "en",
             popularUrl = "$baseUrl/{page}",
             latestUrl = if (selectorConfig.newNovelsSelector.isNotEmpty()) "$baseUrl/{page}" else null,
-            searchUrl = selectorConfig.searchUrl.ifEmpty { "$baseUrl/?s={query}&page={page}" },
+            searchUrl = selectorConfig.searchUrl.ifEmpty { "$baseUrl/?s={query}" },
             selectors = SourceSelectors(
                 popular = MangaListSelectors(
                     list = selectorConfig.trendingSelector,
