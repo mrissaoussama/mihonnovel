@@ -58,6 +58,7 @@ import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.sort
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.BaseSortItem
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.components.HeadingItem
@@ -243,7 +244,7 @@ private fun ColumnScope.SortPage(
         listOfNotNull(
             MR.strings.action_sort_alpha to LibrarySort.Type.Alphabetical,
             MR.strings.action_sort_total to LibrarySort.Type.TotalChapters,
-            MR.strings.action_sort_downloaded to LibrarySort.Type.DownloadedChapters,
+            TDMR.strings.action_sort_downloaded to LibrarySort.Type.DownloadedChapters,
             MR.strings.action_sort_last_read to LibrarySort.Type.LastRead,
             MR.strings.action_sort_last_manga_update to LibrarySort.Type.LastUpdate,
             MR.strings.action_sort_unread_count to LibrarySort.Type.UnreadCount,

@@ -21,6 +21,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 
 @Composable
@@ -30,7 +31,7 @@ fun Screen.sourcesTab(): TabContent {
     val state by screenModel.state.collectAsState()
 
     return TabContent(
-        titleRes = MR.strings.label_manga_sources,
+        titleRes = TDMR.strings.label_manga_sources,
         actions = persistentListOf(
             AppBar.Action(
                 title = stringResource(MR.strings.action_global_search),

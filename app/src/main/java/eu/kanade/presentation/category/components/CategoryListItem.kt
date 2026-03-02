@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import sh.calvin.reorderable.ReorderableCollectionItemScope
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -56,9 +57,9 @@ fun ReorderableCollectionItemScope.CategoryListItem(
                     text = category.name,
                 )
                 val contentTypeText = when (category.contentType) {
-                    Category.CONTENT_TYPE_MANGA -> stringResource(MR.strings.category_content_type_manga)
-                    Category.CONTENT_TYPE_NOVEL -> stringResource(MR.strings.category_content_type_novel)
-                    else -> stringResource(MR.strings.category_content_type_all)
+                    Category.CONTENT_TYPE_MANGA -> stringResource(TDMR.strings.category_content_type_manga)
+                    Category.CONTENT_TYPE_NOVEL -> stringResource(TDMR.strings.category_content_type_novel)
+                    else -> stringResource(TDMR.strings.category_content_type_all)
                 }
                 Text(
                     text = contentTypeText,

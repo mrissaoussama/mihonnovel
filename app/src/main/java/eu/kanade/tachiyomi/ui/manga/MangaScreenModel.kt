@@ -1479,7 +1479,7 @@ class MangaScreenModel(
             if (downloadedChapters.isEmpty()) {
                 withUIContext {
                     snackbarHostState.showSnackbar(
-                        context.stringResource(MR.strings.no_downloaded_chapters),
+                        context.stringResource(TDMR.strings.no_downloaded_chapters),
                     )
                 }
                 return@launchIO
@@ -1490,7 +1490,7 @@ class MangaScreenModel(
 
             withUIContext {
                 snackbarHostState.showSnackbar(
-                    context.stringResource(MR.strings.translation_queued, downloadedChapters.size),
+                    context.stringResource(TDMR.strings.translation_queued, downloadedChapters.size),
                 )
             }
         }

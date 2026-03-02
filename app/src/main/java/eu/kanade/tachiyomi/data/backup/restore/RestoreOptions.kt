@@ -3,6 +3,7 @@ package eu.kanade.tachiyomi.data.backup.restore
 import dev.icerock.moko.resources.StringResource
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 
 data class RestoreOptions(
     val libraryEntries: Boolean = true,
@@ -34,13 +35,13 @@ data class RestoreOptions(
                 setter = { options, enabled -> options.copy(libraryEntries = enabled) },
             ),
             Entry(
-                label = MR.strings.label_manga,
+                label = TDMR.strings.label_manga,
                 getter = RestoreOptions::includeManga,
                 setter = { options, enabled -> options.copy(includeManga = enabled) },
                 enabled = { it.libraryEntries },
             ),
             Entry(
-                label = MR.strings.label_novels,
+                label = TDMR.strings.label_novels,
                 getter = RestoreOptions::includeNovels,
                 setter = { options, enabled -> options.copy(includeNovels = enabled) },
                 enabled = { it.libraryEntries },

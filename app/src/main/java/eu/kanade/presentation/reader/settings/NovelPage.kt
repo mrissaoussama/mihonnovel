@@ -192,7 +192,7 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
 
     // Font Size
     SliderItem(
-        label = stringResource(MR.strings.pref_font_size),
+        label = stringResource(TDMR.strings.pref_font_size),
         value = fontSize,
         valueRange = 10..40,
         onChange = { screenModel.preferences.novelFontSize().set(it) },
@@ -249,7 +249,7 @@ internal fun ColumnScope.NovelReadingTab(screenModel: ReaderSettingsScreenModel,
     )
 
     // Font Family
-    SettingsChipRow(MR.strings.pref_font_family) {
+    SettingsChipRow(TDMR.strings.pref_font_family) {
         allFonts.map { (label, value) ->
             FilterChip(
                 selected = fontFamily == value,
@@ -670,7 +670,7 @@ private fun ColumnScope.TranslationSettingsSection() {
                     ) {
                         stringResource(TDMR.strings.novel_engine_format, selectedEngineId)
                     } else {
-                        stringResource(MR.strings.not_configured)
+                        stringResource(TDMR.strings.not_configured)
                     },
                     style = MaterialTheme.typography.bodyMedium,
                 )
@@ -682,7 +682,7 @@ private fun ColumnScope.TranslationSettingsSection() {
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
-                    text = targetLanguage.ifEmpty { stringResource(MR.strings.not_configured) },
+                    text = targetLanguage.ifEmpty { stringResource(TDMR.strings.not_configured) },
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }

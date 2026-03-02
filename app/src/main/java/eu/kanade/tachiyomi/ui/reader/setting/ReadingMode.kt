@@ -59,7 +59,7 @@ enum class ReadingMode(
         ViewerType.Webtoon,
     ),
     NOVEL(
-        MR.strings.novel_viewer,
+        TDMR.strings.novel_viewer,
         R.drawable.ic_reader_default_24dp,
         0x00000006,
         Direction.Vertical,

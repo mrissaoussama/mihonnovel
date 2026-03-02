@@ -10,6 +10,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import tachiyomi.domain.translation.service.TranslationPreferences
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -32,7 +33,7 @@ object SettingsTranslationScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_translation
+    override fun getTitleRes() = TDMR.strings.pref_category_translation
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -63,23 +64,23 @@ object SettingsTranslationScreen : SearchableSettings {
         val languageEntries = selectedEngine.supportedLanguages.associate { it.first to it.second }.toImmutableMap()
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_translation_general),
+            title = stringResource(TDMR.strings.pref_translation_general),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.translationEnabled(),
-                    title = stringResource(MR.strings.pref_translation_enabled),
-                    subtitle = stringResource(MR.strings.pref_translation_enabled_summary),
+                    title = stringResource(TDMR.strings.pref_translation_enabled),
+                    subtitle = stringResource(TDMR.strings.pref_translation_enabled_summary),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = prefs.selectedEngineId(),
-                    title = stringResource(MR.strings.pref_translation_engine),
+                    title = stringResource(TDMR.strings.pref_translation_engine),
                     subtitle = selectedEngine.name + if (selectedEngine.isOffline) " (Offline)" else "",
                     entries = engineEntries.mapKeys { it.key.toLong() }.toImmutableMap(),
                     enabled = enabled,
                 ),
                 Preference.PreferenceItem.BasicListPreference(
                     value = sourceLanguage,
-                    title = stringResource(MR.strings.pref_translation_source_language),
+                    title = stringResource(TDMR.strings.pref_translation_source_language),
                     subtitle = languageEntries[sourceLanguage] ?: sourceLanguage,
                     entries = languageEntries,
                     onValueChanged = { newValue ->
@@ -90,7 +91,7 @@ object SettingsTranslationScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.BasicListPreference(
                     value = targetLanguage,
-                    title = stringResource(MR.strings.pref_translation_target_language),
+                    title = stringResource(TDMR.strings.pref_translation_target_language),
                     subtitle = languageEntries[targetLanguage] ?: targetLanguage,
                     entries = languageEntries.filterKeys { it != "auto" }.toImmutableMap(),
                     onValueChanged = { newValue ->
@@ -101,14 +102,14 @@ object SettingsTranslationScreen : SearchableSettings {
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.autoDownloadBeforeTranslate(),
-                    title = stringResource(MR.strings.pref_translation_auto_download),
-                    subtitle = stringResource(MR.strings.pref_translation_auto_download_summary),
+                    title = stringResource(TDMR.strings.pref_translation_auto_download),
+                    subtitle = stringResource(TDMR.strings.pref_translation_auto_download_summary),
                     enabled = enabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.autoTranslateDownloads(),
-                    title = stringResource(MR.strings.pref_translation_auto_translate),
-                    subtitle = stringResource(MR.strings.pref_translation_auto_translate_summary),
+                    title = stringResource(TDMR.strings.pref_translation_auto_translate),
+                    subtitle = stringResource(TDMR.strings.pref_translation_auto_translate_summary),
                     enabled = enabled,
                 ),
                 Preference.PreferenceItem.SwitchPreference(
@@ -143,42 +144,42 @@ object SettingsTranslationScreen : SearchableSettings {
         val timeoutMs by prefs.translationTimeoutMs().collectAsState()
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_translation_rate_limit),
+            title = stringResource(TDMR.strings.pref_translation_rate_limit),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SliderPreference(
                     value = rateLimitDelay,
                     valueRange = 500..10000,
-                    title = stringResource(MR.strings.pref_translation_rate_limit_delay),
-                    subtitle = stringResource(MR.strings.pref_translation_rate_limit_delay_summary),
+                    title = stringResource(TDMR.strings.pref_translation_rate_limit_delay),
+                    subtitle = stringResource(TDMR.strings.pref_translation_rate_limit_delay_summary),
                     valueString = "${rateLimitDelay}ms",
                     onValueChanged = { prefs.rateLimitDelayMs().set(it) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = (timeoutMs / 1000).toInt(),
                     valueRange = 30..300,
-                    title = stringResource(MR.strings.pref_translation_timeout),
-                    subtitle = stringResource(MR.strings.pref_translation_timeout_summary),
+                    title = stringResource(TDMR.strings.pref_translation_timeout),
+                    subtitle = stringResource(TDMR.strings.pref_translation_timeout_summary),
                     valueString = "${timeoutMs / 1000}s",
                     onValueChanged = { prefs.translationTimeoutMs().set(it.toLong() * 1000) },
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = warningThreshold,
                     valueRange = 1..50,
-                    title = stringResource(MR.strings.pref_translation_warning_threshold),
-                    subtitle = stringResource(MR.strings.pref_translation_warning_threshold_summary),
+                    title = stringResource(TDMR.strings.pref_translation_warning_threshold),
+                    subtitle = stringResource(TDMR.strings.pref_translation_warning_threshold_summary),
                     valueString = "$warningThreshold chapters",
                     onValueChanged = { prefs.rateLimitWarningThreshold().set(it) },
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.bypassRateLimitWarning(),
-                    title = stringResource(MR.strings.pref_translation_bypass_warning),
-                    subtitle = stringResource(MR.strings.pref_translation_bypass_warning_summary),
+                    title = stringResource(TDMR.strings.pref_translation_bypass_warning),
+                    subtitle = stringResource(TDMR.strings.pref_translation_bypass_warning_summary),
                 ),
                 Preference.PreferenceItem.SliderPreference(
                     value = maxParallel,
                     valueRange = 1..10,
-                    title = stringResource(MR.strings.pref_translation_max_parallel),
-                    subtitle = stringResource(MR.strings.pref_translation_max_parallel_summary),
+                    title = stringResource(TDMR.strings.pref_translation_max_parallel),
+                    subtitle = stringResource(TDMR.strings.pref_translation_max_parallel_summary),
                     valueString = "$maxParallel",
                     onValueChanged = { prefs.maxParallelTranslations().set(it) },
                 ),
@@ -205,51 +206,51 @@ object SettingsTranslationScreen : SearchableSettings {
         val customHttpResponsePath by prefs.customHttpResponsePath().collectAsState()
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_translation_api_keys),
+            title = stringResource(TDMR.strings.pref_translation_api_keys),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.openAiApiKey(),
-                    title = stringResource(MR.strings.pref_translation_openai_key),
-                    subtitle = if (openAiKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    title = stringResource(TDMR.strings.pref_translation_openai_key),
+                    subtitle = if (openAiKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.deepSeekApiKey(),
-                    title = stringResource(MR.strings.pref_translation_deepseek_key),
-                    subtitle = if (deepSeekKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    title = stringResource(TDMR.strings.pref_translation_deepseek_key),
+                    subtitle = if (deepSeekKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.systranApiKey(),
                     title = "SYSTRAN API Key",
-                    subtitle = if (systranKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    subtitle = if (systranKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.deepLApiKey(),
                     title = "DeepL API Key",
-                    subtitle = if (deepLKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    subtitle = if (deepLKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.googleApiKey(),
                     title = "Google Translate API Key",
-                    subtitle = if (googleKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    subtitle = if (googleKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.libreTranslateUrl(),
-                    title = stringResource(MR.strings.pref_translation_libretranslate_url),
+                    title = stringResource(TDMR.strings.pref_translation_libretranslate_url),
                     subtitle = libreTranslateUrl,
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.libreTranslateApiKey(),
                     title = "LibreTranslate API Key",
-                    subtitle = if (libreTranslateKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    subtitle = if (libreTranslateKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.ollamaUrl(),
-                    title = stringResource(MR.strings.pref_translation_ollama_url),
+                    title = stringResource(TDMR.strings.pref_translation_ollama_url),
                     subtitle = ollamaUrl,
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.ollamaModel(),
-                    title = stringResource(MR.strings.pref_translation_ollama_model),
+                    title = stringResource(TDMR.strings.pref_translation_ollama_model),
                     subtitle = ollamaModel,
                 ),
                 Preference.PreferenceItem.EditTextPreference(
@@ -271,12 +272,12 @@ object SettingsTranslationScreen : SearchableSettings {
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.customHttpUrl(),
                     title = "Custom HTTP API URL",
-                    subtitle = if (customHttpUrl.isNotBlank()) customHttpUrl else stringResource(MR.strings.not_set),
+                    subtitle = if (customHttpUrl.isNotBlank()) customHttpUrl else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.customHttpApiKey(),
                     title = "Custom HTTP API Key",
-                    subtitle = if (customHttpApiKey.isNotBlank()) "••••••••" else stringResource(MR.strings.not_set),
+                    subtitle = if (customHttpApiKey.isNotBlank()) "••••••••" else stringResource(TDMR.strings.not_set),
                 ),
                 Preference.PreferenceItem.EditTextPreference(
                     preference = prefs.customHttpRequestTemplate(),

@@ -72,7 +72,7 @@ object SettingsNovelDownloadScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_novel_downloads
+    override fun getTitleRes() = TDMR.strings.pref_category_novel_downloads
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -178,7 +178,7 @@ object SettingsNovelDownloadScreen : SearchableSettings {
         val compressionQuality = prefs.imageCompressionQuality().collectAsState().value
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_category_novel_images),
+            title = stringResource(TDMR.strings.pref_category_novel_images),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = prefs.downloadChapterImages(),
@@ -190,7 +190,7 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                     valueRange = 0..2000,
                     title = stringResource(TDMR.strings.pref_novel_max_image_size),
                     subtitle = stringResource(TDMR.strings.pref_novel_max_image_size_summary),
-                    valueString = if (maxSizeKb == 0) stringResource(MR.strings.no_limit) else "${maxSizeKb}KB",
+                    valueString = if (maxSizeKb == 0) stringResource(TDMR.strings.no_limit) else "${maxSizeKb}KB",
                     onValueChanged = { prefs.maxImageSizeKb().set(it) },
                     enabled = enabled,
                 ),

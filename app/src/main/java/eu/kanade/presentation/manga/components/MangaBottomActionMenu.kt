@@ -181,7 +181,7 @@ fun MangaBottomActionMenu(
                 }
                 if (onRemoveFromDbClicked != null) {
                     Button(
-                        title = stringResource(MR.strings.action_remove_from_db),
+                        title = stringResource(TDMR.strings.action_remove_from_db),
                         icon = Icons.Outlined.DeleteForever,
                         toConfirm = confirm[7],
                         onLongClick = { onLongClickItem(7) },
@@ -204,7 +204,7 @@ fun MangaBottomActionMenu(
                             offset = DpOffset(0.dp, 0.dp),
                         ) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.action_delete_range)) },
+                                text = { Text(stringResource(TDMR.strings.action_delete_range)) },
                                 onClick = {
                                     overflowMenuOpen = false
                                     onDeleteRangeClicked()

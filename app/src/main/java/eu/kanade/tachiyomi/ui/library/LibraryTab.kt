@@ -60,6 +60,7 @@ import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -76,7 +77,7 @@ data object LibraryTab : Tab {
             val image = AnimatedImageVector.animatedVectorResource(R.drawable.anim_library_enter)
             return TabOptions(
                 index = 1u,
-                title = stringResource(MR.strings.label_manga),
+                title = stringResource(TDMR.strings.label_manga),
                 icon = rememberAnimatedVectorPainter(image, isSelected),
             )
         }
@@ -121,7 +122,7 @@ data object LibraryTab : Tab {
         Scaffold(
             topBar = { scrollBehavior ->
                 val title = state.getToolbarTitle(
-                    defaultTitle = stringResource(MR.strings.label_manga),
+                    defaultTitle = stringResource(TDMR.strings.label_manga),
                     defaultCategoryTitle = stringResource(MR.strings.label_default),
                     page = state.coercedActiveCategoryIndex,
                 )

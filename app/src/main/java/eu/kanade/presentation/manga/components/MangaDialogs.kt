@@ -23,6 +23,7 @@ import eu.kanade.tachiyomi.util.system.isReleaseBuildType
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.domain.manga.interactor.FetchInterval
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.WheelTextPicker
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.pluralStringResource
@@ -88,7 +89,7 @@ fun RemoveChaptersFromDbDialog(
             Text(text = stringResource(MR.strings.are_you_sure))
         },
         text = {
-            Text(text = stringResource(MR.strings.confirm_remove_chapters_from_db))
+            Text(text = stringResource(TDMR.strings.confirm_remove_chapters_from_db))
         },
     )
 }

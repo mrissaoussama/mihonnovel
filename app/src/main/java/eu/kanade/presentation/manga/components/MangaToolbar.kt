@@ -205,7 +205,7 @@ fun MangaToolbar(
                     if (onClickEditAltTitles != null) {
                         add(
                             AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_edit_alt_titles),
+                                title = stringResource(TDMR.strings.action_edit_alt_titles),
                                 onClick = onClickEditAltTitles,
                             ),
                         )

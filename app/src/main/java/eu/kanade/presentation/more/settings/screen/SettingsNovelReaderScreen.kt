@@ -121,7 +121,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = fontSize,
                     valueRange = 10..40,
-                    title = stringResource(MR.strings.pref_font_size),
+                    title = stringResource(TDMR.strings.pref_font_size),
                     valueString = "${fontSize}px",
                     onValueChanged = {
                         readerPreferences.novelFontSize().set(it)
@@ -137,7 +137,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                         "Times New Roman, serif" to "Times New Roman",
                         "Arial, sans-serif" to "Arial",
                     ).toImmutableMap(),
-                    title = stringResource(MR.strings.pref_font_family),
+                    title = stringResource(TDMR.strings.pref_font_family),
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Font Manager",

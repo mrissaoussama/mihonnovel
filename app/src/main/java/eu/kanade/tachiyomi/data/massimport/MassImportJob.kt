@@ -56,6 +56,7 @@ import tachiyomi.domain.manga.model.MangaUpdate
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
@@ -508,7 +509,7 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
         // when addAction() is called repeatedly on the same builder
         val notification = context.notificationBuilder(Notifications.CHANNEL_MASS_IMPORT) {
             setSmallIcon(android.R.drawable.stat_sys_download)
-            setContentTitle(context.stringResource(MR.strings.mass_import_progress_title))
+            setContentTitle(context.stringResource(TDMR.strings.mass_import_progress_title))
             setContentText(status)
             setProgress(total, current, false)
             setOngoing(true)
@@ -530,7 +531,7 @@ class MassImportJob(private val context: Context, workerParams: WorkerParameters
 
         val notificationBuilder = context.notificationBuilder(Notifications.CHANNEL_MASS_IMPORT) {
             setSmallIcon(android.R.drawable.stat_sys_download_done)
-            setContentTitle(context.stringResource(MR.strings.mass_import_complete_title))
+            setContentTitle(context.stringResource(TDMR.strings.mass_import_complete_title))
             setContentText(text)
             setAutoCancel(true)
 

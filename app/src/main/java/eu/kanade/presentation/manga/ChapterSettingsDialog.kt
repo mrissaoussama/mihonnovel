@@ -35,6 +35,7 @@ import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.components.RadioItem
 import tachiyomi.presentation.core.components.SortItem
@@ -218,7 +219,7 @@ private fun ColumnScope.DisplayPage(
     listOf(
         MR.strings.show_title to Manga.CHAPTER_DISPLAY_NAME,
         MR.strings.show_chapter_number to Manga.CHAPTER_DISPLAY_NUMBER,
-        MR.strings.show_chapter_both to Manga.CHAPTER_DISPLAY_BOTH,
+        TDMR.strings.show_chapter_both to Manga.CHAPTER_DISPLAY_BOTH,
     ).map { (titleRes, mode) ->
         RadioItem(
             label = stringResource(titleRes),

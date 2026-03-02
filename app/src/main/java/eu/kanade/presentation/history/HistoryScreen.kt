@@ -33,6 +33,7 @@ import eu.kanade.tachiyomi.ui.history.HistoryScreenModel
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.domain.history.model.HistoryWithRelations
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -101,12 +102,12 @@ fun HistoryScreen(
                 FilterChip(
                     selected = state.filter == HistoryFilter.MANGA,
                     onClick = { onFilterSelected(HistoryFilter.MANGA) },
-                    label = { Text(stringResource(MR.strings.label_manga)) },
+                    label = { Text(stringResource(TDMR.strings.label_manga)) },
                 )
                 FilterChip(
                     selected = state.filter == HistoryFilter.NOVELS,
                     onClick = { onFilterSelected(HistoryFilter.NOVELS) },
-                    label = { Text(stringResource(MR.strings.label_novels)) },
+                    label = { Text(stringResource(TDMR.strings.label_novels)) },
                 )
             }
 
