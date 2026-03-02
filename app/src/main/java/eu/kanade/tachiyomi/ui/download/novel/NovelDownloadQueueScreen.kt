@@ -58,6 +58,7 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.presentation.components.AppBar
 import eu.kanade.presentation.util.Screen
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -77,14 +78,14 @@ object NovelDownloadQueueScreen : Screen() {
         Scaffold(
             topBar = {
                 AppBar(
-                    title = "Novel Downloads",
+                    title = stringResource(TDMR.strings.novel_downloads_title),
                     navigateUp = navigator::pop,
                     actions = {
                         if (downloadList.isNotEmpty()) {
                             IconButton(onClick = { screenModel.clearCompletedNovelDownloads() }) {
                                 Icon(
                                     imageVector = Icons.Default.Close,
-                                    contentDescription = "Clear completed",
+                                    contentDescription = stringResource(TDMR.strings.novel_downloads_clear_completed),
                                 )
                             }
                         }
@@ -206,7 +207,7 @@ private fun NovelDownloadCard(
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
-                        text = "${item.downloadedChapters}/${item.totalChapters} chapters",
+                        text = stringResource(TDMR.strings.novel_downloads_chapters_format, item.downloadedChapters, item.totalChapters),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -216,7 +217,7 @@ private fun NovelDownloadCard(
                     IconButton(onClick = { showMenu = true }) {
                         Icon(
                             imageVector = Icons.Default.MoreVert,
-                            contentDescription = "More options",
+                            contentDescription = stringResource(TDMR.strings.novel_downloads_more_options),
                         )
                     }
 
@@ -225,7 +226,7 @@ private fun NovelDownloadCard(
                         onDismissRequest = { showMenu = false },
                     ) {
                         DropdownMenuItem(
-                            text = { Text("Move to top") },
+                            text = { Text(stringResource(TDMR.strings.novel_downloads_move_top)) },
                             onClick = {
                                 onMoveToTop()
                                 showMenu = false
@@ -238,7 +239,7 @@ private fun NovelDownloadCard(
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("Move to bottom") },
+                            text = { Text(stringResource(TDMR.strings.novel_downloads_move_bottom)) },
                             onClick = {
                                 onMoveToBottom()
                                 showMenu = false
@@ -251,7 +252,7 @@ private fun NovelDownloadCard(
                             },
                         )
                         DropdownMenuItem(
-                            text = { Text("Cancel") },
+                            text = { Text(stringResource(MR.strings.action_cancel)) },
                             onClick = {
                                 onCancel()
                                 showMenu = false
@@ -304,7 +305,7 @@ private fun NovelDownloadCard(
 
                 if (item.currentDownload != null) {
                     Text(
-                        text = "Chapter: ${item.currentDownload?.chapterName ?: ""}",
+                        text = stringResource(TDMR.strings.novel_downloads_chapter_format, item.currentDownload?.chapterName ?: ""),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1,

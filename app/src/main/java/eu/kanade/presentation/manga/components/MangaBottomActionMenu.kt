@@ -66,6 +66,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
 
@@ -180,7 +181,7 @@ fun MangaBottomActionMenu(
                 }
                 if (onRemoveFromDbClicked != null) {
                     Button(
-                        title = stringResource(MR.strings.action_remove_from_db),
+                        title = stringResource(TDMR.strings.action_remove_from_db),
                         icon = Icons.Outlined.DeleteForever,
                         toConfirm = confirm[7],
                         onLongClick = { onLongClickItem(7) },
@@ -203,7 +204,7 @@ fun MangaBottomActionMenu(
                             offset = DpOffset(0.dp, 0.dp),
                         ) {
                             DropdownMenuItem(
-                                text = { Text(stringResource(MR.strings.action_delete_range)) },
+                                text = { Text(stringResource(TDMR.strings.action_delete_range)) },
                                 onClick = {
                                     overflowMenuOpen = false
                                     onDeleteRangeClicked()
@@ -404,7 +405,7 @@ fun LibraryBottomActionMenu(
                             )
                             if (onCopyLinksClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_copy_links)) },
+                                    text = { Text(stringResource(TDMR.strings.action_copy_links)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onCopyLinksClicked()
@@ -413,7 +414,7 @@ fun LibraryBottomActionMenu(
                             }
                             if (onTranslateClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_translate)) },
+                                    text = { Text(stringResource(TDMR.strings.action_translate)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onTranslateClicked()
@@ -422,7 +423,7 @@ fun LibraryBottomActionMenu(
                             }
                             if (onRemoveChaptersClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_remove_chapters)) },
+                                    text = { Text(stringResource(TDMR.strings.action_remove_chapters)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onRemoveChaptersClicked()
@@ -431,7 +432,7 @@ fun LibraryBottomActionMenu(
                             }
                             if (onExportEpubClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_export_epub)) },
+                                    text = { Text(stringResource(TDMR.strings.action_export_epub)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onExportEpubClicked()
@@ -440,7 +441,7 @@ fun LibraryBottomActionMenu(
                             }
                             if (onClearCoversClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_clear_covers)) },
+                                    text = { Text(stringResource(TDMR.strings.action_clear_covers)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onClearCoversClicked()
@@ -449,7 +450,7 @@ fun LibraryBottomActionMenu(
                             }
                             if (onClearDescriptionsClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_clear_descriptions)) },
+                                    text = { Text(stringResource(TDMR.strings.action_clear_descriptions)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onClearDescriptionsClicked()
@@ -458,7 +459,7 @@ fun LibraryBottomActionMenu(
                             }
                             if (onClearTagsClicked != null) {
                                 DropdownMenuItem(
-                                    text = { Text(stringResource(MR.strings.action_clear_tags)) },
+                                    text = { Text(stringResource(TDMR.strings.action_clear_tags)) },
                                     onClick = {
                                         overflowMenuOpen = false
                                         onClearTagsClicked()

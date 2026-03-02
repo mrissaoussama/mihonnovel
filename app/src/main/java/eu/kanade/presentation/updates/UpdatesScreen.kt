@@ -42,6 +42,7 @@ import kotlinx.collections.immutable.persistentListOf
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.FastScrollLazyColumn
 import tachiyomi.presentation.core.components.material.PullRefresh
 import tachiyomi.presentation.core.components.material.Scaffold
@@ -145,12 +146,12 @@ fun UpdateScreen(
                                 FilterChip(
                                     selected = state.filter == UpdatesFilter.MANGA,
                                     onClick = { onFilterSelected(UpdatesFilter.MANGA) },
-                                    label = { Text(stringResource(MR.strings.label_manga)) },
+                                    label = { Text(stringResource(TDMR.strings.label_manga)) },
                                 )
                                 FilterChip(
                                     selected = state.filter == UpdatesFilter.NOVELS,
                                     onClick = { onFilterSelected(UpdatesFilter.NOVELS) },
-                                    label = { Text(stringResource(MR.strings.label_novels)) },
+                                    label = { Text(stringResource(TDMR.strings.label_novels)) },
                                 )
                             }
                         }

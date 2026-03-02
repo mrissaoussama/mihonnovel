@@ -47,6 +47,7 @@ import eu.kanade.presentation.util.LocalBackPress
 import eu.kanade.presentation.util.Screen
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import cafe.adriel.voyager.core.screen.Screen as VoyagerScreen
@@ -186,14 +187,14 @@ object SettingsMainScreen : Screen() {
             screen = SettingsLibraryScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_manga_reader,
-            subtitleRes = MR.strings.pref_manga_reader_summary,
+            titleRes = TDMR.strings.pref_category_manga_reader,
+            subtitleRes = TDMR.strings.pref_manga_reader_summary,
             icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsReaderScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_novel_reader,
-            subtitleRes = MR.strings.pref_novel_reader_summary,
+            titleRes = TDMR.strings.pref_category_novel_reader,
+            subtitleRes = TDMR.strings.pref_novel_reader_summary,
             icon = Icons.AutoMirrored.Outlined.ChromeReaderMode,
             screen = SettingsNovelReaderScreen,
         ),
@@ -204,14 +205,14 @@ object SettingsMainScreen : Screen() {
             screen = SettingsDownloadScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_novel_downloads,
-            subtitleRes = MR.strings.pref_novel_download_throttling_summary,
+            titleRes = TDMR.strings.pref_category_novel_downloads,
+            subtitleRes = TDMR.strings.pref_novel_download_throttling_summary,
             icon = Icons.Outlined.GetApp,
             screen = SettingsNovelDownloadScreen,
         ),
         Item(
-            titleRes = MR.strings.pref_category_translation,
-            subtitleRes = MR.strings.pref_translation_enabled_summary,
+            titleRes = TDMR.strings.pref_category_translation,
+            subtitleRes = TDMR.strings.pref_translation_enabled_summary,
             icon = Icons.Outlined.Translate,
             screen = SettingsTranslationScreen,
         ),

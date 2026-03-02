@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.CheckboxItem
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -83,7 +84,7 @@ fun BatchExportEpubDialog(
 
     AlertDialog(
         onDismissRequest = onDismissRequest,
-        title = { Text(stringResource(MR.strings.action_export_epub)) },
+        title = { Text(stringResource(TDMR.strings.action_export_epub)) },
         text = {
             Column(
                 modifier = Modifier
@@ -91,7 +92,7 @@ fun BatchExportEpubDialog(
                     .verticalScroll(rememberScrollState()),
             ) {
                 Text(
-                    text = "${mangaList.size} novel(s) will be exported.",
+                    text = stringResource(TDMR.strings.epub_novels_export_count, mangaList.size),
                     style = MaterialTheme.typography.bodyMedium,
                 )
 
@@ -107,7 +108,7 @@ fun BatchExportEpubDialog(
                 }
                 if (mangaList.size > 5) {
                     Text(
-                        text = "... and ${mangaList.size - 5} more",
+                        text = stringResource(TDMR.strings.epub_and_more, mangaList.size - 5),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -118,7 +119,7 @@ fun BatchExportEpubDialog(
                 OutlinedTextField(
                     value = filename,
                     onValueChange = { filename = it },
-                    label = { Text("Filename") },
+                    label = { Text(stringResource(TDMR.strings.epub_filename)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
@@ -127,19 +128,19 @@ fun BatchExportEpubDialog(
 
                 // Export options
                 Text(
-                    text = "Content Options",
+                    text = stringResource(TDMR.strings.epub_content_options),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(vertical = 4.dp),
                 )
 
                 CheckboxItem(
-                    label = "Downloaded chapters only",
+                    label = stringResource(TDMR.strings.epub_downloaded_only),
                     checked = downloadedOnly,
                     onClick = { downloadedOnly = !downloadedOnly },
                 )
 
                 CheckboxItem(
-                    label = "Prefer translated chapters",
+                    label = stringResource(TDMR.strings.epub_prefer_translated),
                     checked = preferTranslated,
                     onClick = { preferTranslated = !preferTranslated },
                 )
@@ -147,25 +148,25 @@ fun BatchExportEpubDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Filename Options",
+                    text = stringResource(TDMR.strings.epub_filename_options),
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(vertical = 4.dp),
                 )
 
                 CheckboxItem(
-                    label = "Include chapter count (e.g. [50ch])",
+                    label = stringResource(TDMR.strings.epub_include_chapter_count),
                     checked = includeChapterCount,
                     onClick = { includeChapterCount = !includeChapterCount },
                 )
 
                 CheckboxItem(
-                    label = "Include chapter range (e.g. [ch1-50])",
+                    label = stringResource(TDMR.strings.epub_include_chapter_range),
                     checked = includeChapterRange,
                     onClick = { includeChapterRange = !includeChapterRange },
                 )
 
                 CheckboxItem(
-                    label = "Include status (e.g. [Completed])",
+                    label = stringResource(TDMR.strings.epub_include_status),
                     checked = includeStatus,
                     onClick = { includeStatus = !includeStatus },
                 )
@@ -174,11 +175,11 @@ fun BatchExportEpubDialog(
 
                 Text(
                     text = if (downloadedOnly) {
-                        "Only downloaded chapters will be included."
+                        stringResource(TDMR.strings.epub_downloaded_only_info)
                     } else {
-                        "Downloaded chapters will be used. Undownloaded chapters will be fetched from source."
+                        stringResource(TDMR.strings.epub_source_info)
                     } + if (preferTranslated) {
-                        " Translated chapters will be used when available."
+                        stringResource(TDMR.strings.epub_translated_info)
                     } else {
                         ""
                     },
@@ -193,7 +194,7 @@ fun BatchExportEpubDialog(
                     launcher.launch(filename)
                 },
             ) {
-                Text(stringResource(MR.strings.action_export_epub))
+                Text(stringResource(TDMR.strings.action_export_epub))
             }
         },
         dismissButton = {

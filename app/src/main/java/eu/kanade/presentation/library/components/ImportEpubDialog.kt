@@ -55,6 +55,7 @@ import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.category.model.Category
 import tachiyomi.domain.storage.service.StorageManager
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.source.local.metadata.fillMetadata
 import uy.kohesive.injekt.Injekt
@@ -219,7 +220,7 @@ fun ImportEpubDialog(
                 onDismissRequest()
             }
         },
-        title = { Text("Import EPUB") },
+        title = { Text(stringResource(TDMR.strings.epub_import_title)) },
         text = {
             Column(
                 modifier = Modifier
@@ -241,7 +242,7 @@ fun ImportEpubDialog(
                         ) {
                             Icon(Icons.Outlined.FileOpen, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Select EPUB files")
+                            Text(stringResource(TDMR.strings.epub_select_files))
                         }
 
                         if (selectedFiles.isNotEmpty()) {
@@ -249,7 +250,7 @@ fun ImportEpubDialog(
 
                             // Show selected files
                             Text(
-                                text = "Selected files:",
+                                text = stringResource(TDMR.strings.epub_selected_files),
                                 style = MaterialTheme.typography.labelMedium,
                             )
                             selectedFiles.forEach { file ->
@@ -267,7 +268,7 @@ fun ImportEpubDialog(
                                 OutlinedTextField(
                                     value = customTitle,
                                     onValueChange = { customTitle = it },
-                                    label = { Text("Novel title") },
+                                    label = { Text(stringResource(TDMR.strings.epub_novel_title)) },
                                     modifier = Modifier.fillMaxWidth(),
                                     singleLine = true,
                                 )
@@ -286,7 +287,7 @@ fun ImportEpubDialog(
                                         checked = combineAsOneNovel,
                                         onCheckedChange = { combineAsOneNovel = it },
                                     )
-                                    Text("Combine all files into one novel")
+                                    Text(stringResource(TDMR.strings.epub_combine_files))
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
@@ -330,7 +331,7 @@ fun ImportEpubDialog(
                         },
                         enabled = selectedFiles.isNotEmpty(),
                     ) {
-                        Text("Import")
+                        Text(stringResource(TDMR.strings.epub_action_import))
                     }
                 }
             }
@@ -352,7 +353,7 @@ private fun ImportProgressView(progress: ImportProgress) {
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = "Importing ${progress.current}/${progress.total}",
+            text = stringResource(TDMR.strings.epub_importing_progress, progress.current, progress.total),
             style = MaterialTheme.typography.bodyMedium,
         )
         Spacer(Modifier.height(8.dp))
@@ -373,18 +374,18 @@ private fun ImportProgressView(progress: ImportProgress) {
 private fun ImportResultView(result: ImportResult) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text(
-            text = "Import Complete",
+            text = stringResource(TDMR.strings.epub_import_complete),
             style = MaterialTheme.typography.titleMedium,
         )
         Spacer(Modifier.height(8.dp))
         Text(
-            text = "✓ ${result.successCount} imported successfully",
+            text = "✓ " + stringResource(TDMR.strings.epub_import_success_count, result.successCount),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.primary,
         )
         if (result.errorCount > 0) {
             Text(
-                text = "✗ ${result.errorCount} failed",
+                text = "✗ " + stringResource(TDMR.strings.epub_import_error_count, result.errorCount),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
             )

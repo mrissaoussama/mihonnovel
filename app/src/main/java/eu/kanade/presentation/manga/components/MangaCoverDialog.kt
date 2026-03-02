@@ -51,6 +51,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.ReaderPageImageView
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.clickableNoIndication
@@ -139,7 +140,7 @@ fun MangaCoverDialog(
                                         )
                                     }
                                     DropdownMenuItem(
-                                        text = { Text(text = stringResource(MR.strings.pref_clear_cover)) },
+                                        text = { Text(text = stringResource(TDMR.strings.pref_clear_cover)) },
                                         onClick = {
                                             onEditClick(EditCoverAction.CLEAR)
                                             expanded = false

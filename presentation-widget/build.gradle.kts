@@ -18,6 +18,7 @@ dependencies {
     implementation(projects.domain)
     implementation(projects.presentationCore)
     api(projects.i18n)
+    api(projects.i18nNovel)
 
     implementation(compose.glance)
     implementation(libs.material)

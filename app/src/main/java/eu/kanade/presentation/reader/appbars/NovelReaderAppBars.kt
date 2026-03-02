@@ -64,6 +64,7 @@ import eu.kanade.tachiyomi.R
 import eu.kanade.tachiyomi.ui.reader.setting.ReaderOrientation
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Slider
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -241,13 +242,13 @@ private fun NovelReaderTopBar(
                         )
                         add(
                             AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_reload_local),
+                                title = stringResource(TDMR.strings.action_reload_local),
                                 onClick = onReloadLocal,
                             ),
                         )
                         add(
                             AppBar.OverflowAction(
-                                title = stringResource(MR.strings.action_reload_source),
+                                title = stringResource(TDMR.strings.action_reload_source),
                                 onClick = onReloadSource,
                             ),
                         )
@@ -324,7 +325,7 @@ private fun NovelReaderBottomBar(
         IconButton(onClick = onScrollToTop) {
             Icon(
                 imageVector = Icons.Outlined.VerticalAlignTop,
-                contentDescription = stringResource(MR.strings.action_scroll_to_top),
+                contentDescription = stringResource(TDMR.strings.action_scroll_to_top),
             )
         }
 
@@ -339,7 +340,7 @@ private fun NovelReaderBottomBar(
         ) {
             Icon(
                 imageVector = Icons.Outlined.Translate,
-                contentDescription = stringResource(MR.strings.action_translate),
+                contentDescription = stringResource(TDMR.strings.action_translate),
                 tint = if (isTranslating) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier
                     .size(48.dp)
@@ -351,7 +352,7 @@ private fun NovelReaderBottomBar(
             Icon(
                 imageVector = if (isAutoScrolling) Icons.Outlined.Stop else Icons.Outlined.PlayArrow,
                 contentDescription = stringResource(
-                    if (isAutoScrolling) MR.strings.action_stop_auto_scroll else MR.strings.action_start_auto_scroll,
+                    if (isAutoScrolling) TDMR.strings.action_stop_auto_scroll else TDMR.strings.action_start_auto_scroll,
                 ),
             )
         }
@@ -372,7 +373,7 @@ private fun NovelReaderBottomBar(
                     isTtsActive && isTtsPaused -> Icons.Outlined.PlayArrow
                     else -> Icons.Outlined.RecordVoiceOver
                 },
-                contentDescription = stringResource(MR.strings.pref_novel_tts),
+                contentDescription = stringResource(TDMR.strings.pref_novel_tts),
                 tint = if (isTtsActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
             )
         }

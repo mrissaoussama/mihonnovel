@@ -78,6 +78,7 @@ import eu.kanade.tachiyomi.util.system.copyToClipboard
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.core.common.util.lang.launchUI
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
@@ -155,8 +156,8 @@ object DownloadQueueScreen : Screen() {
         }
 
         val tabs = listOf(
-            "${stringResource(MR.strings.label_manga)} ($mangaCount)",
-            "${stringResource(MR.strings.label_novels)} ($novelCount)",
+            "${stringResource(TDMR.strings.label_manga)} ($mangaCount)",
+            "${stringResource(TDMR.strings.label_novels)} ($novelCount)",
         )
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
@@ -244,7 +245,7 @@ object DownloadQueueScreen : Screen() {
                                     // Novel queue sorts (series-level)
                                     DropdownMenuItem(
                                         text = {
-                                            Text(text = stringResource(MR.strings.action_order_by_progress))
+                                            Text(text = stringResource(TDMR.strings.action_order_by_progress))
                                         },
                                         onClick = {
                                             val order = novelList
@@ -256,7 +257,7 @@ object DownloadQueueScreen : Screen() {
                                     )
                                     DropdownMenuItem(
                                         text = {
-                                            Text(text = stringResource(MR.strings.action_order_by_total_chapters))
+                                            Text(text = stringResource(TDMR.strings.action_order_by_total_chapters))
                                         },
                                         onClick = {
                                             val order = novelList
@@ -268,7 +269,7 @@ object DownloadQueueScreen : Screen() {
                                     )
                                     DropdownMenuItem(
                                         text = {
-                                            Text(text = stringResource(MR.strings.action_order_by_extension))
+                                            Text(text = stringResource(TDMR.strings.action_order_by_extension))
                                         },
                                         onClick = {
                                             val order = novelList
@@ -341,7 +342,7 @@ object DownloadQueueScreen : Screen() {
 
                                     NestedMenuItem(
                                         text = {
-                                            Text(text = stringResource(MR.strings.action_order_by_progress))
+                                            Text(text = stringResource(TDMR.strings.action_order_by_progress))
                                         },
                                         children = { closeMenu ->
                                             DropdownMenuItem(
@@ -369,7 +370,7 @@ object DownloadQueueScreen : Screen() {
 
                                     NestedMenuItem(
                                         text = {
-                                            Text(text = stringResource(MR.strings.action_order_by_extension))
+                                            Text(text = stringResource(TDMR.strings.action_order_by_extension))
                                         },
                                         children = { closeMenu ->
                                             DropdownMenuItem(
@@ -582,7 +583,7 @@ private fun NovelDownloadCard(
     onMoveToBottom: () -> Unit,
 ) {
     val context = LocalContext.current
-    val errorLabel = stringResource(MR.strings.download_error_details)
+    val errorLabel = stringResource(MR.strings.update_check_notification_download_error)
     var showMenu by remember { mutableStateOf(false) }
 
     Card(

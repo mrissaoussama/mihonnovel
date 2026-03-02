@@ -10,6 +10,7 @@ import eu.kanade.tachiyomi.ui.reader.setting.ReaderPreferences
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableMap
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
 import uy.kohesive.injekt.Injekt
@@ -40,7 +41,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
 
     @ReadOnlyComposable
     @Composable
-    override fun getTitleRes() = MR.strings.pref_category_novel
+    override fun getTitleRes() = TDMR.strings.pref_category_novel
 
     @Composable
     override fun getPreferences(): List<Preference> {
@@ -72,7 +73,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                         "black" to "Black",
                         "grey" to "Grey",
                     ).toImmutableMap(),
-                    title = stringResource(MR.strings.pref_novel_theme),
+                    title = stringResource(TDMR.strings.pref_novel_theme),
                 ),
                 Preference.PreferenceItem.ListPreference(
                     preference = readerPreferences.novelRenderingMode(),
@@ -120,7 +121,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = fontSize,
                     valueRange = 10..40,
-                    title = stringResource(MR.strings.pref_font_size),
+                    title = stringResource(TDMR.strings.pref_font_size),
                     valueString = "${fontSize}px",
                     onValueChanged = {
                         readerPreferences.novelFontSize().set(it)
@@ -136,7 +137,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                         "Times New Roman, serif" to "Times New Roman",
                         "Arial, sans-serif" to "Arial",
                     ).toImmutableMap(),
-                    title = stringResource(MR.strings.pref_font_family),
+                    title = stringResource(TDMR.strings.pref_font_family),
                 ),
                 Preference.PreferenceItem.TextPreference(
                     title = "Font Manager",
@@ -146,7 +147,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                 Preference.PreferenceItem.SliderPreference(
                     value = (lineHeight * 10).toInt(),
                     valueRange = 10..30,
-                    title = stringResource(MR.strings.pref_novel_line_height),
+                    title = stringResource(TDMR.strings.pref_novel_line_height),
                     valueString = "${lineHeight}x",
                     onValueChanged = {
                         readerPreferences.novelLineHeight().set(it / 10f)
@@ -160,7 +161,7 @@ object SettingsNovelReaderScreen : SearchableSettings {
                         "right" to "Right",
                         "justify" to "Justify",
                     ).toImmutableMap(),
-                    title = stringResource(MR.strings.pref_novel_text_align),
+                    title = stringResource(TDMR.strings.pref_novel_text_align),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.novelForceTextLowercase(),
@@ -183,11 +184,11 @@ object SettingsNovelReaderScreen : SearchableSettings {
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.novelVolumeKeysScroll(),
-                    title = stringResource(MR.strings.pref_novel_volume_keys_scroll),
+                    title = stringResource(TDMR.strings.pref_novel_volume_keys_scroll),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.novelTapToScroll(),
-                    title = stringResource(MR.strings.pref_novel_tap_to_scroll),
+                    title = stringResource(TDMR.strings.pref_novel_tap_to_scroll),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = readerPreferences.novelSwipeNavigation(),
@@ -203,12 +204,12 @@ object SettingsNovelReaderScreen : SearchableSettings {
         val autoScrollSpeed = readerPreferences.novelAutoScrollSpeed().collectAsState().value
 
         return Preference.PreferenceGroup(
-            title = stringResource(MR.strings.pref_novel_auto_scroll),
+            title = stringResource(TDMR.strings.pref_novel_auto_scroll),
             preferenceItems = persistentListOf(
                 Preference.PreferenceItem.SliderPreference(
                     value = autoScrollSpeed,
                     valueRange = 5..120,
-                    title = stringResource(MR.strings.pref_novel_auto_scroll_speed),
+                    title = stringResource(TDMR.strings.pref_novel_auto_scroll_speed),
                     valueString = "${autoScrollSpeed}s per screen",
                     onValueChanged = {
                         readerPreferences.novelAutoScrollSpeed().set(it)

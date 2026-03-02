@@ -71,6 +71,7 @@ import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.TwoPanelBox
 import tachiyomi.presentation.core.components.VerticalFastScroller
 import tachiyomi.presentation.core.components.material.PullRefresh
@@ -936,7 +937,7 @@ private fun LazyListScope.sharedChapterItems(
                             if (isNovel) {
                                 // For novels, lastPageRead stores progress percentage (0-100)
                                 stringResource(
-                                    MR.strings.chapter_progress_novel,
+                                    TDMR.strings.chapter_progress_novel,
                                     it.toInt(),
                                 )
                             } else {

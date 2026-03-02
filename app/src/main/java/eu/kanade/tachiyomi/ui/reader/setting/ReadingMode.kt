@@ -12,6 +12,7 @@ import eu.kanade.tachiyomi.ui.reader.viewer.text.NovelViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.text.NovelWebViewViewer
 import eu.kanade.tachiyomi.ui.reader.viewer.webtoon.WebtoonViewer
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import uy.kohesive.injekt.injectLazy
 
 enum class ReadingMode(
@@ -58,7 +59,7 @@ enum class ReadingMode(
         ViewerType.Webtoon,
     ),
     NOVEL(
-        MR.strings.novel_viewer,
+        TDMR.strings.novel_viewer,
         R.drawable.ic_reader_default_24dp,
         0x00000006,
         Direction.Vertical,

@@ -44,6 +44,7 @@ import eu.kanade.tachiyomi.ui.updates.UpdatesItem
 import eu.kanade.tachiyomi.ui.updates.UpdatesNovelGroup
 import tachiyomi.domain.updates.model.UpdatesWithRelations
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.ListGroupHeader
 import tachiyomi.presentation.core.components.material.DISABLED_ALPHA
 import tachiyomi.presentation.core.components.material.padding
@@ -109,7 +110,7 @@ internal fun LazyListScope.updatesUiItems(
                             if (updatesItem.isNovel) {
                                 // For novels, lastPageRead stores progress percentage (0-100)
                                 stringResource(
-                                    MR.strings.chapter_progress_novel,
+                                    TDMR.strings.chapter_progress_novel,
                                     it.toInt(),
                                 )
                             } else {

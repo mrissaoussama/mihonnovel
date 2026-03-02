@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import dev.icerock.moko.resources.StringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -28,7 +29,7 @@ fun DeleteLibraryMangaDialog(
                 if (!containsLocalManga) {
                     add(CheckboxState.State.None(MR.strings.downloaded_chapters))
                 }
-                add(CheckboxState.State.None(MR.strings.chapters_from_database))
+                add(CheckboxState.State.None(TDMR.strings.chapters_from_database))
             },
         )
     }

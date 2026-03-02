@@ -9,6 +9,7 @@ import eu.kanade.tachiyomi.util.system.buildNotificationChannel
 import eu.kanade.tachiyomi.util.system.buildNotificationChannelGroup
 import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 
 /**
  * Class to manage the basic information of all the notifications used in the app.
@@ -189,7 +190,7 @@ object Notifications {
                     setName(context.stringResource(MR.strings.channel_ext_updates))
                 },
                 buildNotificationChannel(CHANNEL_MASS_IMPORT, IMPORTANCE_LOW) {
-                    setName(context.stringResource(MR.strings.channel_mass_import))
+                    setName(context.stringResource(TDMR.strings.channel_mass_import))
                     setShowBadge(false)
                 },
                 buildNotificationChannel(CHANNEL_EPUB_EXPORT, IMPORTANCE_LOW) {

@@ -39,6 +39,7 @@ import kotlinx.coroutines.delay
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.domain.category.model.Category
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
 import kotlin.time.Duration.Companion.seconds
@@ -102,23 +103,23 @@ fun CategoryCreateDialog(
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = stringResource(MR.strings.category_content_type),
+                    text = stringResource(TDMR.strings.category_content_type),
                     style = MaterialTheme.typography.labelMedium,
                     modifier = Modifier.padding(start = 4.dp, bottom = 4.dp),
                 )
 
                 ContentTypeOption(
-                    text = stringResource(MR.strings.category_content_type_all),
+                    text = stringResource(TDMR.strings.category_content_type_all),
                     selected = contentType == Category.CONTENT_TYPE_ALL,
                     onClick = { contentType = Category.CONTENT_TYPE_ALL },
                 )
                 ContentTypeOption(
-                    text = stringResource(MR.strings.category_content_type_manga),
+                    text = stringResource(TDMR.strings.category_content_type_manga),
                     selected = contentType == Category.CONTENT_TYPE_MANGA,
                     onClick = { contentType = Category.CONTENT_TYPE_MANGA },
                 )
                 ContentTypeOption(
-                    text = stringResource(MR.strings.category_content_type_novel),
+                    text = stringResource(TDMR.strings.category_content_type_novel),
                     selected = contentType == Category.CONTENT_TYPE_NOVEL,
                     onClick = { contentType = Category.CONTENT_TYPE_NOVEL },
                 )

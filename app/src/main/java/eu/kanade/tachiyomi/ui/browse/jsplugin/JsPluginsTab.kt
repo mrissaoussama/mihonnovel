@@ -61,6 +61,7 @@ import eu.kanade.tachiyomi.jsplugin.model.JsPlugin
 import eu.kanade.tachiyomi.ui.browse.jsplugin.JsPluginsScreenModel.JsPluginItem
 import kotlinx.collections.immutable.persistentListOf
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 
@@ -84,7 +85,7 @@ fun jsPluginsTab(
                 onClick = { /* TODO: Language filter */ },
             ),
             AppBar.OverflowAction(
-                title = "Manage Repositories", // TODO: Add string resource
+                title = stringResource(TDMR.strings.js_plugin_manage_repos),
                 onClick = { showRepoDialog = true },
             ),
         ),
@@ -196,7 +197,7 @@ private fun UpdateAllButton(
     ) {
         Icon(Icons.Outlined.Update, contentDescription = null)
         Spacer(Modifier.width(8.dp))
-        Text("Update all ($count)")
+        Text(stringResource(TDMR.strings.js_plugin_update_all, count))
     }
 }
 
@@ -306,7 +307,7 @@ private fun JsPluginCard(
                 IconButton(onClick = onUpdate) {
                     Icon(
                         Icons.Outlined.Update,
-                        contentDescription = "Update",
+                        contentDescription = stringResource(MR.strings.ext_update),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -314,7 +315,7 @@ private fun JsPluginCard(
                 IconButton(onClick = onUninstall) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = "Uninstall",
+                        contentDescription = stringResource(MR.strings.ext_uninstall),
                         tint = MaterialTheme.colorScheme.error,
                     )
                 }
@@ -322,7 +323,7 @@ private fun JsPluginCard(
                 IconButton(onClick = onInstall) {
                     Icon(
                         Icons.Outlined.CloudDownload,
-                        contentDescription = "Install",
+                        contentDescription = stringResource(MR.strings.action_install),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -338,7 +339,7 @@ private fun JsBadge() {
         shape = RoundedCornerShape(4.dp),
     ) {
         Text(
-            text = "JS",
+            text = stringResource(TDMR.strings.js_plugin_badge),
             style = MaterialTheme.typography.labelSmall,
             color = Color.White,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
@@ -353,7 +354,7 @@ private fun UpdateBadge() {
         shape = RoundedCornerShape(4.dp),
     ) {
         Text(
-            text = "UPDATE",
+            text = stringResource(TDMR.strings.js_plugin_update_badge),
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onPrimary,
             modifier = Modifier.padding(horizontal = 4.dp, vertical = 2.dp),
@@ -373,7 +374,7 @@ private fun ManageRepositoriesDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("JS Plugin Repositories") },
+        title = { Text(stringResource(TDMR.strings.js_plugin_repos_title)) },
         text = {
             LazyColumn {
                 items(repositories) { repo ->
@@ -398,7 +399,7 @@ private fun ManageRepositoriesDialog(
                         }
 
                         IconButton(onClick = { onRemoveRepository(repo) }) {
-                            Icon(Icons.Outlined.Delete, "Remove")
+                            Icon(Icons.Outlined.Delete, stringResource(MR.strings.action_remove))
                         }
                     }
                 }
@@ -406,12 +407,12 @@ private fun ManageRepositoriesDialog(
         },
         confirmButton = {
             TextButton(onClick = { showAddDialog = true }) {
-                Text("Add Repository")
+                Text(stringResource(TDMR.strings.js_plugin_add_repo))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Close")
+                Text(stringResource(MR.strings.action_close))
             }
         },
     )
@@ -437,13 +438,13 @@ private fun AddRepositoryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Repository") },
+        title = { Text(stringResource(TDMR.strings.js_plugin_add_repo)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Name") },
+                    label = { Text(stringResource(TDMR.strings.js_plugin_repo_name)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -451,7 +452,7 @@ private fun AddRepositoryDialog(
                 OutlinedTextField(
                     value = url,
                     onValueChange = { url = it },
-                    label = { Text("URL") },
+                    label = { Text(stringResource(TDMR.strings.js_plugin_repo_url)) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -462,12 +463,12 @@ private fun AddRepositoryDialog(
                 onClick = { onAdd(name, url) },
                 enabled = name.isNotBlank() && url.isNotBlank(),
             ) {
-                Text("Add")
+                Text(stringResource(MR.strings.action_add))
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(MR.strings.action_cancel))
             }
         },
     )

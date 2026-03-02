@@ -1,0 +1,561 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Common actions (In MR)
+    ext_update: Update
+    ext_uninstall: Uninstall
+    action_webview_refresh: Refresh
+    nav_zone_next: Next
+    nav_zone_prev: Prev
+     -->
+    <!-- Screen Titles -->
+    <string name="label_novel_download_queue">Novel downloads</string>
+    <string name="label_manga_sources">Manga Sources</string>
+    <string name="label_novel_sources">Novel Sources</string>
+    <string name="label_manga">Manga</string>
+    <string name="label_novels">Novels</string>
+    <string name="label_migration">Migrate Manga</string>
+    <string name="label_novel_migration">Migrate Novels</string>
+    <string name="label_manga_extensions">Manga Extensions</string>
+    <string name="label_novel_extensions">Novel Extensions</string>
+
+    <!-- Actions (In MR)
+    downloaded_chapters: Downloaded chapters
+    -->
+    <!-- Actions -->
+    <string name="action_delete_range">Delete range</string>
+    <string name="action_remove_from_db">Remove from database</string>
+    <string name="category_content_type">Content type</string>
+    <string name="category_content_type_all">All (Manga &amp; Novels)</string>
+    <string name="category_content_type_manga">Manga only</string>
+    <string name="category_content_type_novel">Novels only</string>
+    <string name="action_order_by_progress">By progress</string>
+    <string name="action_order_by_total_chapters">By total chapters</string>
+    <string name="action_order_by_extension">By extension</string>
+    <string name="action_edit_alt_titles">Edit alternative titles</string>
+    <string name="pref_category_manga_reader">Manga Reader</string>
+    <string name="pref_category_novel_reader">Novel Reader</string>
+    <string name="pref_manga_reader_summary">Manga reading mode, display, navigation</string>
+
+    <!-- Reader Section -->
+    <string name="novel_viewer">Novel (text)</string>
+    <string name="chapter_progress_novel">%1$d%%</string>
+    <!-- Library -->
+    <string name="chapters_from_database">Chapter entries from database</string>
+    <!-- Browse Source -->
+    <string name="local_novel_source">Local novels</string>
+    <!-- History -->
+    <string name="pref_clear_cover">Clear cover</string>
+    <!-- Downloads activity and service
+    update_check_notification_download_error: Download error
+     -->
+
+    <!-- Chapters -->
+    <string name="show_chapter_both">Both (Number + Title)</string>
+    <string name="confirm_remove_chapters_from_db">Are you sure you want to remove the selected chapters from the database? Downloaded files will not be affected.</string>
+    <string name="confirm_remove_chapters_from_library">Are you sure you want to remove all chapters from the selected entries? Downloaded files will not be affected.</string>
+
+    <!-- Notification channels -->
+    <string name="channel_mass_import">Mass Import</string>
+    <string name="mass_import_progress_title">Mass Import Progress</string>
+    <string name="mass_import_complete_title">Mass Import Complete</string>
+
+    <!-- Novel Reader UI (In MR)
+    pref_category_appearance: Appearance
+    pref_category_reading: Reading
+    pref_category_advanced: Advanced
+    -->
+    <!-- Novel Reader UI -->
+    <string name="novel_tab_controls">Controls</string>
+    <string name="novel_advanced_webview_only">Advanced settings are only available in WebView rendering mode.</string>
+    <string name="novel_snippet_title">Snippet title</string>
+    <string name="novel_snippet_code">Code</string>
+    <string name="novel_add_snippet">Add snippet</string>
+    <string name="novel_edit_snippet">Edit snippet</string>
+    <string name="novel_delete_snippet">Delete snippet</string>
+    <string name="novel_edit_css_snippet">Edit CSS snippet</string>
+    <string name="novel_add_css_snippet">Add CSS snippet</string>
+    <string name="novel_edit_js_snippet">Edit JS snippet</string>
+    <string name="novel_add_js_snippet">Add JS snippet</string>
+    <string name="pref_novel_js_snippets">JS Snippets</string>
+
+    <!-- Novel TTS Settings -->
+    <string name="pref_novel_tts_section">Text to Speech</string>
+    <string name="pref_novel_tts_voice">Voice</string>
+    <string name="pref_novel_tts_speed">Speech speed</string>
+    <string name="pref_novel_tts_pitch">Speech pitch</string>
+    <string name="pref_novel_tts_auto_next">Auto-play next chapter</string>
+
+    <!-- Novel Reader Actions (In MR)
+    add_to_library: Add to library
+    -->
+    <!-- Novel Reader Actions -->
+    <string name="action_reload_chapter">Reload chapter</string>
+    <string name="action_reload_local">Reload from local</string>
+    <string name="action_reload_source">Reload from source</string>
+    <string name="action_scroll_to_top">Scroll to top</string>
+    <string name="action_scroll_to_bottom">Scroll to bottom</string>
+    <string name="action_translate">Translate</string>
+    <string name="action_translate_downloaded">Translate downloaded chapters</string>
+    <string name="action_export_epub">Export as EPUB</string>
+    <string name="action_export_epub_bulk">Export selected as EPUB</string>
+    <string name="export_epub_progress">Exporting %1$d of %2$d chapters…</string>
+    <string name="export_epub_success">EPUB exported successfully</string>
+    <string name="export_epub_error">Failed to export EPUB: %s</string>
+    <string name="action_remove_chapters">Remove chapters</string>
+    <string name="action_clear_covers">Clear covers</string>
+    <string name="action_clear_descriptions">Clear descriptions</string>
+    <string name="action_clear_tags">Clear tags</string>
+    <string name="action_start_auto_scroll">Start auto-scroll</string>
+    <string name="action_stop_auto_scroll">Stop auto-scroll</string>
+    <string name="action_copy_links">Copy links</string>
+    <string name="action_mass_import">Mass import</string>
+
+    <!-- Novel Translation Settings (reader panel) -->
+    <string name="pref_novel_translation_settings">Translation</string>
+    <string name="pref_novel_translation_enabled">Enable translation</string>
+    <string name="pref_novel_realtime_translation">Real-time translation</string>
+    <string name="pref_novel_translation_engine_label">Engine</string>
+    <string name="pref_novel_translation_target_label">Target language</string>
+    <string name="pref_novel_translation_hint">Configure translation engine and API keys in Settings → Translation</string>
+
+    <!-- Novel Download Settings -->
+    <string name="pref_novel_reader_summary">Novel reading mode, fonts, colors</string>
+    <string name="pref_novel_download_throttling">Enable throttling</string>
+    <string name="pref_novel_download_throttling_summary">Add delays between downloads to avoid rate limiting</string>
+    <string name="pref_novel_download_delay">Download delay</string>
+    <string name="pref_novel_download_delay_summary">Base delay between chapter downloads (ms)</string>
+    <string name="pref_novel_random_delay">Random delay range</string>
+    <string name="pref_novel_random_delay_summary">Additional random delay (0 to this value in ms)</string>
+    <string name="pref_novel_update_throttling">Update throttling</string>
+    <string name="pref_novel_update_throttling_summary">Add delays during library updates for novels</string>
+    <string name="pref_novel_update_delay">Update delay</string>
+    <string name="pref_novel_update_delay_summary">Delay between checking novels during updates (ms)</string>
+    <string name="pref_novel_mass_import_throttling">Mass import throttling</string>
+    <string name="pref_novel_mass_import_throttling_summary">Add delays during mass import operations</string>
+    <string name="pref_novel_mass_import_delay">Mass import delay</string>
+    <string name="pref_novel_mass_import_delay_summary">Delay between imports (ms)</string>
+    <string name="pref_novel_parallel_downloads">Parallel novel downloads</string>
+
+    <!-- Novel Image Embedding -->
+    <string name="pref_novel_download_images">Download chapter images</string>
+    <string name="pref_novel_download_images_summary">Embed images from chapter HTML as base64 for offline viewing</string>
+    <string name="pref_novel_max_image_size">Max image size</string>
+    <string name="pref_novel_max_image_size_summary">Images larger than this will be compressed (0 = no limit)</string>
+    <string name="pref_novel_image_quality">Compression quality</string>
+    <string name="pref_novel_image_quality_summary">Quality for compressed images (higher = larger file)</string>
+
+    <!-- Wizard UI strings -->
+    <string name="selector_title_format">Element Selector - %s</string>
+    <string name="selector_selection_on">Selection ON</string>
+    <string name="selector_select_element">Select Element</string>
+    <string name="selector_tap_to_select">Tap an element to select it</string>
+    <string name="selector_elements_selected">%d element(s) selected</string>
+    <string name="selector_clear_selections">Clear selections</string>
+    <string name="selector_detected_format">Detected: %s</string>
+    <string name="selector_selected_elements">Selected Elements</string>
+    <string name="selector_selected_text">Selected Text:</string>
+    <string name="selector_select_parent">Select Parent Element:</string>
+    <string name="selector_hide_html">Hide HTML</string>
+    <string name="selector_show_html">Show HTML</string>
+    <string name="selector_custom_source">Custom Source</string>
+    <string name="selector_enter_name">Enter a name for your custom source:</string>
+    <string name="selector_name_required">Name is required</string>
+    <string name="selector_base_url_format">Base URL: %s</string>
+    <string name="selector_no_patterns">No specific patterns available for this step and framework.</string>
+    <string name="selector_suggested_format">Suggested selectors for %s:</string>
+    <string name="selector_available_frameworks">Available Frameworks:</string>
+
+    <!-- EPUB Export/Import (novel-specific) -->
+    <string name="epub_chapters_export_count">%d chapter(s) will be exported.</string>
+    <string name="epub_filename">Filename</string>
+    <string name="epub_export_note">Note: Downloaded chapters will be included. Chapters not yet downloaded will be fetched from the source.</string>
+    <string name="epub_import_title">Import EPUB</string>
+    <string name="epub_select_files">Select EPUB files</string>
+    <string name="epub_selected_files">Selected files:</string>
+    <string name="epub_novel_title">Novel title</string>
+    <string name="epub_combine_files">Combine all files into one novel</string>
+    <string name="epub_importing_progress">Importing %1$d/%2$d</string>
+    <string name="epub_import_complete">Import Complete</string>
+    <string name="epub_import_success_count">%d imported successfully</string>
+    <string name="epub_import_error_count">%d failed</string>
+    <string name="epub_create_dir_failed">Failed to create directory for: %s</string>
+    <string name="epub_novels_export_count">%d novel(s) will be exported.</string>
+    <string name="epub_and_more">… and %d more</string>
+    <string name="epub_content_options">Content Options</string>
+    <string name="epub_downloaded_only">Downloaded chapters only</string>
+    <string name="epub_prefer_translated">Prefer translated chapters</string>
+    <string name="epub_filename_options">Filename Options</string>
+    <string name="epub_include_chapter_count">Include chapter count (e.g. [50ch])</string>
+    <string name="epub_include_chapter_range">Include chapter range (e.g. [ch1-50])</string>
+    <string name="epub_include_status">Include status (e.g. [Completed])</string>
+    <string name="epub_downloaded_only_info">Only downloaded chapters will be included.</string>
+    <string name="epub_source_info">Downloaded chapters will be used. Undownloaded chapters will be fetched from source.</string>
+    <string name="epub_translated_info"> Translated chapters will be used when available.</string>
+    <string name="epub_action_import">Import</string>
+
+    <!-- Novel Reader Settings - NovelPage.kt -->
+    <string name="novel_theme_app">App</string>
+    <string name="novel_theme_light">Light</string>
+    <string name="novel_theme_dark">Dark</string>
+    <string name="novel_theme_sepia">Sepia</string>
+    <string name="novel_theme_black">Black</string>
+    <string name="novel_theme_grey">Grey</string>
+    <string name="novel_theme_custom">Custom</string>
+    <string name="novel_font_sans_serif">Sans Serif</string>
+    <string name="novel_font_serif">Serif</string>
+    <string name="novel_font_monospace">Monospace</string>
+    <string name="novel_font_georgia">Georgia</string>
+    <string name="novel_font_times">Times New Roman</string>
+    <string name="novel_font_arial">Arial</string>
+    <string name="novel_align_left">Left</string>
+    <string name="novel_align_center">Center</string>
+    <string name="novel_align_right">Right</string>
+    <string name="novel_align_justify">Justify</string>
+    <string name="novel_render_default">Default (TextView)</string>
+    <string name="novel_render_webview">WebView</string>
+    <string name="novel_color_default">Default</string>
+    <string name="novel_color_black">Black</string>
+    <string name="novel_color_white">White</string>
+    <string name="novel_color_gray">Gray</string>
+    <string name="novel_color_dark_gray">Dark Gray</string>
+    <string name="novel_color_light_gray">Light Gray</string>
+    <string name="novel_color_off_white">OffWhite</string>
+    <string name="novel_color_sepia">Sepia</string>
+    <string name="novel_color_custom">Custom</string>
+    <string name="novel_color_cream">Cream</string>
+    <string name="novel_color_charcoal">Charcoal</string>
+    <string name="novel_chapter_display_name">Name only</string>
+    <string name="novel_chapter_display_number">Number only</string>
+    <string name="novel_chapter_display_both">Both</string>
+    <string name="novel_sort_source">Source order</string>
+    <string name="novel_sort_chapter">Chapter number</string>
+    <string name="novel_auto_split">Auto-split long chapters</string>
+    <string name="novel_split_word_count">Split word count (×50)</string>
+    <string name="novel_force_lowercase">Force text to lowercase</string>
+    <string name="novel_engine_format">Engine #%d</string>
+    <string name="novel_enabled">Enabled</string>
+    <string name="novel_disabled">Disabled</string>
+    <string name="novel_no_snippets">No snippets added</string>
+    <string name="novel_regex_find_replace">Regex Find &amp; Replace</string>
+    <string name="novel_add_rule">Add rule</string>
+    <string name="novel_tag_regex">regex</string>
+    <string name="novel_tag_text">text</string>
+    <string name="novel_rule_format">/%1$s/ → %2$s</string>
+    <string name="novel_rule_remove">(remove)</string>
+    <string name="novel_no_rules">No rules added. Rules apply to chapter content before rendering.</string>
+    <string name="novel_edit_rule">Edit Rule</string>
+    <string name="novel_add_rule_title">Add Find &amp; Replace Rule</string>
+    <string name="novel_rule_title">Title</string>
+    <string name="novel_regex_pattern">Regex Pattern</string>
+    <string name="novel_find_text">Find Text</string>
+    <string name="novel_replace_with">Replace With (empty = remove)</string>
+    <string name="novel_use_regex">Use Regex</string>
+    <string name="novel_test">Test</string>
+    <string name="novel_sample_input">Sample Input</string>
+    <string name="novel_pattern_empty">Pattern is empty</string>
+    <string name="novel_invalid_regex">Invalid regex</string>
+    <string name="novel_run_test">Run Test</string>
+    <string name="novel_output_format">Output: %s</string>
+    <string name="novel_error_format">Error: %s</string>
+    <string name="novel_invalid_regex_format">Invalid regex: %s</string>
+    <string name="novel_tts_default_voice">Default (System)</string>
+    <string name="novel_hex_color">Hex Color</string>
+    <string name="novel_red_format">Red: %d</string>
+    <string name="novel_green_format">Green: %d</string>
+    <string name="novel_blue_format">Blue: %d</string>
+
+    <!-- Novel Download Queue -->
+    <string name="novel_downloads_title">Novel Downloads</string>
+    <string name="novel_downloads_clear_completed">Clear completed</string>
+    <string name="novel_downloads_chapters_format">%1$d/%2$d chapters</string>
+    <string name="novel_downloads_more_options">More options</string>
+    <string name="novel_downloads_move_top">Move to top</string>
+    <string name="novel_downloads_move_bottom">Move to bottom</string>
+    <string name="novel_downloads_chapter_format">Chapter: %s</string>
+
+    <!-- JS Plugins Tab -->
+    <string name="js_plugin_manage_repos">Manage Repositories</string>
+    <string name="js_plugin_update_all">Update all (%d)</string>
+    <string name="js_plugin_badge">JS</string>
+    <string name="js_plugin_update_badge">UPDATE</string>
+    <string name="js_plugin_repos_title">JS Plugin Repositories</string>
+    <string name="js_plugin_add_repo">Add Repository</string>
+    <string name="js_plugin_repo_name">Name</string>
+    <string name="js_plugin_repo_url">URL</string>
+
+    <!-- Some novel settings -->
+    <string name="pref_font_size">Font size</string>
+    <string name="pref_font_family">Font family</string>
+    <string name="pref_novel_js_snippets">JavaScript Snippets</string>
+    <string name="novel_add_css_snippet">Add CSS snippet</string>
+    <string name="novel_edit_css_snippet">Edit CSS snippet</string>
+    <string name="novel_add_js_snippet">Add JavaScript snippet</string>
+    <string name="novel_edit_js_snippet">Edit JavaScript snippet</string>
+
+    <!-- TTS Settings -->
+    <string name="pref_novel_tts_section">Text-to-Speech</string>
+    <string name="pref_novel_tts_speed">Speech speed</string>
+    <string name="pref_novel_tts_pitch">Speech pitch</string>
+    <string name="pref_novel_tts_voice">Voice</string>
+    <string name="pref_novel_tts_voice_default">System default</string>
+    <string name="pref_novel_tts_auto_next">Auto-play next chapter</string>
+
+    <!-- Translation Settings -->
+    <string name="pref_novel_translation_settings">Translation</string>
+    <string name="pref_novel_translation_enabled">Enable translation</string>
+    <string name="pref_novel_realtime_translation">Real-time translation while reading</string>
+    <string name="pref_novel_translation_engine_label">Engine</string>
+    <string name="pref_novel_translation_target_label">Target language</string>
+    <string name="pref_novel_translation_hint">Configure translation engines in Settings → Novel → Translation</string>
+    <string name="action_disable_translation">Disable translation</string>
+    <string name="not_configured">Not configured</string>
+
+    <!-- Novel Reader Preferences -->
+    <string name="pref_novel_theme">Theme</string>
+    <string name="pref_category_novel">Novel</string>
+    <string name="pref_novel_custom_css">Custom CSS</string>
+    <string name="pref_novel_custom_js">Custom JavaScript</string>
+    <string name="pref_novel_line_height">Line height</string>
+    <string name="pref_novel_text_align">Text alignment</string>
+    <string name="pref_novel_auto_scroll">Auto scroll</string>
+    <string name="pref_novel_auto_scroll_speed">Auto scroll speed</string>
+    <string name="pref_novel_volume_keys_scroll">Volume keys scroll</string>
+    <string name="pref_novel_tap_to_scroll">Tap to scroll</string>
+    <string name="pref_novel_text_selectable">Enable text selection</string>
+    <string name="pref_novel_hide_chapter_title">Hide chapter title in content</string>
+    <string name="pref_novel_chapter_title_display">Chapter title format</string>
+    <string name="pref_novel_use_original_fonts">Use source\'s original fonts</string>
+    <string name="pref_novel_margin_left">Left margin</string>
+    <string name="pref_novel_margin_right">Right margin</string>
+    <string name="pref_novel_margin_top">Top margin</string>
+    <string name="pref_novel_margin_bottom">Bottom margin</string>
+    <string name="pref_novel_font_color">Font color</string>
+    <string name="pref_novel_background_color">Background color</string>
+    <string name="pref_novel_paragraph_indent">Paragraph indent</string>
+    <string name="pref_novel_paragraph_spacing">Paragraph spacing</string>
+    <string name="pref_novel_block_media">Block images and videos</string>
+    <string name="pref_novel_show_raw_html">Show raw HTML</string>
+    <string name="pref_novel_keep_screen_on">Keep screen on</string>
+    <string name="pref_novel_swipe_navigation">Swipe to change chapters</string>
+    <string name="pref_novel_rendering_mode">Rendering mode</string>
+    <string name="pref_novel_auto_load_next_at">Auto-load next chapter at %</string>
+    <string name="pref_novel_tts">Text to speech</string>
+    <string name="pref_novel_infinite_scroll">Infinite scroll (auto-load next chapter)</string>
+    <string name="pref_novel_chapter_sort_order">Chapter order</string>
+    <string name="pref_novel_progress_slider">Show progress slider</string>
+    <string name="pref_novel_css_snippets">CSS Snippets</string>
+
+    <!-- Novel Download Throttling (category headers only) -->
+    <string name="pref_category_novel_downloads">Novel Downloads</string>
+    <string name="pref_novel_source_overrides">Source-specific overrides</string>
+    <string name="pref_novel_source_overrides_summary">Configure delays for specific sources</string>
+
+    <!-- Novel Image Embedding (category header only) -->
+    <string name="pref_category_novel_images">Chapter Images</string>
+
+    <!-- Translation Services -->
+    <string name="pref_category_translation">Translation</string>
+    <string name="pref_translation_general">General</string>
+    <string name="pref_translation_enabled">Enable translation</string>
+    <string name="pref_translation_enabled_summary">Allow translating novel chapters</string>
+    <string name="pref_translation_engine">Translation engine</string>
+    <string name="pref_translation_source_language">Source language</string>
+    <string name="pref_translation_target_language">Target language</string>
+    <string name="pref_translation_auto_download">Auto-download before translating</string>
+    <string name="pref_translation_auto_download_summary">Download chapter content if not already available</string>
+    <string name="pref_translation_auto_translate">Auto-translate downloads</string>
+    <string name="pref_translation_auto_translate_summary">Automatically translate chapters when downloaded</string>
+    <string name="pref_translation_rate_limit">Rate Limiting</string>
+    <string name="pref_translation_rate_limit_delay">Delay between requests</string>
+    <string name="pref_translation_rate_limit_delay_summary">Wait time between translation requests (ms)</string>
+    <string name="pref_translation_timeout">Request timeout</string>
+    <string name="pref_translation_timeout_summary">Maximum time to wait for translation response (seconds)</string>
+    <string name="pref_translation_warning_threshold">Warning threshold</string>
+    <string name="pref_translation_warning_threshold_summary">Show warning when translating more than this many chapters</string>
+    <string name="pref_translation_bypass_warning">Bypass rate limit warning</string>
+    <string name="pref_translation_bypass_warning_summary">Don\'t show warning for large batch translations</string>
+    <string name="pref_translation_max_parallel">Max parallel translations</string>
+    <string name="pref_translation_max_parallel_summary">For offline engines only</string>
+    <string name="pref_translation_api_keys">API Configuration</string>
+    <string name="pref_translation_openai_key">OpenAI API key</string>
+    <string name="pref_translation_deepseek_key">DeepSeek API key</string>
+    <string name="pref_translation_libretranslate_url">LibreTranslate server URL</string>
+    <string name="pref_translation_ollama_url">Ollama server URL</string>
+    <string name="pref_translation_ollama_model">Ollama model name</string>
+    <string name="not_set">Not set</string>
+    <string name="no_limit">No limit</string>
+    <string name="no_downloaded_chapters">No downloaded chapters found</string>
+    <string name="translation_queued">Queued %d chapters for translation</string>
+
+    <!-- Custom Source - Create dialog hint -->
+    <string name="custom_source_use_repos_hint">For pre-built novel source themes (Madara, LightNovelWP, etc.), install extensions from a repository instead.</string>
+
+    <!-- Custom Source - CreateCustomSourceScreen.kt -->
+    <string name="custom_source_created">Custom source created successfully!</string>
+    <string name="custom_source_error_format">Error: %s</string>
+
+    <!-- Custom Source - Editor screen -->
+    <string name="custom_source_edit_title">Edit Source</string>
+    <string name="custom_source_create_source">Create Source</string>
+    <string name="custom_source_basic_info">Basic Information</string>
+    <string name="custom_source_source_name_required">Source Name *</string>
+    <string name="custom_source_base_url_required">Base URL *</string>
+    <string name="custom_source_options">Source Options</string>
+    <string name="custom_source_use_cloudflare">Use Cloudflare Bypass</string>
+    <string name="custom_source_use_cloudflare_desc">Enable for sites protected by Cloudflare</string>
+    <string name="custom_source_reverse_chapters">Reverse Chapter Order</string>
+    <string name="custom_source_reverse_chapters_desc">Enable if chapters are listed newest first</string>
+    <string name="custom_source_post_search">Use POST for Search</string>
+    <string name="custom_source_post_search_desc">Enable if the site uses POST requests for search</string>
+    <string name="custom_source_novel_source">Novel Source</string>
+    <string name="custom_source_novel_source_desc">Enable for novel/text sources, disable for manga/manhwa/webtoon sources</string>
+    <string name="custom_source_base_on_extension">Base on Extension</string>
+    <string name="custom_source_base_on_extension_desc">Create a custom source that delegates to an installed extension with a different name/URL</string>
+    <string name="custom_source_pick_extension">Pick Extension Source</string>
+    <string name="custom_source_pick_extension_hint">Select an installed novel extension to base your custom source on. You can override the name and base URL.</string>
+    <string name="custom_source_no_extensions">No novel extensions installed. Install extensions from the Extensions tab first.</string>
+    <string name="custom_source_url_patterns">URL Patterns</string>
+    <string name="custom_source_url_placeholders">Use {baseUrl}, {page}, {query} as placeholders</string>
+    <string name="custom_source_popular_url">Popular URL *</string>
+    <string name="custom_source_popular_url_hint">{baseUrl}/popular?page={page}</string>
+    <string name="custom_source_latest_url">Latest URL (optional)</string>
+    <string name="custom_source_search_url">Search URL *</string>
+    <string name="custom_source_search_url_hint">{baseUrl}/search?q={query}&amp;page={page}</string>
+    <string name="custom_source_css_selectors">CSS Selectors</string>
+    <string name="custom_source_css_selectors_help">Use browser DevTools to find CSS selectors</string>
+    <string name="custom_source_novel_list">Novel List (Popular/Latest)</string>
+    <string name="custom_source_list_item_selector">List Item Selector *</string>
+    <string name="custom_source_list_item_hint">.novel-item, .book-card</string>
+    <string name="custom_source_title_selector">Title Selector</string>
+    <string name="custom_source_cover_selector">Cover Image Selector</string>
+    <string name="custom_source_novel_details">Novel Details</string>
+    <string name="custom_source_title_selector_required">Title Selector *</string>
+    <string name="custom_source_description_selector">Description Selector</string>
+    <string name="custom_source_chapters">Chapters</string>
+    <string name="custom_source_chapter_list_selector">Chapter List Selector *</string>
+    <string name="custom_source_chapter_content">Chapter Content</string>
+    <string name="custom_source_content_selector">Content Selector *</string>
+    <string name="custom_source_content_selector_hint">.chapter-content, #content</string>
+    <string name="custom_source_save">Save Source</string>
+
+    <!-- Custom Source - Import/Export -->
+    <string name="custom_source_imported">Source imported successfully!</string>
+    <string name="custom_source_import_failed">Import failed: %s</string>
+    <string name="custom_source_read_error">Error reading file: %s</string>
+    <string name="custom_source_export_title">Export Source</string>
+    <string name="custom_source_export_failed">Export failed: %s</string>
+    <string name="custom_source_export_error">Could not export source</string>
+    <string name="custom_source_load_failed">Failed to load sources: %s</string>
+    <string name="custom_source_delete_failed">Failed to delete source: %s</string>
+
+    <!-- Custom Source - Test screen -->
+    <string name="custom_source_test_title">Test Source</string>
+    <string name="custom_source_testing">Testing source…</string>
+    <string name="custom_source_run_test">Run Test</string>
+    <string name="custom_source_test_again">Test Again</string>
+    <string name="custom_source_all_tests_passed">✓ All tests passed</string>
+    <string name="custom_source_some_tests_failed">✗ Some tests failed</string>
+    <string name="custom_source_export_subject">Custom Source: %s</string>
+
+    <!-- Custom Source - WebView Element Selector Wizard -->
+    <string name="selector_step_trending_title">Trending Section</string>
+    <string name="selector_step_trending_desc">Navigate to the trending/popular novels section</string>
+    <string name="selector_step_trending_detail">Find the section showing popular or trending novels on the homepage</string>
+    <string name="selector_step_novel_card_title">Novel Card Elements</string>
+    <string name="selector_step_novel_card_desc">Select: 1) Cover IMAGE, 2) TITLE text, 3) Novel URL link</string>
+    <string name="selector_step_novel_card_detail">These elements will be used to display novels in popular/latest/search lists</string>
+    <string name="selector_step_trending_novels_title">Trending Novels</string>
+    <string name="selector_step_trending_novels_desc">Select 3 novel items: Click on TITLE element of each novel</string>
+    <string name="selector_step_trending_novels_detail">Click on the title text of 3 different trending novels.</string>
+    <string name="selector_step_new_section_title">New Novels Section</string>
+    <string name="selector_step_new_section_desc">Navigate to the new/latest novels section</string>
+    <string name="selector_step_new_section_detail">Find the section showing recently updated novels</string>
+    <string name="selector_step_new_novels_title">New Novels</string>
+    <string name="selector_step_new_novels_desc">Select 3 novel items: Select the TITLE element for each</string>
+    <string name="selector_step_new_novels_detail">Click on the title text of 3 different latest novels</string>
+    <string name="selector_step_search_title">Search Page (Optional)</string>
+    <string name="selector_step_search_desc">Skip or search for \'a\' (single letter) to identify search URL pattern</string>
+    <string name="selector_step_search_detail">Search for a single letter like \'a\' or \'the\'. Look at the URL to find how the search term is passed (e.g., ?s=, ?q=, /search/)</string>
+    <string name="selector_step_search_url_title">Search URL Pattern</string>
+    <string name="selector_step_search_url_desc">Identify where the search keyword appears in the URL</string>
+    <string name="selector_step_search_url_detail">Look for your search term in the URL. Common patterns: ?s=keyword, ?q=keyword, /search/keyword</string>
+    <string name="selector_step_pagination_title">Pagination (Optional)</string>
+    <string name="selector_step_pagination_desc">Navigate to page 2 to identify pagination pattern</string>
+    <string name="selector_step_pagination_detail">Click on page 2 link. Look for page number in URL (e.g., /page/2, ?page=2, ?p=2)</string>
+    <string name="selector_step_novel_page_title">Novel Details Page</string>
+    <string name="selector_step_novel_page_desc">Click on a novel to open its details page</string>
+    <string name="selector_step_novel_page_detail">Navigate to any novel\'s main page</string>
+    <string name="selector_step_novel_details_title">Novel Details</string>
+    <string name="selector_step_novel_details_desc">Select: 1) Title, 2) Description/Summary, 3) Cover image, 4) Tags/Genres (optional)</string>
+    <string name="selector_step_novel_details_detail">Select each element that shows novel information on the details page</string>
+    <string name="selector_step_chapter_list_title">Chapter List</string>
+    <string name="selector_step_chapter_list_desc">Select chapter items: Click on the TITLE/LINK of chapters</string>
+    <string name="selector_step_chapter_list_detail">Select at least one chapter item (more improves accuracy)</string>
+    <string name="selector_step_chapter_page_title">Chapter Page</string>
+    <string name="selector_step_chapter_page_desc">Open a chapter to identify the content element</string>
+    <string name="selector_step_chapter_page_detail">Click on any chapter to open its reading page</string>
+    <string name="selector_step_chapter_content_title">Chapter Content</string>
+    <string name="selector_step_chapter_content_desc">Select the main text container element</string>
+    <string name="selector_step_chapter_content_detail">Click on the element containing the actual chapter text/content</string>
+    <string name="selector_step_complete_title">Complete</string>
+    <string name="selector_step_complete_desc">Review and save your custom source configuration</string>
+    <string name="selector_step_complete_detail">Verify your selections and save</string>
+
+    <!-- Custom Source UI -->
+    <string name="custom_source_create_title">Create Custom Source</string>
+    <string name="custom_source_create_subtitle">Build your own novel source by selecting elements from a website</string>
+    <string name="custom_source_method_guided_title">Guided WebView Selector</string>
+    <string name="custom_source_method_guided_desc">Navigate to a novel website and select elements step-by-step</string>
+    <string name="custom_source_method_template_title">Use Installed Extension Template</string>
+    <string name="custom_source_method_template_desc">Pick an installed KT/JS source, then override URL and name before launching the selector</string>
+    <string name="custom_source_method_repos_title">Manage Saved Repositories</string>
+    <string name="custom_source_method_repos_desc">Open Kotlin/JS repo management before building a source</string>
+    <string name="custom_source_steps_intro">The guided selector will walk you through:</string>
+    <string name="custom_source_step_1">1. Selecting trending/popular novels section</string>
+    <string name="custom_source_step_2">2. Selecting new/latest novels section</string>
+    <string name="custom_source_step_3">3. Setting up search functionality</string>
+    <string name="custom_source_step_4">4. Identifying pagination patterns</string>
+    <string name="custom_source_step_5">5. Selecting novel card elements (cover, title)</string>
+    <string name="custom_source_step_6">6. Selecting novel details (description, tags)</string>
+    <string name="custom_source_step_7">7. Selecting chapter list elements</string>
+    <string name="custom_source_step_8">8. Selecting chapter content area</string>
+    <string name="custom_source_url_dialog_title">Enter Website URL</string>
+    <string name="custom_source_url_dialog_message">Enter the URL of the novel website you want to create a source for:</string>
+    <string name="custom_source_url_label">Website URL</string>
+    <string name="custom_source_start_wizard">Start Wizard</string>
+    <string name="custom_source_choose_installed">Choose Installed Source</string>
+    <string name="custom_source_choose_installed_desc">Select a template source, then optionally override name and URL.</string>
+    <string name="custom_source_choose_installed_empty">No installed KT/JS catalogue sources with HTTP base URLs were found.</string>
+    <string name="custom_source_source_name">Source name</string>
+    <string name="custom_source_base_url">Base URL</string>
+    <string name="custom_source_use_template">Use Template</string>
+    <string name="custom_sources_title">Custom Sources</string>
+    <string name="custom_sources_import_source">Import source</string>
+    <string name="custom_sources_add_source">Add source</string>
+    <string name="custom_sources_delete_title">Delete Source</string>
+    <string name="custom_sources_delete_message">Are you sure you want to delete this custom source?</string>
+    <string name="custom_sources_empty_title">No Custom Sources</string>
+    <string name="custom_sources_empty_subtitle">Create a custom source to scrape novels from any website</string>
+    <string name="custom_sources_create_source">Create Source</string>
+    <string name="custom_sources_import">Import</string>
+    <string name="custom_sources_language_format">Language: %1$s</string>
+    <string name="custom_sources_test">Test</string>
+    <string name="custom_sources_export">Export</string>
+    <string name="custom_sources_use_webview_selector">Use WebView Element Selector</string>
+    <string name="custom_sources_use_webview_selector_summary">Guided wizard to select elements visually</string>
+    <string name="custom_sources_template">Template</string>
+    <string name="custom_sources_open_webview_wizard">Open WebView Wizard</string>
+    <string name="custom_selector_skip">Skip</string>
+    <string name="custom_selector_suggestions">Suggestions</string>
+    <string name="custom_selector_previous">Previous</string>
+    <string name="custom_selector_next_step">Next Step</string>
+    <string name="custom_selector_save_source">Save Source</string>
+    <string name="custom_selector_confirm_selection">Confirm Selection</string>
+    <string name="custom_selector_css_selector">CSS Selector</string>
+    <string name="custom_selector_save_custom_source">Save Custom Source</string>
+    <string name="custom_selector_source_name_required">Source Name *</string>
+    <string name="custom_selector_pattern_library">Pattern Library</string>
+    <string name="custom_selector_test">Test</string>
+    <string name="custom_selector_use">Use</string>
+    <string name="custom_selector_select_parent_format">Select Parent &lt;%1$s&gt;</string>
+</resources>

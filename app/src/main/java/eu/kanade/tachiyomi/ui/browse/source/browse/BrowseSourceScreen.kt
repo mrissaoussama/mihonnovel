@@ -70,6 +70,7 @@ import tachiyomi.core.common.Constants
 import tachiyomi.core.common.util.lang.launchIO
 import tachiyomi.domain.source.model.StubSource
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.components.material.padding
 import tachiyomi.presentation.core.i18n.stringResource
@@ -323,7 +324,7 @@ data class BrowseSourceScreen(
                                 )
                             },
                             label = {
-                                Text(text = stringResource(MR.strings.action_translate))
+                                Text(text = stringResource(TDMR.strings.action_translate))
                             },
                         )
                         // Multi-select chip for mass import
@@ -374,7 +375,7 @@ data class BrowseSourceScreen(
                                     )
                                 },
                                 label = {
-                                    Text(text = stringResource(MR.strings.action_add_to_library))
+                                    Text(text = stringResource(MR.strings.add_to_library))
                                 },
                             )
                         }

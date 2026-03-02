@@ -23,6 +23,7 @@ import eu.kanade.presentation.components.SearchToolbar
 import kotlinx.collections.immutable.persistentListOf
 import kotlinx.collections.immutable.toImmutableList
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.Pill
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.theme.active
@@ -138,7 +139,7 @@ private fun LibraryRegularToolbar(
             if (onClickMassImport != null) {
                 actions.add(
                     AppBar.OverflowAction(
-                        title = stringResource(MR.strings.action_mass_import),
+                        title = stringResource(TDMR.strings.action_mass_import),
                         onClick = onClickMassImport,
                     ),
                 )
