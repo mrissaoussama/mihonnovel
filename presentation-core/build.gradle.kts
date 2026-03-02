@@ -30,6 +30,7 @@ kotlin {
 dependencies {
     api(projects.core.common)
     api(projects.i18n)
+    api(projects.i18nNovel)
 
     // Compose
     implementation(compose.activity)

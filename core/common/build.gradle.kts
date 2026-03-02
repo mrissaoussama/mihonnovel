@@ -19,6 +19,7 @@ kotlin {
 
 dependencies {
     implementation(projects.i18n)
+    implementation(projects.i18nNovel)
 
     api(libs.logcat)
 
