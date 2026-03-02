@@ -406,7 +406,7 @@ fun ElementSelectorScreen(
                     navigationIcon = Icons.Outlined.Close,
                     actions = {
                         IconButton(onClick = { navigator.reload() }) {
-                            Icon(Icons.Outlined.Refresh, stringResource(TDMR.strings.action_refresh))
+                            Icon(Icons.Outlined.Refresh, stringResource(MR.strings.action_webview_refresh))
                         }
                         IconButton(onClick = {
                             // Show name dialog before saving
@@ -811,10 +811,10 @@ private fun NavigationBar(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onBack, enabled = canGoBack) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(TDMR.strings.action_previous))
+            Icon(Icons.AutoMirrored.Outlined.ArrowBack, stringResource(MR.strings.nav_zone_prev))
         }
         IconButton(onClick = onForward, enabled = canGoForward) {
-            Icon(Icons.AutoMirrored.Outlined.ArrowForward, stringResource(TDMR.strings.action_next))
+            Icon(Icons.AutoMirrored.Outlined.ArrowForward, stringResource(MR.strings.nav_zone_next))
         }
 
         OutlinedTextField(
