@@ -23,6 +23,7 @@ import androidx.compose.material.icons.automirrored.outlined.ArrowBack
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Extension
 import androidx.compose.material.icons.outlined.FileUpload
 import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material.icons.outlined.Share
@@ -31,10 +32,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -66,9 +64,17 @@ import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import eu.kanade.tachiyomi.source.custom.CustomSourceConfig
 import eu.kanade.tachiyomi.source.custom.CustomSourceManager
-import eu.kanade.tachiyomi.source.custom.CustomSourceTemplates
 import eu.kanade.tachiyomi.source.custom.SourceTestResult
+import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.extension.ExtensionManager
+import eu.kanade.tachiyomi.extension.model.Extension
 import kotlinx.coroutines.launch
+import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
+import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
 import java.io.File
 
 /**
@@ -104,14 +110,14 @@ class CustomSourcesScreen : Screen {
                         val result = screenModel.importSource(json)
                         result.fold(
                             onSuccess = {
-                                snackbarHostState.showSnackbar("Source imported successfully!")
+                                snackbarHostState.showSnackbar(context.stringResource(TDMR.strings.custom_source_imported))
                             },
                             onFailure = { e ->
-                                snackbarHostState.showSnackbar("Import failed: ${e.message}")
+                                snackbarHostState.showSnackbar(context.stringResource(TDMR.strings.custom_source_import_failed, e.message ?: ""))
                             },
                         )
                     } catch (e: Exception) {
-                        snackbarHostState.showSnackbar("Error reading file: ${e.message}")
+                        snackbarHostState.showSnackbar(context.stringResource(TDMR.strings.custom_source_read_error, e.message ?: ""))
                     }
                 }
             }
@@ -120,23 +126,23 @@ class CustomSourcesScreen : Screen {
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Custom Sources") },
+                    title = { Text(stringResource(TDMR.strings.custom_sources_title)) },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(MR.strings.action_webview_back))
                         }
                     },
                     actions = {
                         // Import button
                         IconButton(onClick = { importLauncher.launch("application/json") }) {
-                            Icon(Icons.Outlined.FileUpload, contentDescription = "Import Source")
+                            Icon(Icons.Outlined.FileUpload, contentDescription = stringResource(TDMR.strings.custom_sources_import_source))
                         }
                     },
                 )
             },
             floatingActionButton = {
                 FloatingActionButton(onClick = { showCreateDialog = true }) {
-                    Icon(Icons.Outlined.Add, contentDescription = "Add Source")
+                    Icon(Icons.Outlined.Add, contentDescription = stringResource(TDMR.strings.custom_sources_add_source))
                 }
             },
             snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -190,16 +196,16 @@ class CustomSourcesScreen : Screen {
                                             val shareIntent = Intent(Intent.ACTION_SEND).apply {
                                                 type = "application/json"
                                                 putExtra(Intent.EXTRA_STREAM, uri)
-                                                putExtra(Intent.EXTRA_SUBJECT, "Custom Source: ${source.name}")
+                                                putExtra(Intent.EXTRA_SUBJECT, context.stringResource(TDMR.strings.custom_source_export_subject, source.name))
                                                 addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
                                             }
 
-                                            context.startActivity(Intent.createChooser(shareIntent, "Export Source"))
+                                            context.startActivity(Intent.createChooser(shareIntent, context.stringResource(TDMR.strings.custom_source_export_title)))
                                         } catch (e: Exception) {
-                                            snackbarHostState.showSnackbar("Export failed: ${e.message}")
+                                            snackbarHostState.showSnackbar(context.stringResource(TDMR.strings.custom_source_export_failed, e.message ?: ""))
                                         }
                                     } else {
-                                        snackbarHostState.showSnackbar("Could not export source")
+                                        snackbarHostState.showSnackbar(context.stringResource(TDMR.strings.custom_source_export_error))
                                     }
                                 }
                             },
@@ -213,11 +219,10 @@ class CustomSourcesScreen : Screen {
         if (showCreateDialog) {
             CreateSourceDialog(
                 onDismiss = { showCreateDialog = false },
-                onCreate = { name, baseUrl, template ->
+                onCreate = { name, baseUrl ->
                     navigator.push(
                         CustomSourceEditorScreen(
                             sourceId = null,
-                            templateName = template,
                             initialName = name,
                             initialBaseUrl = baseUrl,
                         ),
@@ -228,6 +233,17 @@ class CustomSourcesScreen : Screen {
                     navigator.push(eu.kanade.tachiyomi.ui.customsource.ElementSelectorVoyagerScreen(baseUrl))
                     showCreateDialog = false
                 },
+                onBaseOnExtension = { name, baseUrl, extensionSourceId ->
+                    navigator.push(
+                        CustomSourceEditorScreen(
+                            sourceId = null,
+                            initialName = name,
+                            initialBaseUrl = baseUrl,
+                            basedOnSourceId = extensionSourceId,
+                        ),
+                    )
+                    showCreateDialog = false
+                },
             )
         }
 
@@ -235,19 +251,19 @@ class CustomSourcesScreen : Screen {
         sourceToDelete?.let { id ->
             AlertDialog(
                 onDismissRequest = { sourceToDelete = null },
-                title = { Text("Delete Source") },
-                text = { Text("Are you sure you want to delete this custom source?") },
+                title = { Text(stringResource(TDMR.strings.custom_sources_delete_title)) },
+                text = { Text(stringResource(TDMR.strings.custom_sources_delete_message)) },
                 confirmButton = {
                     TextButton(onClick = {
                         screenModel.deleteSource(id)
                         sourceToDelete = null
                     }) {
-                        Text("Delete")
+                        Text(stringResource(MR.strings.action_delete))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { sourceToDelete = null }) {
-                        Text("Cancel")
+                        Text(stringResource(MR.strings.action_cancel))
                     }
                 },
             )
@@ -267,12 +283,12 @@ private fun EmptyState(
         verticalArrangement = Arrangement.Center,
     ) {
         Text(
-            text = "No Custom Sources",
+            text = stringResource(TDMR.strings.custom_sources_empty_title),
             style = MaterialTheme.typography.titleLarge,
         )
         Spacer(modifier = Modifier.height(8.dp))
         Text(
-            text = "Create a custom source to scrape novels from any website",
+            text = stringResource(TDMR.strings.custom_sources_empty_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -283,12 +299,12 @@ private fun EmptyState(
             Button(onClick = onCreateClick) {
                 Icon(Icons.Outlined.Add, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Create Source")
+                Text(stringResource(TDMR.strings.custom_sources_create_source))
             }
             Button(onClick = onImportClick) {
                 Icon(Icons.Outlined.FileUpload, contentDescription = null)
                 Spacer(modifier = Modifier.width(8.dp))
-                Text("Import")
+                Text(stringResource(TDMR.strings.custom_sources_import))
             }
         }
     }
@@ -326,7 +342,7 @@ private fun CustomSourceCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Text(
-                        text = "Language: $lang",
+                        text = stringResource(TDMR.strings.custom_sources_language_format, lang),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -340,16 +356,16 @@ private fun CustomSourceCard(
                 horizontalArrangement = Arrangement.End,
             ) {
                 IconButton(onClick = onTest) {
-                    Icon(Icons.Outlined.PlayArrow, contentDescription = "Test")
+                    Icon(Icons.Outlined.PlayArrow, contentDescription = stringResource(TDMR.strings.custom_sources_test))
                 }
                 IconButton(onClick = onEdit) {
-                    Icon(Icons.Outlined.Edit, contentDescription = "Edit")
+                    Icon(Icons.Outlined.Edit, contentDescription = stringResource(MR.strings.action_edit))
                 }
                 IconButton(onClick = onExport) {
-                    Icon(Icons.Outlined.Share, contentDescription = "Export")
+                    Icon(Icons.Outlined.Share, contentDescription = stringResource(TDMR.strings.custom_sources_export))
                 }
                 IconButton(onClick = onDelete) {
-                    Icon(Icons.Outlined.Delete, contentDescription = "Delete")
+                    Icon(Icons.Outlined.Delete, contentDescription = stringResource(MR.strings.action_delete))
                 }
             }
         }
@@ -360,26 +376,24 @@ private fun CustomSourceCard(
 @Composable
 private fun CreateSourceDialog(
     onDismiss: () -> Unit,
-    onCreate: (name: String, baseUrl: String, template: String) -> Unit,
+    onCreate: (name: String, baseUrl: String) -> Unit,
     onUseWebViewSelector: (baseUrl: String) -> Unit = {},
+    onBaseOnExtension: (name: String, baseUrl: String, sourceId: Long) -> Unit = { _, _, _ -> },
 ) {
     var name by remember { mutableStateOf("") }
     var baseUrl by remember { mutableStateOf("https://") }
-    var selectedTemplate by remember { mutableStateOf("Generic") }
-    var expanded by remember { mutableStateOf(false) }
     var useWebView by remember { mutableStateOf(false) }
-
-    val templates = remember { CustomSourceTemplates.getAll().keys.toList() }
+    var showExtensionPicker by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Create Custom Source") },
+        title = { Text(stringResource(TDMR.strings.custom_source_create_title)) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Source Name") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_source_name)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                 )
@@ -389,7 +403,7 @@ private fun CreateSourceDialog(
                 OutlinedTextField(
                     value = baseUrl,
                     onValueChange = { baseUrl = it },
-                    label = { Text("Base URL") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_base_url)) },
                     modifier = Modifier.fillMaxWidth(),
                     singleLine = true,
                     placeholder = { Text("https://example.com") },
@@ -411,51 +425,40 @@ private fun CreateSourceDialog(
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
                         Text(
-                            text = "Use WebView Element Selector",
+                            text = stringResource(TDMR.strings.custom_sources_use_webview_selector),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Text(
-                            text = "Guided wizard to select elements visually",
+                            text = stringResource(TDMR.strings.custom_sources_use_webview_selector_summary),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
-                // Template selection (only if not using WebView)
+                // Base on Extension option
+                Spacer(modifier = Modifier.height(4.dp))
+                Button(
+                    onClick = { showExtensionPicker = true },
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(TDMR.strings.custom_source_base_on_extension))
+                }
+                Text(
+                    text = stringResource(TDMR.strings.custom_source_base_on_extension_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+
+                // Hint about extension repos for pre-built themes
                 if (!useWebView) {
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = it },
-                    ) {
-                        OutlinedTextField(
-                            value = selectedTemplate,
-                            onValueChange = {},
-                            readOnly = true,
-                            label = { Text("Template") },
-                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                        )
-
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false },
-                        ) {
-                            templates.forEach { template ->
-                                DropdownMenuItem(
-                                    text = { Text(template) },
-                                    onClick = {
-                                        selectedTemplate = template
-                                        expanded = false
-                                    },
-                                )
-                            }
-                        }
-                    }
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_use_repos_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = 4.dp),
+                    )
                 }
             }
         },
@@ -465,21 +468,38 @@ private fun CreateSourceDialog(
                     if (useWebView) {
                         onUseWebViewSelector(baseUrl)
                     } else {
-                        onCreate(name, baseUrl, selectedTemplate)
+                        onCreate(name, baseUrl)
                     }
                 },
                 enabled = (useWebView && baseUrl.startsWith("http")) ||
                     (!useWebView && name.isNotBlank() && baseUrl.startsWith("http")),
             ) {
-                Text(if (useWebView) "Open WebView Wizard" else "Create")
+                Text(
+                    if (useWebView) {
+                        stringResource(TDMR.strings.custom_sources_open_webview_wizard)
+                    } else {
+                        stringResource(MR.strings.action_create)
+                    },
+                )
             }
         },
         dismissButton = {
             TextButton(onClick = onDismiss) {
-                Text("Cancel")
+                Text(stringResource(MR.strings.action_cancel))
             }
         },
     )
+
+    // Extension picker dialog
+    if (showExtensionPicker) {
+        ExtensionSourcePickerDialog(
+            onDismiss = { showExtensionPicker = false },
+            onPick = { pickedName, pickedBaseUrl, pickedSourceId ->
+                showExtensionPicker = false
+                onBaseOnExtension(pickedName, pickedBaseUrl, pickedSourceId)
+            },
+        )
+    }
 }
 
 /**
@@ -502,10 +522,10 @@ class CustomSourceTestScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text("Test Source") },
+                    title = { Text(stringResource(TDMR.strings.custom_source_test_title)) },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(MR.strings.action_webview_back))
                         }
                     },
                 )
@@ -522,7 +542,7 @@ class CustomSourceTestScreen(
                 if (isLoading) {
                     CircularProgressIndicator()
                     Spacer(modifier = Modifier.height(16.dp))
-                    Text("Testing source...")
+                    Text(stringResource(TDMR.strings.custom_source_testing))
                 } else if (testResult == null) {
                     Button(onClick = {
                         isLoading = true
@@ -531,7 +551,7 @@ class CustomSourceTestScreen(
                             isLoading = false
                         }
                     }) {
-                        Text("Run Test")
+                        Text(stringResource(TDMR.strings.custom_source_run_test))
                     }
                 } else {
                     TestResultView(result = testResult!!)
@@ -541,7 +561,7 @@ class CustomSourceTestScreen(
                     Button(onClick = {
                         testResult = null
                     }) {
-                        Text("Test Again")
+                        Text(stringResource(TDMR.strings.custom_source_test_again))
                     }
                 }
             }
@@ -561,7 +581,7 @@ private fun TestResultView(result: SourceTestResult) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = if (result.overallSuccess) "✓ All tests passed" else "✗ Some tests failed",
+            text = if (result.overallSuccess) stringResource(TDMR.strings.custom_source_all_tests_passed) else stringResource(TDMR.strings.custom_source_some_tests_failed),
             color = if (result.overallSuccess) {
                 MaterialTheme.colorScheme.primary
             } else {
@@ -621,9 +641,9 @@ private fun TestResultView(result: SourceTestResult) {
  */
 class CustomSourceEditorScreen(
     private val sourceId: Long?,
-    private val templateName: String? = null,
     private val initialName: String? = null,
     private val initialBaseUrl: String? = null,
+    private val basedOnSourceId: Long? = null,
 ) : Screen {
 
     @OptIn(ExperimentalMaterial3Api::class)
@@ -633,12 +653,12 @@ class CustomSourceEditorScreen(
         val screenModel = rememberScreenModel { CustomSourcesScreenModel() }
         val scope = rememberCoroutineScope()
 
-        // Load existing config or create from template
+        // Load existing config or create blank
         val initialConfig = remember {
             if (sourceId != null) {
                 screenModel.getSourceConfig(sourceId)
-            } else if (templateName != null && initialName != null && initialBaseUrl != null) {
-                screenModel.createFromTemplate(templateName, initialName, initialBaseUrl)
+            } else if (initialName != null && initialBaseUrl != null) {
+                screenModel.createBlankConfig(initialName, initialBaseUrl)
             } else {
                 null
             }
@@ -654,8 +674,8 @@ class CustomSourceEditorScreen(
         // New fields for source type and cloudflare
         var useCloudflare by remember { mutableStateOf(initialConfig?.useCloudflare ?: true) }
         var reverseChapters by remember { mutableStateOf(initialConfig?.reverseChapters ?: false) }
-        var useNewChapterEndpoint by remember { mutableStateOf(initialConfig?.useNewChapterEndpoint ?: false) }
         var postSearch by remember { mutableStateOf(initialConfig?.postSearch ?: false) }
+        var isNovel by remember { mutableStateOf(initialConfig?.isNovel ?: true) }
 
         // Selectors
         var popularListSelector by remember {
@@ -686,10 +706,10 @@ class CustomSourceEditorScreen(
         Scaffold(
             topBar = {
                 TopAppBar(
-                    title = { Text(if (sourceId != null) "Edit Source" else "Create Source") },
+                    title = { Text(if (sourceId != null) stringResource(TDMR.strings.custom_source_edit_title) else stringResource(TDMR.strings.custom_source_create_source)) },
                     navigationIcon = {
                         IconButton(onClick = { navigator.pop() }) {
-                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = "Back")
+                            Icon(Icons.AutoMirrored.Outlined.ArrowBack, contentDescription = stringResource(MR.strings.action_webview_back))
                         }
                     },
                 )
@@ -704,7 +724,7 @@ class CustomSourceEditorScreen(
             ) {
                 // Basic Info Section
                 Text(
-                    text = "Basic Information",
+                    text = stringResource(TDMR.strings.custom_source_basic_info),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -713,7 +733,7 @@ class CustomSourceEditorScreen(
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Source Name *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_source_name_required)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -722,14 +742,50 @@ class CustomSourceEditorScreen(
                 OutlinedTextField(
                     value = baseUrl,
                     onValueChange = { baseUrl = it },
-                    label = { Text("Base URL *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_base_url_required)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
+
+                // Show info card when based on extension
+                if (basedOnSourceId != null) {
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Card(
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        ),
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Icon(
+                                Icons.Outlined.Extension,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSecondaryContainer,
+                            )
+                            Spacer(modifier = Modifier.width(12.dp))
+                            Column {
+                                Text(
+                                    text = stringResource(TDMR.strings.custom_source_base_on_extension),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                )
+                                Text(
+                                    text = stringResource(TDMR.strings.custom_source_base_on_extension_desc),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f),
+                                )
+                            }
+                        }
+                    }
+                }
 
                 // Source Options Section
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "Source Options",
+                    text = stringResource(TDMR.strings.custom_source_options),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -748,9 +804,9 @@ class CustomSourceEditorScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Use Cloudflare Bypass", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(TDMR.strings.custom_source_use_cloudflare), style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Enable for sites protected by Cloudflare",
+                            stringResource(TDMR.strings.custom_source_use_cloudflare_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -770,31 +826,9 @@ class CustomSourceEditorScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Reverse Chapter Order", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(TDMR.strings.custom_source_reverse_chapters), style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Enable if chapters are listed newest first",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-
-                // New chapter endpoint option (for Madara sites)
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    androidx.compose.material3.Checkbox(
-                        checked = useNewChapterEndpoint,
-                        onCheckedChange = { useNewChapterEndpoint = it },
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
-                        Text("Use New Chapter Endpoint", style = MaterialTheme.typography.bodyMedium)
-                        Text(
-                            "For Madara sites using /ajax/chapters/ instead of admin-ajax.php",
+                            stringResource(TDMR.strings.custom_source_reverse_chapters_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -814,24 +848,47 @@ class CustomSourceEditorScreen(
                     )
                     Spacer(modifier = Modifier.width(8.dp))
                     Column {
-                        Text("Use POST for Search", style = MaterialTheme.typography.bodyMedium)
+                        Text(stringResource(TDMR.strings.custom_source_post_search), style = MaterialTheme.typography.bodyMedium)
                         Text(
-                            "Enable if the site uses POST requests for search",
+                            stringResource(TDMR.strings.custom_source_post_search_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
                 }
 
-                // URLs Section
+                // Novel source type option
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    androidx.compose.material3.Checkbox(
+                        checked = isNovel,
+                        onCheckedChange = { isNovel = it },
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Column {
+                        Text(stringResource(TDMR.strings.custom_source_novel_source), style = MaterialTheme.typography.bodyMedium)
+                        Text(
+                            stringResource(TDMR.strings.custom_source_novel_source_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+
+                // URLs Section (only for manual/selector-based sources)
+                if (basedOnSourceId == null) {
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "URL Patterns",
+                    text = stringResource(TDMR.strings.custom_source_url_patterns),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Use {baseUrl}, {page}, {query} as placeholders",
+                    text = stringResource(TDMR.strings.custom_source_url_placeholders),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -840,9 +897,9 @@ class CustomSourceEditorScreen(
                 OutlinedTextField(
                     value = popularUrl,
                     onValueChange = { popularUrl = it },
-                    label = { Text("Popular URL *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_popular_url)) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("{baseUrl}/popular?page={page}") },
+                    placeholder = { Text(stringResource(TDMR.strings.custom_source_popular_url_hint)) },
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
@@ -850,7 +907,7 @@ class CustomSourceEditorScreen(
                 OutlinedTextField(
                     value = latestUrl,
                     onValueChange = { latestUrl = it },
-                    label = { Text("Latest URL (optional)") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_latest_url)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
@@ -859,86 +916,87 @@ class CustomSourceEditorScreen(
                 OutlinedTextField(
                     value = searchUrl,
                     onValueChange = { searchUrl = it },
-                    label = { Text("Search URL *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_search_url)) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text("{baseUrl}/search?q={query}&page={page}") },
+                    placeholder = { Text(stringResource(TDMR.strings.custom_source_search_url_hint)) },
                 )
 
                 // Selectors Section
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(
-                    text = "CSS Selectors",
+                    text = stringResource(TDMR.strings.custom_source_css_selectors),
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
                 )
                 Text(
-                    text = "Use browser DevTools to find CSS selectors",
+                    text = stringResource(TDMR.strings.custom_source_css_selectors_help),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Popular/List selectors
-                Text("Novel List (Popular/Latest)", fontWeight = FontWeight.Medium)
+                Text(stringResource(TDMR.strings.custom_source_novel_list), fontWeight = FontWeight.Medium)
                 OutlinedTextField(
                     value = popularListSelector,
                     onValueChange = { popularListSelector = it },
-                    label = { Text("List Item Selector *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_list_item_selector)) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(".novel-item, .book-card") },
+                    placeholder = { Text(stringResource(TDMR.strings.custom_source_list_item_hint)) },
                 )
                 OutlinedTextField(
                     value = popularTitleSelector,
                     onValueChange = { popularTitleSelector = it },
-                    label = { Text("Title Selector") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_title_selector)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = popularCoverSelector,
                     onValueChange = { popularCoverSelector = it },
-                    label = { Text("Cover Image Selector") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_cover_selector)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Details selectors
-                Text("Novel Details", fontWeight = FontWeight.Medium)
+                Text(stringResource(TDMR.strings.custom_source_novel_details), fontWeight = FontWeight.Medium)
                 OutlinedTextField(
                     value = detailsTitleSelector,
                     onValueChange = { detailsTitleSelector = it },
-                    label = { Text("Title Selector *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_title_selector_required)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = detailsDescriptionSelector,
                     onValueChange = { detailsDescriptionSelector = it },
-                    label = { Text("Description Selector") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_description_selector)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Chapter selectors
-                Text("Chapters", fontWeight = FontWeight.Medium)
+                Text(stringResource(TDMR.strings.custom_source_chapters), fontWeight = FontWeight.Medium)
                 OutlinedTextField(
                     value = chaptersListSelector,
                     onValueChange = { chaptersListSelector = it },
-                    label = { Text("Chapter List Selector *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_chapter_list_selector)) },
                     modifier = Modifier.fillMaxWidth(),
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 // Content selector
-                Text("Chapter Content", fontWeight = FontWeight.Medium)
+                Text(stringResource(TDMR.strings.custom_source_chapter_content), fontWeight = FontWeight.Medium)
                 OutlinedTextField(
                     value = contentPrimarySelector,
                     onValueChange = { contentPrimarySelector = it },
-                    label = { Text("Content Selector *") },
+                    label = { Text(stringResource(TDMR.strings.custom_source_content_selector)) },
                     modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(".chapter-content, #content") },
+                    placeholder = { Text(stringResource(TDMR.strings.custom_source_content_selector_hint)) },
                 )
+                } // end if (basedOnSourceId == null)
 
                 // Error message
                 errorMessage?.let {
@@ -963,7 +1021,8 @@ class CustomSourceEditorScreen(
                                 popularListSelector, popularTitleSelector, popularCoverSelector,
                                 detailsTitleSelector, detailsDescriptionSelector,
                                 chaptersListSelector, contentPrimarySelector,
-                                sourceId, useCloudflare, reverseChapters, useNewChapterEndpoint, postSearch,
+                                sourceId, useCloudflare, reverseChapters, postSearch,
+                                basedOnSourceId, isNovel,
                             )
 
                             val result = if (sourceId != null) {
@@ -982,14 +1041,16 @@ class CustomSourceEditorScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSaving && name.isNotBlank() && baseUrl.isNotBlank() &&
-                        popularUrl.isNotBlank() && searchUrl.isNotBlank() &&
-                        popularListSelector.isNotBlank() && detailsTitleSelector.isNotBlank() &&
-                        chaptersListSelector.isNotBlank() && contentPrimarySelector.isNotBlank(),
+                        (basedOnSourceId != null || (
+                            popularUrl.isNotBlank() && searchUrl.isNotBlank() &&
+                            popularListSelector.isNotBlank() && detailsTitleSelector.isNotBlank() &&
+                            chaptersListSelector.isNotBlank() && contentPrimarySelector.isNotBlank()
+                        )),
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(modifier = Modifier.height(24.dp))
                     } else {
-                        Text("Save Source")
+                        Text(stringResource(TDMR.strings.custom_source_save))
                     }
                 }
             }
@@ -1012,8 +1073,9 @@ class CustomSourceEditorScreen(
         existingId: Long?,
         useCloudflare: Boolean,
         reverseChapters: Boolean,
-        useNewChapterEndpoint: Boolean,
         postSearch: Boolean,
+        basedOnSourceId: Long? = null,
+        isNovel: Boolean = true,
     ): CustomSourceConfig {
         return CustomSourceConfig(
             name = name,
@@ -1041,8 +1103,142 @@ class CustomSourceEditorScreen(
             ),
             useCloudflare = useCloudflare,
             reverseChapters = reverseChapters,
-            useNewChapterEndpoint = useNewChapterEndpoint,
             postSearch = postSearch,
+            basedOnSourceId = basedOnSourceId,
+            isNovel = isNovel,
         )
     }
+}
+
+/**
+ * Dialog to pick an installed extension source to base a custom source on.
+ * Shows all installed extensions grouped by extension name.
+ */
+@Composable
+private fun ExtensionSourcePickerDialog(
+    onDismiss: () -> Unit,
+    onPick: (name: String, baseUrl: String, sourceId: Long) -> Unit,
+) {
+    val extensionManager: ExtensionManager = remember { Injekt.get() }
+    val installedExtensions by extensionManager.installedExtensionsFlow.collectAsState()
+
+    // Collect novel extension sources: extension name → list of (Source, ExtensionName)
+    data class SourceEntry(val sourceId: Long, val sourceName: String, val baseUrl: String, val extensionName: String, val lang: String)
+
+    val novelSources = remember(installedExtensions) {
+        installedExtensions
+            .flatMap { ext ->
+                ext.sources.mapNotNull { source ->
+                    val httpSource = source as? HttpSource ?: return@mapNotNull null
+                    SourceEntry(
+                        sourceId = httpSource.id,
+                        sourceName = httpSource.name,
+                        baseUrl = httpSource.baseUrl,
+                        extensionName = ext.name,
+                        lang = httpSource.lang,
+                    )
+                }
+            }
+            .sortedBy { it.extensionName }
+    }
+
+    var nameOverride by remember { mutableStateOf("") }
+    var baseUrlOverride by remember { mutableStateOf("") }
+    var selectedSource by remember { mutableStateOf<SourceEntry?>(null) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(TDMR.strings.custom_source_pick_extension)) },
+        text = {
+            Column(
+                modifier = Modifier.verticalScroll(rememberScrollState()),
+            ) {
+                if (novelSources.isEmpty()) {
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_no_extensions),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_pick_extension_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+
+                    novelSources.forEach { entry ->
+                        val isSelected = selectedSource == entry
+                        Card(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 2.dp),
+                            colors = CardDefaults.cardColors(
+                                containerColor = if (isSelected) {
+                                    MaterialTheme.colorScheme.primaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.surfaceVariant
+                                },
+                            ),
+                            onClick = {
+                                selectedSource = entry
+                                nameOverride = entry.sourceName + " (Custom)"
+                                baseUrlOverride = entry.baseUrl
+                            },
+                        ) {
+                            Column(modifier = Modifier.padding(12.dp)) {
+                                Text(
+                                    text = entry.sourceName,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    text = "${entry.extensionName} · ${entry.lang} · ${entry.baseUrl}",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            }
+                        }
+                    }
+
+                    // Override fields (shown when a source is selected)
+                    if (selectedSource != null) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        OutlinedTextField(
+                            value = nameOverride,
+                            onValueChange = { nameOverride = it },
+                            label = { Text(stringResource(TDMR.strings.custom_source_source_name)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = baseUrlOverride,
+                            onValueChange = { baseUrlOverride = it },
+                            label = { Text(stringResource(TDMR.strings.custom_source_base_url)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    selectedSource?.let { entry ->
+                        onPick(nameOverride, baseUrlOverride, entry.sourceId)
+                    }
+                },
+                enabled = selectedSource != null && nameOverride.isNotBlank() && baseUrlOverride.startsWith("http"),
+            ) {
+                Text(stringResource(MR.strings.action_create))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(MR.strings.action_cancel))
+            }
+        },
+    )
 }

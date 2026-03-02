@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Code
@@ -39,7 +40,24 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
+import eu.kanade.tachiyomi.jsplugin.source.JsSource
+import eu.kanade.tachiyomi.source.online.HttpSource
+import eu.kanade.tachiyomi.ui.browse.extension.NovelExtensionReposScreen
+import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
+import tachiyomi.core.common.i18n.stringResource as ctxStringResource
 import tachiyomi.presentation.core.components.material.Scaffold
+import tachiyomi.presentation.core.i18n.stringResource
+import uy.kohesive.injekt.Injekt
+import uy.kohesive.injekt.api.get
+
+private data class SourceTemplateOption(
+    val id: Long,
+    val name: String,
+    val baseUrl: String,
+    val type: String,
+)
 
 /**
  * Entry screen for creating a custom novel source via WebView element selection.
@@ -53,6 +71,26 @@ class CreateCustomSourceScreen : Screen {
 
         var showUrlDialog by remember { mutableStateOf(false) }
         var websiteUrl by remember { mutableStateOf("") }
+        var showInstalledTemplateDialog by remember { mutableStateOf(false) }
+        val sourceManager = remember { Injekt.get<SourceManager>() }
+        val installedTemplateSources = remember {
+            sourceManager.getCatalogueSources()
+                .mapNotNull { source ->
+                    val baseUrl = when (source) {
+                        is HttpSource -> source.baseUrl
+                        is JsSource -> source.baseUrl
+                        else -> null
+                    }?.trim()
+                    if (baseUrl.isNullOrBlank() || !baseUrl.startsWith("http")) return@mapNotNull null
+                    SourceTemplateOption(
+                        id = source.id,
+                        name = source.name,
+                        baseUrl = baseUrl,
+                        type = if (source is JsSource) "JS" else "KT",
+                    )
+                }
+                .sortedBy { it.name.lowercase() }
+        }
 
         Scaffold { padding ->
             Column(
@@ -74,7 +112,7 @@ class CreateCustomSourceScreen : Screen {
                 Spacer(modifier = Modifier.height(16.dp))
 
                 Text(
-                    text = "Create Custom Source",
+                    text = stringResource(TDMR.strings.custom_source_create_title),
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold,
                 )
@@ -82,7 +120,7 @@ class CreateCustomSourceScreen : Screen {
                 Spacer(modifier = Modifier.height(8.dp))
 
                 Text(
-                    text = "Build your own novel source by selecting elements from a website",
+                    text = stringResource(TDMR.strings.custom_source_create_subtitle),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -111,13 +149,13 @@ class CreateCustomSourceScreen : Screen {
                         Spacer(modifier = Modifier.weight(0.1f))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Guided WebView Selector",
+                                text = stringResource(TDMR.strings.custom_source_method_guided_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer,
                             )
                             Text(
-                                text = "Navigate to a novel website and select elements step-by-step",
+                                text = stringResource(TDMR.strings.custom_source_method_guided_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f),
                             )
@@ -133,10 +171,7 @@ class CreateCustomSourceScreen : Screen {
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.secondaryContainer,
                     ),
-                    onClick = {
-                        // TODO: Import JSON config
-                        Toast.makeText(context, "Import feature coming soon", Toast.LENGTH_SHORT).show()
-                    },
+                    onClick = { showInstalledTemplateDialog = true },
                 ) {
                     Row(
                         modifier = Modifier
@@ -152,15 +187,52 @@ class CreateCustomSourceScreen : Screen {
                         Spacer(modifier = Modifier.weight(0.1f))
                         Column(modifier = Modifier.weight(1f)) {
                             Text(
-                                text = "Import Configuration",
+                                text = stringResource(TDMR.strings.custom_source_method_template_title),
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer,
                             )
                             Text(
-                                text = "Import a JSON configuration file from another user",
+                                text = stringResource(TDMR.strings.custom_source_method_template_desc),
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f),
+                            )
+                        }
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.tertiaryContainer,
+                    ),
+                    onClick = { navigator.push(NovelExtensionReposScreen()) },
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(
+                            Icons.Filled.Code,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onTertiaryContainer,
+                        )
+                        Spacer(modifier = Modifier.weight(0.1f))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(TDMR.strings.custom_source_method_repos_title),
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer,
+                            )
+                            Text(
+                                text = stringResource(TDMR.strings.custom_source_method_repos_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer.copy(alpha = 0.8f),
                             )
                         }
                     }
@@ -170,21 +242,21 @@ class CreateCustomSourceScreen : Screen {
 
                 // Info text
                 Text(
-                    text = "The guided selector will walk you through:",
+                    text = stringResource(TDMR.strings.custom_source_steps_intro),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
                 listOf(
-                    "1. Selecting trending/popular novels section",
-                    "2. Selecting new/latest novels section",
-                    "3. Setting up search functionality",
-                    "4. Identifying pagination patterns",
-                    "5. Selecting novel card elements (cover, title)",
-                    "6. Selecting novel details (description, tags)",
-                    "7. Selecting chapter list elements",
-                    "8. Selecting chapter content area",
+                    stringResource(TDMR.strings.custom_source_step_1),
+                    stringResource(TDMR.strings.custom_source_step_2),
+                    stringResource(TDMR.strings.custom_source_step_3),
+                    stringResource(TDMR.strings.custom_source_step_4),
+                    stringResource(TDMR.strings.custom_source_step_5),
+                    stringResource(TDMR.strings.custom_source_step_6),
+                    stringResource(TDMR.strings.custom_source_step_7),
+                    stringResource(TDMR.strings.custom_source_step_8),
                 ).forEach { step ->
                     Text(
                         text = step,
@@ -199,11 +271,11 @@ class CreateCustomSourceScreen : Screen {
         if (showUrlDialog) {
             AlertDialog(
                 onDismissRequest = { showUrlDialog = false },
-                title = { Text("Enter Website URL") },
+                title = { Text(stringResource(TDMR.strings.custom_source_url_dialog_title)) },
                 text = {
                     Column {
                         Text(
-                            text = "Enter the URL of the novel website you want to create a source for:",
+                            text = stringResource(TDMR.strings.custom_source_url_dialog_message),
                             style = MaterialTheme.typography.bodySmall,
                         )
                         Spacer(modifier = Modifier.height(16.dp))
@@ -211,7 +283,7 @@ class CreateCustomSourceScreen : Screen {
                         OutlinedTextField(
                             value = websiteUrl,
                             onValueChange = { websiteUrl = it },
-                            label = { Text("Website URL") },
+                            label = { Text(stringResource(TDMR.strings.custom_source_url_label)) },
                             placeholder = { Text("https://example.com") },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -228,22 +300,125 @@ class CreateCustomSourceScreen : Screen {
                                     websiteUrl
                                 }
                                 showUrlDialog = false
-                                navigator.push(ElementSelectorVoyagerScreen(url))
+                                navigator.push(ElementSelectorVoyagerScreen(initialUrl = url))
                             }
                         },
                         enabled = websiteUrl.isNotBlank(),
                     ) {
-                        Text("Start Wizard")
+                        Text(stringResource(TDMR.strings.custom_source_start_wizard))
                     }
                 },
                 dismissButton = {
                     TextButton(onClick = { showUrlDialog = false }) {
-                        Text("Cancel")
+                        Text(stringResource(MR.strings.action_cancel))
                     }
                 },
             )
         }
+
+        if (showInstalledTemplateDialog) {
+            InstalledTemplateDialog(
+                templates = installedTemplateSources,
+                onDismiss = { showInstalledTemplateDialog = false },
+                onStart = { selected, nameOverride, urlOverride ->
+                    showInstalledTemplateDialog = false
+                    navigator.push(
+                        ElementSelectorVoyagerScreen(
+                            initialUrl = urlOverride,
+                            initialSourceName = nameOverride.ifBlank { selected.name },
+                        ),
+                    )
+                },
+            )
+        }
     }
+}
+
+@Composable
+private fun InstalledTemplateDialog(
+    templates: List<SourceTemplateOption>,
+    onDismiss: () -> Unit,
+    onStart: (SourceTemplateOption, String, String) -> Unit,
+) {
+    var selected by remember { mutableStateOf<SourceTemplateOption?>(null) }
+    var sourceName by remember { mutableStateOf("") }
+    var sourceUrl by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(TDMR.strings.custom_source_choose_installed)) },
+        text = {
+            Column {
+                if (templates.isEmpty()) {
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_choose_installed_empty),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                } else {
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_choose_installed_desc),
+                        style = MaterialTheme.typography.bodySmall,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(220.dp)
+                            .verticalScroll(androidx.compose.foundation.rememberScrollState()),
+                    ) {
+                        templates.forEach { template ->
+                            OutlinedButton(
+                                onClick = {
+                                    selected = template
+                                    sourceName = template.name
+                                    sourceUrl = template.baseUrl
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 4.dp),
+                            ) {
+                                Text("${template.name} (${template.type})")
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = sourceName,
+                        onValueChange = { sourceName = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_source_name)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = sourceUrl,
+                        onValueChange = { sourceUrl = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_base_url)) },
+                        placeholder = { Text("https://example.com") },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            Button(
+                onClick = {
+                    val selectedTemplate = selected ?: return@Button
+                    val normalizedUrl = if (sourceUrl.startsWith("http")) sourceUrl else "https://$sourceUrl"
+                    onStart(selectedTemplate, sourceName.trim(), normalizedUrl.trim())
+                },
+                enabled = selected != null && sourceUrl.isNotBlank(),
+            ) {
+                Text(stringResource(TDMR.strings.custom_source_use_template))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(MR.strings.action_cancel))
+            }
+        },
+    )
 }
 
 /**
@@ -251,19 +426,20 @@ class CreateCustomSourceScreen : Screen {
  */
 class ElementSelectorVoyagerScreen(
     private val initialUrl: String,
+    private val initialSourceName: String = "",
 ) : Screen {
 
     @Composable
     override fun Content() {
         val navigator = LocalNavigator.currentOrThrow
         val context = LocalContext.current
-        val screenModel = rememberScreenModel { ElementSelectorScreenModel(initialUrl) }
+        val screenModel = rememberScreenModel { ElementSelectorScreenModel(initialUrl, initialSourceName) }
         val state by screenModel.state.collectAsState()
 
         // Handle success
         LaunchedEffect(state.savedSuccessfully) {
             if (state.savedSuccessfully) {
-                Toast.makeText(context, "Custom source created successfully!", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.ctxStringResource(TDMR.strings.custom_source_created), Toast.LENGTH_LONG).show()
                 navigator.popUntilRoot()
             }
         }
@@ -271,13 +447,14 @@ class ElementSelectorVoyagerScreen(
         // Handle error
         LaunchedEffect(state.error) {
             state.error?.let { error ->
-                Toast.makeText(context, "Error: $error", Toast.LENGTH_LONG).show()
+                Toast.makeText(context, context.ctxStringResource(TDMR.strings.custom_source_error_format, error), Toast.LENGTH_LONG).show()
                 screenModel.clearError()
             }
         }
 
         ElementSelectorScreen(
             initialUrl = initialUrl,
+            initialSourceName = initialSourceName,
             onNavigateUp = { navigator.pop() },
             onSaveConfig = { config ->
                 screenModel.saveConfig(config)

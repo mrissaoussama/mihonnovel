@@ -140,24 +140,21 @@ class CustomSourceManager(
     }
 
     /**
-     * Get available templates
+     * Create a blank config with the given name and base URL.
+     * Templates have been removed — use extension repos for pre-built themes.
      */
-    fun getTemplates(): Map<String, CustomSourceConfig> = CustomSourceTemplates.getAll()
-
-    /**
-     * Create a config from a template
-     */
-    fun fromTemplate(templateName: String, name: String, baseUrl: String): CustomSourceConfig {
-        val template = CustomSourceTemplates.getAll()[templateName]
-            ?: CustomSourceTemplates.GENERIC
-
-        return template.copy(
+    fun createBlankConfig(name: String, baseUrl: String): CustomSourceConfig {
+        return CustomSourceConfig(
             name = name,
             baseUrl = baseUrl,
-            popularUrl = template.popularUrl.replace("https://example.com", baseUrl),
-            latestUrl = template.latestUrl?.replace("https://example.com", baseUrl),
-            searchUrl = template.searchUrl.replace("https://example.com", baseUrl),
-            chapterAjax = template.chapterAjax?.replace("https://example.com", baseUrl),
+            popularUrl = "$baseUrl/page/{page}",
+            searchUrl = "$baseUrl/?s={query}",
+            selectors = SourceSelectors(
+                popular = MangaListSelectors(list = ""),
+                details = DetailSelectors(title = ""),
+                chapters = ChapterSelectors(list = ""),
+                content = ContentSelectors(primary = ""),
+            ),
         )
     }
 
@@ -177,28 +174,31 @@ class CustomSourceManager(
             errors.add("Base URL must start with http:// or https://")
         }
 
-        if (config.popularUrl.isBlank()) {
-            errors.add("Popular URL is required")
-        }
+        // Skip URL and selector validation when based on an extension
+        if (config.basedOnSourceId == null) {
+            if (config.popularUrl.isBlank()) {
+                errors.add("Popular URL is required")
+            }
 
-        if (config.searchUrl.isBlank()) {
-            errors.add("Search URL is required")
-        }
+            if (config.searchUrl.isBlank()) {
+                errors.add("Search URL is required")
+            }
 
-        if (config.selectors.popular.list.isBlank()) {
-            errors.add("Popular list selector is required")
-        }
+            if (config.selectors.popular.list.isBlank()) {
+                errors.add("Popular list selector is required")
+            }
 
-        if (config.selectors.details.title.isBlank()) {
-            errors.add("Details title selector is required")
-        }
+            if (config.selectors.details.title.isBlank()) {
+                errors.add("Details title selector is required")
+            }
 
-        if (config.selectors.chapters.list.isBlank()) {
-            errors.add("Chapters list selector is required")
-        }
+            if (config.selectors.chapters.list.isBlank()) {
+                errors.add("Chapters list selector is required")
+            }
 
-        if (config.selectors.content.primary.isBlank()) {
-            errors.add("Content primary selector is required")
+            if (config.selectors.content.primary.isBlank()) {
+                errors.add("Content primary selector is required")
+            }
         }
 
         // Check for duplicate name
