@@ -105,10 +105,10 @@ private fun NovelReaderSettingsDialog(
 ) {
     val renderingMode by screenModel.preferences.novelRenderingMode().collectAsState()
     val tabTitles = persistentListOf(
-        stringResource(TDMR.strings.novel_tab_reading),
-        stringResource(TDMR.strings.novel_tab_appearance),
+        stringResource(MR.strings.pref_category_reading),
+        stringResource(MR.strings.pref_category_appearance),
         stringResource(TDMR.strings.novel_tab_controls),
-        stringResource(TDMR.strings.novel_tab_advanced),
+        stringResource(MR.strings.pref_category_advanced),
     )
     val pagerState = rememberPagerState { tabTitles.size }
 

@@ -10,7 +10,7 @@ import eu.kanade.tachiyomi.databinding.DownloadItemBinding
 import eu.kanade.tachiyomi.util.system.copyToClipboard
 import eu.kanade.tachiyomi.util.view.popupMenu
 import tachiyomi.core.common.i18n.stringResource
-import tachiyomi.i18n.novel.TDMR
+import tachiyomi.i18n.MR
 
 /**
  * Class used to hold the data of a download.
@@ -67,7 +67,7 @@ class DownloadHolder(private val view: View, val adapter: DownloadAdapter) :
         if (shouldShowError) {
             binding.downloadErrorText.text = error
             binding.downloadErrorText.setOnClickListener {
-                val label = view.context.stringResource(TDMR.strings.download_error_details)
+                val label = view.context.stringResource(MR.strings.update_check_notification_download_error)
                 view.context.copyToClipboard(label, error)
             }
         } else {

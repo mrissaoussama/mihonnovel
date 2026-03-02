@@ -583,7 +583,7 @@ private fun NovelDownloadCard(
     onMoveToBottom: () -> Unit,
 ) {
     val context = LocalContext.current
-    val errorLabel = stringResource(TDMR.strings.download_error_details)
+    val errorLabel = stringResource(MR.strings.update_check_notification_download_error)
     var showMenu by remember { mutableStateOf(false) }
 
     Card(

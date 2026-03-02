@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Common actions (not in MR) -->
-    <string name="action_update">Update</string>
-    <string name="action_uninstall">Uninstall</string>
-    <string name="action_refresh">Refresh</string>
-    <string name="action_previous">Previous</string>
-    <string name="action_next">Next</string>
-
+    <!-- Common actions (In MR)
+    ext_update: Update
+    ext_uninstall: Uninstall
+    action_webview_refresh: Refresh
+    nav_zone_next: Next
+    nav_zone_prev: Prev
+     -->
     <!-- Screen Titles -->
     <string name="label_novel_download_queue">Novel downloads</string>
     <string name="label_manga_sources">Manga Sources</string>
@@ -18,8 +18,10 @@
     <string name="label_manga_extensions">Manga Extensions</string>
     <string name="label_novel_extensions">Novel Extensions</string>
 
+    <!-- Actions (In MR)
+    downloaded_chapters: Downloaded chapters
+    -->
     <!-- Actions -->
-    <string name="action_sort_downloaded">Downloaded chapters</string>
     <string name="action_delete_range">Delete range</string>
     <string name="action_remove_from_db">Remove from database</string>
     <string name="category_content_type">Content type</string>
@@ -43,8 +45,9 @@
     <string name="local_novel_source">Local novels</string>
     <!-- History -->
     <string name="pref_clear_cover">Clear cover</string>
-    <!-- Downloads activity and service -->
-    <string name="download_error_details">Download error</string>
+    <!-- Downloads activity and service
+    update_check_notification_download_error: Download error
+     -->
 
     <!-- Chapters -->
     <string name="show_chapter_both">Both (Number + Title)</string>
@@ -56,11 +59,13 @@
     <string name="mass_import_progress_title">Mass Import Progress</string>
     <string name="mass_import_complete_title">Mass Import Complete</string>
 
+    <!-- Novel Reader UI (In MR)
+    pref_category_appearance: Appearance
+    pref_category_reading: Reading
+    pref_category_advanced: Advanced
+    -->
     <!-- Novel Reader UI -->
-    <string name="novel_tab_reading">Reading</string>
-    <string name="novel_tab_appearance">Appearance</string>
     <string name="novel_tab_controls">Controls</string>
-    <string name="novel_tab_advanced">Advanced</string>
     <string name="novel_advanced_webview_only">Advanced settings are only available in WebView rendering mode.</string>
     <string name="novel_snippet_title">Snippet title</string>
     <string name="novel_snippet_code">Code</string>
@@ -80,6 +85,9 @@
     <string name="pref_novel_tts_pitch">Speech pitch</string>
     <string name="pref_novel_tts_auto_next">Auto-play next chapter</string>
 
+    <!-- Novel Reader Actions (In MR)
+    add_to_library: Add to library
+    -->
     <!-- Novel Reader Actions -->
     <string name="action_reload_chapter">Reload chapter</string>
     <string name="action_reload_local">Reload from local</string>
@@ -101,7 +109,6 @@
     <string name="action_stop_auto_scroll">Stop auto-scroll</string>
     <string name="action_copy_links">Copy links</string>
     <string name="action_mass_import">Mass import</string>
-    <string name="action_add_to_library">Add to library</string>
 
     <!-- Novel Translation Settings (reader panel) -->
     <string name="pref_novel_translation_settings">Translation</string>

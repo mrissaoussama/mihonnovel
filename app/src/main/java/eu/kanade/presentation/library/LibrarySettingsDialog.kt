@@ -244,7 +244,7 @@ private fun ColumnScope.SortPage(
         listOfNotNull(
             MR.strings.action_sort_alpha to LibrarySort.Type.Alphabetical,
             MR.strings.action_sort_total to LibrarySort.Type.TotalChapters,
-            TDMR.strings.action_sort_downloaded to LibrarySort.Type.DownloadedChapters,
+            MR.strings.downloaded_chapters to LibrarySort.Type.DownloadedChapters,
             MR.strings.action_sort_last_read to LibrarySort.Type.LastRead,
             MR.strings.action_sort_last_manga_update to LibrarySort.Type.LastUpdate,
             MR.strings.action_sort_unread_count to LibrarySort.Type.UnreadCount,

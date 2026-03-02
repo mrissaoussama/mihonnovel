@@ -307,7 +307,7 @@ private fun JsPluginCard(
                 IconButton(onClick = onUpdate) {
                     Icon(
                         Icons.Outlined.Update,
-                        contentDescription = stringResource(TDMR.strings.action_update),
+                        contentDescription = stringResource(MR.strings.ext_update),
                         tint = MaterialTheme.colorScheme.primary,
                     )
                 }
@@ -315,7 +315,7 @@ private fun JsPluginCard(
                 IconButton(onClick = onUninstall) {
                     Icon(
                         Icons.Outlined.Delete,
-                        contentDescription = stringResource(TDMR.strings.action_uninstall),
+                        contentDescription = stringResource(MR.strings.ext_uninstall),
                         tint = MaterialTheme.colorScheme.error,
                     )
                 }

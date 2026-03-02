@@ -375,7 +375,7 @@ data class BrowseSourceScreen(
                                     )
                                 },
                                 label = {
-                                    Text(text = stringResource(TDMR.strings.action_add_to_library))
+                                    Text(text = stringResource(MR.strings.add_to_library))
                                 },
                             )
                         }
