@@ -73,6 +73,13 @@ object SourcePriorityScreen : Screen {
                 )
             },
         ) { contentPadding ->
+            val sourceTypes = listOf(
+                DuplicateDetectionScreenModel.SourceType.JS to stringResource(MR.strings.duplicate_source_type_js_extensions),
+                DuplicateDetectionScreenModel.SourceType.KT to stringResource(MR.strings.duplicate_source_type_kt_extensions),
+                DuplicateDetectionScreenModel.SourceType.CUSTOM to stringResource(MR.strings.duplicate_source_type_custom_extensions),
+                DuplicateDetectionScreenModel.SourceType.LOCAL to stringResource(MR.strings.duplicate_source_type_local_source),
+            )
+
             LazyColumn(
                 contentPadding = contentPadding + PaddingValues(horizontal = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
@@ -91,13 +98,6 @@ object SourcePriorityScreen : Screen {
                         modifier = Modifier.padding(bottom = 8.dp),
                     )
                 }
-
-                val sourceTypes = listOf(
-                    DuplicateDetectionScreenModel.SourceType.JS to stringResource(MR.strings.duplicate_source_type_js_extensions),
-                    DuplicateDetectionScreenModel.SourceType.KT to stringResource(MR.strings.duplicate_source_type_kt_extensions),
-                    DuplicateDetectionScreenModel.SourceType.CUSTOM to stringResource(MR.strings.duplicate_source_type_custom_extensions),
-                    DuplicateDetectionScreenModel.SourceType.LOCAL to stringResource(MR.strings.duplicate_source_type_local_source),
-                )
 
                 items(sourceTypes, key = { it.first.name }) { (type, label) ->
                     val priority = state.typePriorities[type] ?: 0
