@@ -8,6 +8,8 @@ import eu.kanade.tachiyomi.data.translation.engine.LibreTranslateEngine
 import eu.kanade.tachiyomi.source.fetchNovelPageText
 import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.Page
+import org.jsoup.Jsoup
+import org.jsoup.nodes.Element
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -94,6 +96,7 @@ class TranslationService(
         val task = TranslationTask(
             chapterId = chapter.id,
             mangaId = manga.id,
+            chapterName = chapter.name,
             sourceLanguage = translationPreferences.sourceLanguage().get(),
             targetLanguage = translationPreferences.targetLanguage().get(),
             engineId = 0, // Will be determined at translation time
@@ -345,11 +348,10 @@ class TranslationService(
         logcat(LogPriority.DEBUG) { "Translating ${paragraphs.size} paragraphs for chapter ${chapter.name}" }
 
         // Group paragraphs into chunks to improve translation quality
-        val chunkMode = translationPreferences.translationChunkMode().get()
         val chunkSize = translationPreferences.translationChunkSize().get()
-        val chunks = buildChunks(paragraphs, chunkMode, chunkSize)
+        val chunks = buildChunks(paragraphs, chunkSize)
 
-        logcat(LogPriority.DEBUG) { "Grouped into ${chunks.size} chunks (mode=$chunkMode, size=$chunkSize)" }
+        logcat(LogPriority.DEBUG) { "Grouped into ${chunks.size} chunks (size=$chunkSize)" }
 
         // Update progress with chunk info
         _progressState.update { current ->
@@ -357,17 +359,14 @@ class TranslationService(
         }
 
         // Check for existing partial translation to resume from
-        val repo = translatedChapterRepository
-        val existingTmpParagraphs = if (repo is tachiyomi.data.translation.TranslatedChapterRepositoryImpl) {
-            val tmp = repo.getTmpTranslation(task.chapterId, task.targetLanguage)
+        val existingTmpParagraphs = run {
+            val tmp = translatedChapterRepository.getTmpTranslation(task.chapterId, task.targetLanguage)
             if (tmp != null) {
                 val tmpText = extractTextFromHtml(tmp.translatedContent)
                 tmpText.split("\n\n").filter { it.isNotBlank() }
             } else {
                 emptyList()
             }
-        } else {
-            emptyList()
         }
 
         // Determine which chunks were already translated (for resume)
@@ -535,8 +534,6 @@ class TranslationService(
         translatedTitle: String?,
     ) {
         if (translatedParagraphs.isEmpty()) return
-        val repo = translatedChapterRepository
-        if (repo !is tachiyomi.data.translation.TranslatedChapterRepositoryImpl) return
 
         val html = buildString {
             if (!translatedTitle.isNullOrBlank()) {
@@ -556,7 +553,7 @@ class TranslationService(
             dateTranslated = System.currentTimeMillis(),
         )
         try {
-            repo.upsertTmpTranslation(partial)
+            translatedChapterRepository.upsertTmpTranslation(partial)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to save partial translation" }
         }
@@ -877,28 +874,27 @@ class TranslationService(
     }
 
     /**
-     * Regex to match image-like HTML elements that should be preserved through translation.
-     * Matches <img>, <figure>, <picture>, and their closing tags.
+     * CSS selector for HTML elements that should be preserved through translation.
+     * These are replaced with placeholders before translation and reinserted after.
      */
-    private val imageTagRegex = Regex(
-        """<(?:img|figure|picture|video|source|svg)[^>]*(?:/>|>(?:.*?</(?:figure|picture|video|svg)>)?)""",
-        setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL),
-    )
+    private val imageElementSelector = "img, figure, picture, video, source, svg"
 
     /**
-     * Extract image tags from HTML, replacing them with unique placeholders.
+     * Extract image/media tags from HTML using Jsoup, replacing them with unique placeholders.
      * Returns the modified HTML and a map of placeholder -> original tag.
      */
     private fun extractImages(html: String): Pair<String, Map<String, String>> {
+        val doc = Jsoup.parse(html)
+        doc.outputSettings().prettyPrint(false)
         val images = mutableMapOf<String, String>()
         var index = 0
-        val result = imageTagRegex.replace(html) { match ->
-            val placeholder = "\n[IMG_PLACEHOLDER_$index]\n"
-            images[placeholder.trim()] = match.value
+        doc.select(imageElementSelector).forEach { element: Element ->
+            val placeholder = "[IMG_PLACEHOLDER_$index]"
+            images[placeholder] = element.outerHtml()
+            element.replaceWith(org.jsoup.nodes.TextNode("\n$placeholder\n"))
             index++
-            placeholder
         }
-        return result to images
+        return doc.body().html() to images
     }
 
     /**
@@ -952,13 +948,12 @@ class TranslationService(
     }
 
     /**
-     * Group paragraphs into translation chunks based on the configured mode.
+     * Group paragraphs into translation chunks.
      * Each chunk is a single string with paragraphs separated by double newlines.
      * This keeps context together so LLMs produce better translations and don't skip content.
      */
-    private fun buildChunks(paragraphs: List<String>, chunkMode: String, chunkSize: Int): List<String> {
+    private fun buildChunks(paragraphs: List<String>, chunkSize: Int): List<String> {
         if (paragraphs.isEmpty()) return emptyList()
-        // Always group by paragraphs
         return paragraphs.chunked(chunkSize.coerceAtLeast(1)).map { group ->
             group.joinToString("\n\n")
         }

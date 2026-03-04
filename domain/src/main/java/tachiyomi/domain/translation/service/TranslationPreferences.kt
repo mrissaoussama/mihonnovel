@@ -298,16 +298,7 @@ class TranslationPreferences(
     )
 
     /**
-     * Translation chunk mode: "paragraphs", "characters", or "words"
-     */
-    fun translationChunkMode() = preferenceStore.getString(
-        "translation_chunk_mode",
-        "paragraphs",
-    )
-
-    /**
-     * Maximum chunk size per translation batch.
-     * Meaning depends on chunkMode: paragraphs count, character count, or word count.
+     * Maximum chunk size per translation batch (in paragraphs).
      */
     fun translationChunkSize() = preferenceStore.getInt(
         "translation_chunk_size",

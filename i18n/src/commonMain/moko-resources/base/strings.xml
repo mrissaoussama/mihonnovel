@@ -1210,4 +1210,24 @@
     <string name="pref_db_maintenance_subtitle">VACUUM, REINDEX, and ANALYZE database</string>
     <string name="pref_bulk_remove_url">Bulk remove by URL</string>
     <string name="pref_bulk_remove_url_subtitle">Remove multiple entries from library by URL list</string>
+
+    <!-- Translation queue / batch -->
+    <string name="translation_all_downloaded_already_translated">All downloaded chapters are already translated</string>
+    <string name="translation_selected_already_translated">Selected chapters are already translated</string>
+
+    <!-- Batch update -->
+    <string name="batch_updating_entries">Updating %d entries…</string>
+    <string name="batch_update_complete">Updated %d entries</string>
+    <string name="batch_update_complete_with_failures">Updated %1$d/%2$d entries (%3$d failed)</string>
+
+    <!-- Duplicate detection -->
+    <string name="duplicate_source_type_js_extensions">JS Extensions</string>
+    <string name="duplicate_source_type_kt_extensions">Kotlin Extensions</string>
+    <string name="duplicate_source_type_custom_extensions">Custom Extensions</string>
+    <string name="duplicate_source_type_local_source">Local Source</string>
+    <string name="duplicate_no_sources_found">No sources with library entries found</string>
+
+    <!-- Misc UI -->
+    <string name="action_collapse">Collapse</string>
+    <string name="action_expand">Expand</string>
 </resources>

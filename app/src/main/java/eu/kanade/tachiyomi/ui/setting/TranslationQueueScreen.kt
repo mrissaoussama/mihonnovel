@@ -203,7 +203,7 @@ object TranslationQueueScreen : Screen() {
                     modifier = Modifier.weight(1f),
                 ) {
                     Text(
-                        text = "Chapter ${task.chapterId}",
+                        text = task.chapterName.ifBlank { "#${task.chapterId}" },
                         style = MaterialTheme.typography.bodyMedium,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,

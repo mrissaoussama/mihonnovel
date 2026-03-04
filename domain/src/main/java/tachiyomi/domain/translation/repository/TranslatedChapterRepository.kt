@@ -78,4 +78,19 @@ interface TranslatedChapterRepository {
      * Returns the number of bytes freed.
      */
     suspend fun clearTmpFiles(): Long
+
+    /**
+     * Insert or update a partial (.tmp) translation (for resume support).
+     */
+    suspend fun upsertTmpTranslation(translatedChapter: TranslatedChapter)
+
+    /**
+     * Get a partial (.tmp) translation if one exists.
+     */
+    suspend fun getTmpTranslation(chapterId: Long, targetLanguage: String): TranslatedChapter?
+
+    /**
+     * Check if a partial (.tmp) translation exists.
+     */
+    suspend fun hasTmpTranslation(chapterId: Long, targetLanguage: String): Boolean
 }

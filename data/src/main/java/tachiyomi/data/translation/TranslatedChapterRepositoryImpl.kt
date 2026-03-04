@@ -200,7 +200,7 @@ class TranslatedChapterRepositoryImpl(
     /**
      * Check if a partial (tmp) translation exists for a chapter.
      */
-    suspend fun hasTmpTranslation(chapterId: Long, targetLanguage: String): Boolean =
+    override suspend fun hasTmpTranslation(chapterId: Long, targetLanguage: String): Boolean =
         withContext(Dispatchers.IO) {
             val name = getTmpTranslationFileName(chapterId, targetLanguage)
             translationsDir.findFile(name) != null
@@ -281,7 +281,7 @@ class TranslatedChapterRepositoryImpl(
      * Save a partial (in-progress) translation with .tmp extension.
      * This allows resuming incomplete translations.
      */
-    suspend fun upsertTmpTranslation(translatedChapter: TranslatedChapter) =
+    override suspend fun upsertTmpTranslation(translatedChapter: TranslatedChapter) =
         withContext(Dispatchers.IO) {
             val dir = translationsDir
             val name = getTmpTranslationFileName(translatedChapter.chapterId, translatedChapter.targetLanguage)
@@ -297,7 +297,7 @@ class TranslatedChapterRepositoryImpl(
     /**
      * Read a partial (in-progress) translation.
      */
-    suspend fun getTmpTranslation(chapterId: Long, targetLanguage: String): TranslatedChapter? =
+    override suspend fun getTmpTranslation(chapterId: Long, targetLanguage: String): TranslatedChapter? =
         withContext(Dispatchers.IO) {
             val name = getTmpTranslationFileName(chapterId, targetLanguage)
             val file = translationsDir.findFile(name) ?: return@withContext null

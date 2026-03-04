@@ -1487,7 +1487,7 @@ class MangaScreenModel(
 
             if (chaptersToTranslate.isEmpty()) {
                 withUIContext {
-                    snackbarHostState.showSnackbar("All downloaded chapters are already translated")
+                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.translation_all_downloaded_already_translated))
                 }
                 return@launchIO
             }
@@ -1523,7 +1523,7 @@ class MangaScreenModel(
 
             if (chaptersToTranslate.isEmpty()) {
                 withUIContext {
-                    snackbarHostState.showSnackbar("Selected chapters are already translated")
+                    snackbarHostState.showSnackbar(context.stringResource(MR.strings.translation_selected_already_translated))
                 }
                 return@launchIO
             }
