@@ -26,6 +26,7 @@ import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.epub.EpubExportJob
 import eu.kanade.tachiyomi.data.track.TrackerManager
+import eu.kanade.tachiyomi.data.translation.TranslationJob
 import eu.kanade.tachiyomi.data.translation.TranslationService
 import eu.kanade.tachiyomi.source.isNovelSource
 import eu.kanade.tachiyomi.source.model.SManga
@@ -52,6 +53,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.flow.updateAndGet
 import logcat.LogPriority
 import mihon.core.common.utils.mutate
+import tachiyomi.core.common.i18n.stringResource
 import tachiyomi.core.common.preference.CheckboxState
 import tachiyomi.core.common.preference.TriState
 import tachiyomi.core.common.util.lang.compareToWithCollator
@@ -74,6 +76,7 @@ import tachiyomi.domain.library.model.LibraryManga
 import tachiyomi.domain.library.model.LibrarySort
 import tachiyomi.domain.library.model.sort
 import tachiyomi.domain.library.service.LibraryPreferences
+import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import tachiyomi.domain.manga.interactor.GetLibraryManga
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.model.MangaUpdate
@@ -83,6 +86,7 @@ import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.domain.track.interactor.GetTracksPerManga
 import tachiyomi.domain.track.model.Track
 import tachiyomi.domain.translation.repository.TranslatedChapterRepository
+import tachiyomi.i18n.MR
 import tachiyomi.source.local.isLocal
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
@@ -356,6 +360,11 @@ class LibraryScreenModel(
             applyFilter(preferences.filterNovel) { isNovel }
         }
 
+        val filterFnCustomExtension: (LibraryItem) -> Boolean = { item ->
+            val isCustom = sourceManager.get(item.libraryManga.manga.source) is CustomNovelSource
+            applyFilter(preferences.filterCustomExtension) { isCustom }
+        }
+
         val tagIncluded = preferences.includedTags
         val tagExcluded = preferences.excludedTags
         val tagCaseSensitive = preferences.tagCaseSensitive
@@ -406,6 +415,12 @@ class LibraryScreenModel(
             true
         }
 
+        val filterFnChapterCount: (LibraryItem) -> Boolean = { item ->
+            applyFilter(preferences.filterChapterCount) {
+                item.libraryManga.totalChapters >= preferences.filterChapterCountThreshold
+            }
+        }
+
         return fastFilter {
             filterFnDownloaded(it) &&
                 filterFnUnread(it) &&
@@ -416,7 +431,9 @@ class LibraryScreenModel(
                 filterFnTracking(it) &&
                 filterFnExtensions(it) &&
                 filterFnNovel(it) &&
-                filterFnTags(it)
+                filterFnCustomExtension(it) &&
+                filterFnTags(it) &&
+                filterFnChapterCount(it)
         }
     }
 
@@ -550,6 +567,9 @@ class LibraryScreenModel(
                 libraryPreferences.tagIncludeMode().changes(),
                 libraryPreferences.tagExcludeMode().changes(),
                 libraryPreferences.tagCaseSensitive().changes(),
+                libraryPreferences.filterChapterCount().changes(),
+                libraryPreferences.filterChapterCountThreshold().changes(),
+                libraryPreferences.filterCustomExtension().changes(),
             ) { arr -> arr },
         ) { first, second, third ->
             ItemPreferences(
@@ -573,6 +593,9 @@ class LibraryScreenModel(
                 tagIncludeModeAnd = third[3] as Boolean,
                 tagExcludeModeAnd = third[4] as Boolean,
                 tagCaseSensitive = third[5] as Boolean,
+                filterChapterCount = third[6] as TriState,
+                filterChapterCountThreshold = third[7] as Int,
+                filterCustomExtension = third[8] as TriState,
             )
         }
     }
@@ -774,6 +797,8 @@ class LibraryScreenModel(
                 // Queue all chapters for translation (TranslationService will skip already translated ones)
                 translationService.enqueueAll(manga, chapters)
             }
+            // Start background worker with notification
+            TranslationJob.start(Injekt.get<android.app.Application>())
         }
     }
 
@@ -824,6 +849,7 @@ class LibraryScreenModel(
         deleteFromLibrary: Boolean,
         deleteChapters: Boolean,
         clearChaptersFromDb: Boolean = false,
+        deleteTranslations: Boolean = false,
     ) {
         screenModelScope.launchNonCancellable {
             if (deleteFromLibrary) {
@@ -851,9 +877,16 @@ class LibraryScreenModel(
                 removeChapters.awaitByMangaIds(mangaIds)
             }
 
+            if (deleteTranslations) {
+                mangas.forEach { manga ->
+                    val chapters = getChaptersByMangaId.await(manga.id)
+                    translatedChapterRepository.deleteAllForChapters(chapters.map { it.id })
+                }
+            }
+
             // Refresh library UI after modifications
             if (deleteFromLibrary) {
-            } else if (deleteChapters || clearChaptersFromDb) {
+            } else if (deleteChapters || clearChaptersFromDb || deleteTranslations) {
                 getLibraryManga.notifyChanged()
             }
         }
@@ -1087,7 +1120,14 @@ class LibraryScreenModel(
         }
         val currentTime = System.currentTimeMillis()
 
-        screenModelScope.launchIO {
+        // Use launchNonCancellable so the job survives navigation away
+        val context = Injekt.get<android.app.Application>()
+        screenModelScope.launchNonCancellable {
+            snackbarHostState.showSnackbar(
+                message = context.stringResource(MR.strings.batch_updating_entries, mangaList.size),
+                duration = SnackbarDuration.Short,
+            )
+
             val results = mangaList.map { manga ->
                 async {
                     try {
@@ -1125,7 +1165,18 @@ class LibraryScreenModel(
             }
             val outcomes = results.awaitAll()
             val successCount = outcomes.count { it }
+            val failCount = mangaList.size - successCount
             logcat(LogPriority.INFO) { "Batch update complete: $successCount/${mangaList.size} succeeded" }
+
+            val message = if (failCount > 0) {
+                context.stringResource(MR.strings.batch_update_complete_with_failures, successCount, mangaList.size, failCount)
+            } else {
+                context.stringResource(MR.strings.batch_update_complete, successCount)
+            }
+            snackbarHostState.showSnackbar(
+                message = message,
+                duration = SnackbarDuration.Short,
+            )
         }
     }
 
@@ -1240,7 +1291,7 @@ class LibraryScreenModel(
             mangaIds = mangaList.map { it.id },
             outputUri = uri,
             downloadedOnly = options.downloadedOnly,
-            preferTranslated = options.preferTranslated,
+            translationMode = options.translationMode,
             includeChapterCount = options.includeChapterCount,
             includeChapterRange = options.includeChapterRange,
             includeStatus = options.includeStatus,
@@ -1306,9 +1357,9 @@ class LibraryScreenModel(
                         var firstChapterNum = Double.MAX_VALUE
                         var lastChapterNum = Double.MIN_VALUE
 
-                        // Get translated chapter IDs for this manga if preferTranslated is enabled
-                        val translatedChapterIds = if (options.preferTranslated) {
-                            translatedChapterRepository.getTranslatedChapterIds(manga.id)
+                        // Get translated chapter IDs for this manga if translation mode needs them
+                        val translatedChapterIds = if (options.translationMode != tachiyomi.domain.translation.model.TranslationMode.ORIGINAL) {
+                            translatedChapterRepository.getTranslatedChapterIds(chapters.map { it.id })
                         } else {
                             emptySet()
                         }
@@ -1333,9 +1384,9 @@ class LibraryScreenModel(
                                 continue
                             }
 
-                            // Try to get translated content first if preferTranslated is enabled
+                            // Try to get translated content first if translation mode needs it
                             var content: String? = null
-                            if (options.preferTranslated && hasTranslation) {
+                            if (options.translationMode != tachiyomi.domain.translation.model.TranslationMode.ORIGINAL && hasTranslation) {
                                 try {
                                     val translations = translatedChapterRepository.getAllTranslationsForChapter(chapter.id)
                                     content = translations.firstOrNull()?.translatedContent
@@ -1707,6 +1758,9 @@ class LibraryScreenModel(
         val tagIncludeModeAnd: Boolean,
         val tagExcludeModeAnd: Boolean,
         val tagCaseSensitive: Boolean,
+        val filterChapterCount: TriState = TriState.DISABLED,
+        val filterChapterCountThreshold: Int = 10,
+        val filterCustomExtension: TriState = TriState.DISABLED,
     )
 
     /**
