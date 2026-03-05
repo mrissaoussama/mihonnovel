@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.components.LabeledCheckbox
 import tachiyomi.presentation.core.i18n.stringResource
 
@@ -41,22 +42,22 @@ fun UpdateSelectedDialog(
             }
         },
         title = {
-            Text(text = stringResource(MR.strings.update_selected_title))
+            Text(text = stringResource(TDMR.strings.update_selected_title))
         },
         text = {
             Column {
                 LabeledCheckbox(
-                    label = stringResource(MR.strings.update_selected_fetch_chapters),
+                    label = stringResource(TDMR.strings.update_selected_fetch_chapters),
                     checked = fetchChapters,
                     onCheckedChange = { fetchChapters = it },
                 )
                 LabeledCheckbox(
-                    label = stringResource(MR.strings.update_selected_fetch_details),
+                    label = stringResource(TDMR.strings.update_selected_fetch_details),
                     checked = fetchDetails,
                     onCheckedChange = { fetchDetails = it },
                 )
                 LabeledCheckbox(
-                    label = stringResource(MR.strings.update_selected_ignore_skip),
+                    label = stringResource(TDMR.strings.update_selected_ignore_skip),
                     checked = ignoreSkipRecentlyUpdated,
                     onCheckedChange = { ignoreSkipRecentlyUpdated = it },
                 )

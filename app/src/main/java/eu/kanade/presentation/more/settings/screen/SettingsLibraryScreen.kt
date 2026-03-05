@@ -38,6 +38,7 @@ import tachiyomi.domain.library.service.LibraryPreferences.Companion.MANGA_OUTSI
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_EXISTING
 import tachiyomi.domain.library.service.LibraryPreferences.Companion.MARK_DUPLICATE_CHAPTER_READ_NEW
 import tachiyomi.i18n.MR
+import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.pluralStringResource
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.util.collectAsState
@@ -208,17 +209,17 @@ object SettingsLibraryScreen : SearchableSettings {
                 Preference.PreferenceItem.ListPreference(
                     preference = libraryPreferences.skipUpdateTime(),
                     entries = persistentMapOf(
-                        LibraryPreferences.SKIP_UPDATE_NONE to stringResource(MR.strings.skip_update_no_restriction),
-                        LibraryPreferences.SKIP_UPDATE_1_DAY to stringResource(MR.strings.skip_update_days, 1),
-                        LibraryPreferences.SKIP_UPDATE_3_DAYS to stringResource(MR.strings.skip_update_days, 3),
-                        LibraryPreferences.SKIP_UPDATE_7_DAYS to stringResource(MR.strings.skip_update_days, 7),
-                        LibraryPreferences.SKIP_UPDATE_14_DAYS to stringResource(MR.strings.skip_update_days, 14),
-                        LibraryPreferences.SKIP_UPDATE_30_DAYS to stringResource(MR.strings.skip_update_days, 30),
-                        LibraryPreferences.SKIP_UPDATE_60_DAYS to stringResource(MR.strings.skip_update_days, 60),
-                        LibraryPreferences.SKIP_UPDATE_90_DAYS to stringResource(MR.strings.skip_update_days, 90),
+                        LibraryPreferences.SKIP_UPDATE_NONE to stringResource(TDMR.strings.skip_update_no_restriction),
+                        LibraryPreferences.SKIP_UPDATE_1_DAY to stringResource(TDMR.strings.skip_update_days, 1),
+                        LibraryPreferences.SKIP_UPDATE_3_DAYS to stringResource(TDMR.strings.skip_update_days, 3),
+                        LibraryPreferences.SKIP_UPDATE_7_DAYS to stringResource(TDMR.strings.skip_update_days, 7),
+                        LibraryPreferences.SKIP_UPDATE_14_DAYS to stringResource(TDMR.strings.skip_update_days, 14),
+                        LibraryPreferences.SKIP_UPDATE_30_DAYS to stringResource(TDMR.strings.skip_update_days, 30),
+                        LibraryPreferences.SKIP_UPDATE_60_DAYS to stringResource(TDMR.strings.skip_update_days, 60),
+                        LibraryPreferences.SKIP_UPDATE_90_DAYS to stringResource(TDMR.strings.skip_update_days, 90),
                     ),
-                    title = stringResource(MR.strings.skip_recently_updated_title),
-                    subtitle = stringResource(MR.strings.skip_recently_updated_subtitle),
+                    title = stringResource(TDMR.strings.skip_recently_updated_title),
+                    subtitle = stringResource(TDMR.strings.skip_recently_updated_subtitle),
                 ),
                 Preference.PreferenceItem.SwitchPreference(
                     preference = libraryPreferences.newShowUpdatesCount(),

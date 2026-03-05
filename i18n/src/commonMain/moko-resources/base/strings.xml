@@ -1225,10 +1225,6 @@
     <string name="batch_updating_entries">Updating %d entries…</string>
     <string name="batch_update_complete">Updated %d entries</string>
     <string name="batch_update_complete_with_failures">Updated %1$d/%2$d entries (%3$d failed)</string>
-    <string name="update_selected_title">Update selected</string>
-    <string name="update_selected_fetch_chapters">Fetch chapters</string>
-    <string name="update_selected_fetch_details">Fetch manga details</string>
-    <string name="update_selected_ignore_skip">Ignore \'Skip recently updated\' and force update</string>
 
     <!-- Duplicate detection -->
     <string name="duplicate_source_type_js_extensions">JS Extensions</string>
@@ -1240,10 +1236,4 @@
     <!-- Misc UI -->
     <string name="action_collapse">Collapse</string>
     <string name="action_expand">Expand</string>
-    <string name="skip_recently_updated_title">Skip recently updated entries</string>
-    <string name="skip_recently_updated_subtitle">Skip entries that were recently updated during bulk updates</string>
-    <string name="skip_update_no_restriction">No restriction</string>
-    <string name="skip_update_days">Skip if updated in last %d day(s)</string>
-    <string name="novel_ext_repos_js_header">JS Plugin Repos</string>
-    <string name="novel_ext_repos_kt_header">Kotlin Extension Repos</string>
 </resources>
