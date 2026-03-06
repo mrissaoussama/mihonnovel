@@ -180,7 +180,7 @@ object SettingsNovelDownloadScreen : SearchableSettings {
                     valueRange = 0..5000,
                     title = stringResource(TDMR.strings.pref_novel_random_delay),
                     subtitle = stringResource(TDMR.strings.pref_novel_random_delay_summary),
-                    valueString = "${randomDelayMin}-${randomDelay}ms",
+                    valueString = "$randomDelayMin-${randomDelay}ms",
                     onValueChanged = {
                         prefs.randomDelayRange().set(it)
                         if (it < prefs.randomDelayMin().get()) {

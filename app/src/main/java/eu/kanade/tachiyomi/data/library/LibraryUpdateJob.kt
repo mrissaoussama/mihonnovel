@@ -175,8 +175,14 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
      */
     private suspend fun addSpecificMangaToQueue(mangaIds: LongArray, ignoreSkipRecentlyUpdated: Boolean) {
         val mangaIdSet = mangaIds.toSet()
-        val skipUpdateTime = if (ignoreSkipRecentlyUpdated) 0 else {
-            try { libraryPreferences.skipUpdateTime().get() } catch (_: Exception) { 0 }
+        val skipUpdateTime = if (ignoreSkipRecentlyUpdated) {
+            0
+        } else {
+            try {
+                libraryPreferences.skipUpdateTime().get()
+            } catch (_: Exception) {
+                0
+            }
         }
         val currentTime = System.currentTimeMillis()
 

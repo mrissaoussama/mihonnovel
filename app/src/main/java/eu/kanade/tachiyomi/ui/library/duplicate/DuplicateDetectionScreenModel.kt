@@ -8,11 +8,11 @@ import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import eu.kanade.tachiyomi.source.isNovelSource
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import logcat.LogPriority
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.category.interactor.GetCategories
@@ -188,7 +188,6 @@ class DuplicateDetectionScreenModel(
             }
 
         fun getSourcePriority(sourceId: Long): Int {
-
             val specificPriority = specificSourcePriorities[sourceId]
             if (specificPriority != null && specificPriority != 0) return specificPriority
             val type = sourceTypeMap[sourceId] ?: SourceType.STUB

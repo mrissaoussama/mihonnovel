@@ -67,7 +67,11 @@ class TranslatedChapterRepositoryImpl(
 
             val targetDir = storageManager.getTranslationsDirectory() ?: return
             // Don't migrate if target is effectively the same as legacy (both are app-internal)
-            val targetPath = try { targetDir.filePath } catch (_: Exception) { null }
+            val targetPath = try {
+                targetDir.filePath
+            } catch (_: Exception) {
+                null
+            }
             if (targetPath != null && targetPath == legacyDir.absolutePath) return
 
             var migrated = 0

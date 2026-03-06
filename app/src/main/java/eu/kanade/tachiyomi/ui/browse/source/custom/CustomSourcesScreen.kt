@@ -61,17 +61,17 @@ import cafe.adriel.voyager.core.model.rememberScreenModel
 import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
-import eu.kanade.tachiyomi.source.custom.CustomNovelSource
-import eu.kanade.tachiyomi.source.custom.CustomSourceConfig
-import eu.kanade.tachiyomi.source.custom.CustomSourceManager
-import tachiyomi.domain.source.service.SourceManager
-import eu.kanade.tachiyomi.source.custom.SourceTestResult
-import eu.kanade.tachiyomi.source.online.HttpSource
 import eu.kanade.tachiyomi.extension.ExtensionManager
 import eu.kanade.tachiyomi.extension.model.Extension
 import eu.kanade.tachiyomi.jsplugin.JsPluginManager
+import eu.kanade.tachiyomi.source.custom.CustomNovelSource
+import eu.kanade.tachiyomi.source.custom.CustomSourceConfig
+import eu.kanade.tachiyomi.source.custom.CustomSourceManager
+import eu.kanade.tachiyomi.source.custom.SourceTestResult
+import eu.kanade.tachiyomi.source.online.HttpSource
 import kotlinx.coroutines.launch
 import tachiyomi.core.common.i18n.stringResource
+import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
 import tachiyomi.presentation.core.i18n.stringResource
@@ -912,121 +912,121 @@ class CustomSourceEditorScreen(
 
                 // URLs Section (only for manual/selector-based sources)
                 if (effectiveBasedOnSourceId == null) {
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(TDMR.strings.custom_source_url_patterns),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = stringResource(TDMR.strings.custom_source_url_placeholders),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_url_patterns),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_url_placeholders),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = popularUrl,
-                    onValueChange = { popularUrl = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_popular_url)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(TDMR.strings.custom_source_popular_url_hint)) },
-                )
+                    OutlinedTextField(
+                        value = popularUrl,
+                        onValueChange = { popularUrl = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_popular_url)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(TDMR.strings.custom_source_popular_url_hint)) },
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = latestUrl,
-                    onValueChange = { latestUrl = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_latest_url)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                    OutlinedTextField(
+                        value = latestUrl,
+                        onValueChange = { latestUrl = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_latest_url)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                OutlinedTextField(
-                    value = searchUrl,
-                    onValueChange = { searchUrl = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_search_url)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(TDMR.strings.custom_source_search_url_hint)) },
-                )
+                    OutlinedTextField(
+                        value = searchUrl,
+                        onValueChange = { searchUrl = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_search_url)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(TDMR.strings.custom_source_search_url_hint)) },
+                    )
 
-                // Selectors Section
-                Spacer(modifier = Modifier.height(16.dp))
-                Text(
-                    text = stringResource(TDMR.strings.custom_source_css_selectors),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
-                Text(
-                    text = stringResource(TDMR.strings.custom_source_css_selectors_help),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Spacer(modifier = Modifier.height(8.dp))
+                    // Selectors Section
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_css_selectors),
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = stringResource(TDMR.strings.custom_source_css_selectors_help),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                // Popular/List selectors
-                Text(stringResource(TDMR.strings.custom_source_novel_list), fontWeight = FontWeight.Medium)
-                OutlinedTextField(
-                    value = popularListSelector,
-                    onValueChange = { popularListSelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_list_item_selector)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(TDMR.strings.custom_source_list_item_hint)) },
-                )
-                OutlinedTextField(
-                    value = popularTitleSelector,
-                    onValueChange = { popularTitleSelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_title_selector)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = popularCoverSelector,
-                    onValueChange = { popularCoverSelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_cover_selector)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                    // Popular/List selectors
+                    Text(stringResource(TDMR.strings.custom_source_novel_list), fontWeight = FontWeight.Medium)
+                    OutlinedTextField(
+                        value = popularListSelector,
+                        onValueChange = { popularListSelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_list_item_selector)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(TDMR.strings.custom_source_list_item_hint)) },
+                    )
+                    OutlinedTextField(
+                        value = popularTitleSelector,
+                        onValueChange = { popularTitleSelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_title_selector)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = popularCoverSelector,
+                        onValueChange = { popularCoverSelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_cover_selector)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                // Details selectors
-                Text(stringResource(TDMR.strings.custom_source_novel_details), fontWeight = FontWeight.Medium)
-                OutlinedTextField(
-                    value = detailsTitleSelector,
-                    onValueChange = { detailsTitleSelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_title_selector_required)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                OutlinedTextField(
-                    value = detailsDescriptionSelector,
-                    onValueChange = { detailsDescriptionSelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_description_selector)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                    // Details selectors
+                    Text(stringResource(TDMR.strings.custom_source_novel_details), fontWeight = FontWeight.Medium)
+                    OutlinedTextField(
+                        value = detailsTitleSelector,
+                        onValueChange = { detailsTitleSelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_title_selector_required)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    OutlinedTextField(
+                        value = detailsDescriptionSelector,
+                        onValueChange = { detailsDescriptionSelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_description_selector)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                // Chapter selectors
-                Text(stringResource(TDMR.strings.custom_source_chapters), fontWeight = FontWeight.Medium)
-                OutlinedTextField(
-                    value = chaptersListSelector,
-                    onValueChange = { chaptersListSelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_chapter_list_selector)) },
-                    modifier = Modifier.fillMaxWidth(),
-                )
+                    // Chapter selectors
+                    Text(stringResource(TDMR.strings.custom_source_chapters), fontWeight = FontWeight.Medium)
+                    OutlinedTextField(
+                        value = chaptersListSelector,
+                        onValueChange = { chaptersListSelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_chapter_list_selector)) },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
 
-                Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
-                // Content selector
-                Text(stringResource(TDMR.strings.custom_source_chapter_content), fontWeight = FontWeight.Medium)
-                OutlinedTextField(
-                    value = contentPrimarySelector,
-                    onValueChange = { contentPrimarySelector = it },
-                    label = { Text(stringResource(TDMR.strings.custom_source_content_selector)) },
-                    modifier = Modifier.fillMaxWidth(),
-                    placeholder = { Text(stringResource(TDMR.strings.custom_source_content_selector_hint)) },
-                )
+                    // Content selector
+                    Text(stringResource(TDMR.strings.custom_source_chapter_content), fontWeight = FontWeight.Medium)
+                    OutlinedTextField(
+                        value = contentPrimarySelector,
+                        onValueChange = { contentPrimarySelector = it },
+                        label = { Text(stringResource(TDMR.strings.custom_source_content_selector)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        placeholder = { Text(stringResource(TDMR.strings.custom_source_content_selector_hint)) },
+                    )
                 } // end if (effectiveBasedOnSourceId == null)
 
                 // Error message
@@ -1072,11 +1072,13 @@ class CustomSourceEditorScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = !isSaving && name.isNotBlank() && baseUrl.isNotBlank() &&
-                        (effectiveBasedOnSourceId != null || (
-                            popularUrl.isNotBlank() && searchUrl.isNotBlank() &&
-                            popularListSelector.isNotBlank() && detailsTitleSelector.isNotBlank() &&
-                            chaptersListSelector.isNotBlank() && contentPrimarySelector.isNotBlank()
-                        )),
+                        (
+                            effectiveBasedOnSourceId != null || (
+                                popularUrl.isNotBlank() && searchUrl.isNotBlank() &&
+                                    popularListSelector.isNotBlank() && detailsTitleSelector.isNotBlank() &&
+                                    chaptersListSelector.isNotBlank() && contentPrimarySelector.isNotBlank()
+                                )
+                            ),
                 ) {
                     if (isSaving) {
                         CircularProgressIndicator(modifier = Modifier.height(24.dp))

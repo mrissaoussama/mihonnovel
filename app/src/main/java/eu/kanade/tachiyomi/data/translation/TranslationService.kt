@@ -223,10 +223,10 @@ class TranslationService(
                     val retryCount = task.retryCount + 1
                     if (retryCount < MAX_TASK_RETRIES) {
                         queueMap[task.chapterId] = task.copy(
-                                status = TranslationStatus.FAILED,
-                                errorMessage = e.message,
-                                retryCount = retryCount,
-                            )
+                            status = TranslationStatus.FAILED,
+                            errorMessage = e.message,
+                            retryCount = retryCount,
+                        )
                     } else {
                         logcat(LogPriority.ERROR) { "Max retries reached for chapter ${task.chapterId}, skipping" }
                     }

@@ -5,8 +5,8 @@ import cafe.adriel.voyager.core.model.screenModelScope
 import eu.kanade.domain.base.BasePreferences
 import eu.kanade.tachiyomi.data.cache.LibrarySettingsCache
 import eu.kanade.tachiyomi.data.track.TrackerManager
-import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import eu.kanade.tachiyomi.jsplugin.source.JsSource
+import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import eu.kanade.tachiyomi.source.isNovelSource
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -310,7 +310,7 @@ class LibrarySettingsScreenModel(
                     if (shouldInclude) {
                         if (genres.isNullOrEmpty()) {
                             noTagsCount++
-                    } else {
+                        } else {
                             genres.forEach { tag ->
                                 val normalizedTag = tag.trim()
                                 if (normalizedTag.isNotBlank()) {

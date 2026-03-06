@@ -93,8 +93,10 @@ data class TranslatedLanguages(
 enum class TranslationMode(val key: String) {
     /** Export only the original (source) content. */
     ORIGINAL("original"),
+
     /** Export only translated content; skip chapters without a translation. */
     TRANSLATED("translated"),
+
     /** Export two separate EPUB files — one original, one translated. */
     BOTH("both"),
     ;

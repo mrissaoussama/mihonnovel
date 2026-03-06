@@ -46,11 +46,11 @@ import eu.kanade.tachiyomi.ui.browse.extension.NovelExtensionReposScreen
 import tachiyomi.domain.source.service.SourceManager
 import tachiyomi.i18n.MR
 import tachiyomi.i18n.novel.TDMR
-import tachiyomi.core.common.i18n.stringResource as ctxStringResource
 import tachiyomi.presentation.core.components.material.Scaffold
 import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import tachiyomi.core.common.i18n.stringResource as ctxStringResource
 
 private data class SourceTemplateOption(
     val id: Long,

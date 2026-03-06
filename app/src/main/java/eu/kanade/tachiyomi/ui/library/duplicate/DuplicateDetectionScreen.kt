@@ -90,13 +90,13 @@ import kotlinx.coroutines.launch
 import tachiyomi.domain.manga.interactor.DuplicateMatchMode
 import tachiyomi.domain.manga.model.MangaWithChapterCount
 import tachiyomi.domain.source.service.SourceManager
-import tachiyomi.core.common.i18n.stringResource as ctxStringResource
 import tachiyomi.i18n.MR
 import tachiyomi.presentation.core.i18n.stringResource
 import tachiyomi.presentation.core.screens.EmptyScreen
 import tachiyomi.presentation.core.screens.LoadingScreen
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
+import tachiyomi.core.common.i18n.stringResource as ctxStringResource
 import tachiyomi.domain.category.model.Category as CategoryModel
 
 class DuplicateDetectionScreen : Screen {
@@ -596,7 +596,6 @@ class DuplicateDetectionScreen : Screen {
                                 }
                             }
                         }
-
 
                         Row(
                             modifier = Modifier
