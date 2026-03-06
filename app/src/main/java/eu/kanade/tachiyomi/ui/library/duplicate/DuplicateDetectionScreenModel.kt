@@ -8,6 +8,7 @@ import eu.kanade.tachiyomi.jsplugin.source.JsSource
 import eu.kanade.tachiyomi.source.custom.CustomNovelSource
 import eu.kanade.tachiyomi.source.isNovelSource
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.cancelChildren
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.update
@@ -598,7 +599,7 @@ class DuplicateDetectionScreenModel(
 
     suspend fun deleteSelected(deleteManga: Boolean, deleteChapters: Boolean) {
         val selectedIds = state.value.selection.toList()
-        screenModelScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             if (deleteChapters) {
                 selectedIds.forEach { mangaId ->
                     try {
@@ -658,14 +659,15 @@ class DuplicateDetectionScreenModel(
             // Clear selection and reload to refresh the list
             mutableState.update { it.copy(selection = emptySet()) }
             loadDuplicates()
-        }.join()
+        }
     }
 
     suspend fun moveSelectedToCategories(categoryIds: List<Long>) {
         val selectedIds = state.value.selection.toList()
-        screenModelScope.launch(Dispatchers.IO) {
+        withContext(Dispatchers.IO) {
             mangaRepository.setMangasCategories(selectedIds, categoryIds)
             mutableState.update { it.copy(selection = emptySet()) }
+            loadDuplicates()
         }
     }
 }

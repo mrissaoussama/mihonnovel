@@ -1387,13 +1387,19 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.On
     }
 
     private fun displayError(error: Throwable) {
+        val escapedMessage = (error.message ?: "Unknown error")
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("\"", "&quot;")
+            .replace("'", "&#39;")
         val errorHtml = """
             <!DOCTYPE html>
             <html>
             <body style="display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
                 <div style="text-align: center; color: #ff5555;">
                     <h2>Error loading chapter</h2>
-                    <p>${error.message}</p>
+                    <p>$escapedMessage</p>
                 </div>
             </body>
             </html>

@@ -115,6 +115,7 @@
     <string name="action_export_epub_bulk">Export selected as EPUB</string>
     <string name="export_epub_progress">Exporting %1$d of %2$d chaptersâ€¦</string>
     <string name="export_epub_success">EPUB exported successfully</string>
+    <string name="export_epub_started">EPUB export started</string>
     <string name="export_epub_error">Failed to export EPUB: %s</string>
     <string name="action_remove_chapters">Remove chapters</string>
     <string name="action_clear_covers">Clear covers</string>
@@ -627,6 +628,18 @@
     <string name="translation_job_processing">Processing&#8230;</string>
     <string name="translation_job_complete">Translation Complete</string>
     <string name="translation_job_complete_count">%d chapters translated</string>
+
+    <!-- Batch update -->
+    <string name="update_selected_title">Update selected</string>
+    <string name="update_selected_fetch_chapters">Fetch chapters</string>
+    <string name="update_selected_fetch_details">Fetch manga details</string>
+    <string name="update_selected_ignore_skip">Ignore \'Skip recently updated\' and force update</string>
+    <string name="skip_recently_updated_title">Skip recently updated entries</string>
+    <string name="skip_recently_updated_subtitle">Skip entries that were recently updated during bulk updates</string>
+    <string name="skip_update_no_restriction">No restriction</string>
+    <string name="skip_update_days">Skip if updated in last %d day(s)</string>
+    <string name="novel_ext_repos_js_header">JS Plugin Repos</string>
+    <string name="novel_ext_repos_kt_header">Kotlin Extension Repos</string>
 </resources>
 
 

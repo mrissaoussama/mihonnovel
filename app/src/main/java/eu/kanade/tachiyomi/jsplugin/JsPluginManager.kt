@@ -20,6 +20,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -56,6 +57,10 @@ class JsPluginManager(
 
     private val cacheDir: File = File(context.cacheDir, "lnreader_plugins_cache")
 
+    // Persistent icon cache inside the lnreader_plugins directory
+    private val iconsCacheDir: File
+        get() = File(cacheDir, "icons").apply { mkdirs() }
+
     // State
     private val _repositories = MutableStateFlow<List<JsPluginRepository>>(emptyList())
     val repositories: StateFlow<List<JsPluginRepository>> = _repositories.asStateFlow()
@@ -68,6 +73,8 @@ class JsPluginManager(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
+
+    private val refreshMutex = Mutex()
 
     private val _jsSources = MutableStateFlow<List<CatalogueSource>>(emptyList())
     val jsSources: StateFlow<List<CatalogueSource>> = _jsSources.asStateFlow()
@@ -122,33 +129,42 @@ class JsPluginManager(
      * Refresh available plugins from all repositories
      */
     suspend fun refreshAvailablePlugins(forceRefresh: Boolean = false) {
-        _isLoading.value = true
+        // Skip if another refresh is already in progress — result flows through _availablePlugins StateFlow
+        if (!refreshMutex.tryLock()) return
         try {
-            // Load from cache first if not forcing refresh
-            if (!forceRefresh && _availablePlugins.value.isNotEmpty()) {
-                logcat(LogPriority.DEBUG) { "Using cached plugin list (${_availablePlugins.value.size} plugins)" }
-                return
-            }
-
-            val allPlugins = mutableListOf<JsPlugin>()
-
-            for (repo in _repositories.value.filter { it.enabled }) {
-                try {
-                    val plugins = fetchPluginList(repo.url)
-                    plugins.forEach { it.repositoryUrl = repo.url }
-                    allPlugins.addAll(plugins)
-                    logcat(LogPriority.DEBUG) { "Loaded ${plugins.size} plugins from ${repo.name}" }
-                } catch (e: Exception) {
-                    logcat(LogPriority.ERROR, e) { "Failed to fetch plugins from ${repo.name}" }
+            _isLoading.value = true
+            try {
+                // Load from cache first if not forcing refresh
+                if (!forceRefresh && _availablePlugins.value.isNotEmpty()) {
+                    logcat(LogPriority.DEBUG) { "Using cached plugin list (${_availablePlugins.value.size} plugins)" }
+                    return
                 }
+
+                val allPlugins = mutableListOf<JsPlugin>()
+
+                for (repo in _repositories.value.filter { it.enabled }) {
+                    try {
+                        val plugins = fetchPluginList(repo.url)
+                        plugins.forEach { it.repositoryUrl = repo.url }
+                        allPlugins.addAll(plugins)
+                        logcat(LogPriority.DEBUG) { "Loaded ${plugins.size} plugins from ${repo.name}" }
+                    } catch (e: Exception) {
+                        logcat(LogPriority.ERROR, e) { "Failed to fetch plugins from ${repo.name}" }
+                    }
+                }
+
+                _availablePlugins.value = allPlugins
+
+                // Save to cache file
+                saveCachedPluginList(allPlugins)
+
+                // Cache icons to avoid re-fetching each time
+                cacheIcons(allPlugins)
+            } finally {
+                _isLoading.value = false
             }
-
-            _availablePlugins.value = allPlugins
-
-            // Save to cache file
-            saveCachedPluginList(allPlugins)
         } finally {
-            _isLoading.value = false
+            refreshMutex.unlock()
         }
     }
 
@@ -677,6 +693,50 @@ class JsPluginManager(
      */
     fun getInstalledPlugin(pluginId: String): InstalledJsPlugin? {
         return _installedPlugins.value.find { it.plugin.id == pluginId }
+    }
+
+    // Icon caching
+
+    /**
+     * Returns the local cached icon file for a plugin, or null if not cached.
+     */
+    fun getCachedIconFile(pluginId: String): File? {
+        val file = File(iconsCacheDir, "$pluginId.png")
+        return file.takeIf { it.exists() && it.length() > 0 }
+    }
+
+    /**
+     * Returns the local icon path if cached, otherwise the original URL.
+     * This avoids re-fetching icons on every screen visit.
+     */
+    fun getIconUrl(plugin: JsPlugin): String {
+        val cached = getCachedIconFile(plugin.id)
+        return cached?.let { "file://${it.absolutePath}" } ?: plugin.iconUrl
+    }
+
+    /**
+     * Download and cache icons for a list of plugins in the background.
+     */
+    private suspend fun cacheIcons(plugins: List<JsPlugin>) = withContext(Dispatchers.IO) {
+        for (plugin in plugins) {
+            if (plugin.iconUrl.isBlank()) continue
+            val iconFile = File(iconsCacheDir, "${plugin.id}.png")
+            if (iconFile.exists() && iconFile.length() > 0) continue
+            try {
+                val response = client.newCall(GET(plugin.iconUrl)).execute()
+                response.use { resp ->
+                    if (resp.isSuccessful) {
+                        resp.body?.byteStream()?.use { input ->
+                            iconFile.outputStream().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                logcat(LogPriority.WARN) { "Failed to cache icon for ${plugin.name}: ${e.message}" }
+            }
+        }
     }
 
     // UniFile helpers

@@ -102,6 +102,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
     private var mangaToUpdate: List<tachiyomi.domain.library.model.LibraryManga> = mutableListOf()
 
+    // Flags set from input data for "Update Selected" mode
+    private var forceFetchDetails = false
+    private var skipChapterFetch = false
+
     override suspend fun doWork(): Result {
         if (tags.contains(WORK_NAME_AUTO)) {
             if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) {
@@ -122,8 +126,17 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
         libraryPreferences.lastUpdatedTimestamp().set(Instant.now().toEpochMilli())
 
-        val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
-        addMangaToQueue(categoryId)
+        val mangaIds = inputData.getLongArray(KEY_MANGA_IDS)
+        forceFetchDetails = inputData.getBoolean(KEY_FETCH_DETAILS, false)
+        skipChapterFetch = !inputData.getBoolean(KEY_FETCH_CHAPTERS, true)
+        val ignoreSkip = inputData.getBoolean(KEY_IGNORE_SKIP, false)
+
+        if (mangaIds != null) {
+            addSpecificMangaToQueue(mangaIds, ignoreSkip)
+        } else {
+            val categoryId = inputData.getLong(KEY_CATEGORY, -1L)
+            addMangaToQueue(categoryId)
+        }
 
         return withIOContext {
             try {
@@ -154,6 +167,33 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                 0
             },
         )
+    }
+
+    /**
+     * Adds specific manga to the update queue by ID.
+     * Used by "Update Selected" to update a user-chosen subset.
+     */
+    private suspend fun addSpecificMangaToQueue(mangaIds: LongArray, ignoreSkipRecentlyUpdated: Boolean) {
+        val mangaIdSet = mangaIds.toSet()
+        val skipUpdateTime = if (ignoreSkipRecentlyUpdated) 0 else {
+            try { libraryPreferences.skipUpdateTime().get() } catch (_: Exception) { 0 }
+        }
+        val currentTime = System.currentTimeMillis()
+
+        val libraryManga = getLibraryManga.awaitForUpdate()
+
+        mangaToUpdate = libraryManga
+            .filter { it.id in mangaIdSet }
+            .filter {
+                if (skipUpdateTime > 0 && it.lastUpdate > 0) {
+                    val daysSinceUpdate = (currentTime - it.lastUpdate) / (1000 * 60 * 60 * 24)
+                    daysSinceUpdate >= skipUpdateTime
+                } else {
+                    true
+                }
+            }
+            .sortedBy { it.title }
+            .map { it.toLibraryManga() }
     }
 
     /**
@@ -405,10 +445,12 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val source = sourceManager.getOrStub(manga.source)
 
         // Update manga metadata if needed
-        if (libraryPreferences.autoUpdateMetadata().get()) {
+        if (forceFetchDetails || libraryPreferences.autoUpdateMetadata().get()) {
             val networkManga = source.getMangaDetails(manga.toSManga())
-            updateManga.awaitUpdateFromSource(manga, networkManga, manualFetch = false, coverCache)
+            updateManga.awaitUpdateFromSource(manga, networkManga, manualFetch = forceFetchDetails, coverCache)
         }
+
+        if (skipChapterFetch) return emptyList()
 
         val chapters = source.getChapterList(manga.toSManga())
 
@@ -519,6 +561,14 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
          */
         private const val KEY_CATEGORY = "category"
 
+        /**
+         * Keys for "Update Selected" mode — specific manga IDs with options.
+         */
+        private const val KEY_MANGA_IDS = "manga_ids"
+        private const val KEY_FETCH_DETAILS = "fetch_details"
+        private const val KEY_FETCH_CHAPTERS = "fetch_chapters"
+        private const val KEY_IGNORE_SKIP = "ignore_skip"
+
         fun setupTask(
             context: Context,
             prefInterval: Int? = null,
@@ -574,6 +624,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         fun startNow(
             context: Context,
             category: Category? = null,
+            mangaIds: LongArray? = null,
+            fetchChapters: Boolean = true,
+            fetchDetails: Boolean = false,
+            ignoreSkipRecentlyUpdated: Boolean = false,
         ): Boolean {
             val wm = context.workManager
             if (wm.isRunning(TAG)) {
@@ -583,6 +637,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
 
             val inputData = workDataOf(
                 KEY_CATEGORY to category?.id,
+                KEY_MANGA_IDS to mangaIds,
+                KEY_FETCH_DETAILS to fetchDetails,
+                KEY_FETCH_CHAPTERS to fetchChapters,
+                KEY_IGNORE_SKIP to ignoreSkipRecentlyUpdated,
             )
             val request = OneTimeWorkRequestBuilder<LibraryUpdateJob>()
                 .addTag(TAG)

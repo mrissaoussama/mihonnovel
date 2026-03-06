@@ -102,7 +102,7 @@ class NovelExtensionReposScreen : Screen() {
                     if (successState.jsRepos.isNotEmpty()) {
                         item(key = "js-header") {
                             Text(
-                                text = "JS Plugin Repos",
+                                text = stringResource(TDMR.strings.novel_ext_repos_js_header),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(
@@ -125,7 +125,7 @@ class NovelExtensionReposScreen : Screen() {
                     if (successState.kotlinRepos.isNotEmpty()) {
                         item(key = "kotlin-header") {
                             Text(
-                                text = "Kotlin Extension Repos",
+                                text = stringResource(TDMR.strings.novel_ext_repos_kt_header),
                                 style = MaterialTheme.typography.titleSmall,
                                 color = MaterialTheme.colorScheme.primary,
                                 modifier = Modifier.padding(

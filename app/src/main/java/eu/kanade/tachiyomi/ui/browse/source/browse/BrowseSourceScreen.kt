@@ -357,7 +357,7 @@ data class BrowseSourceScreen(
                                     screenModel.selectAll(mangaList.itemSnapshotList.items.mapNotNull { it.value })
                                 },
                                 label = {
-                                    Text(text = "Select All")
+                                    Text(text = stringResource(MR.strings.action_select_all))
                                 },
                             )
                         }

@@ -36,7 +36,11 @@ data class TranslationTask(
  */
 enum class TranslationStatus {
     QUEUED,
+
+    /** Reserved for future use — e.g. downloading source content before translation. */
+    @Suppress("unused")
     DOWNLOADING,
+
     TRANSLATING,
     COMPLETED,
     FAILED,

@@ -24,7 +24,6 @@ import eu.kanade.tachiyomi.util.system.setForegroundSafely
 import eu.kanade.tachiyomi.util.system.workManager
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
-import mihon.core.archive.ArchiveReader
 import mihon.core.archive.EpubWriter
 import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
@@ -39,8 +38,6 @@ import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
 import java.util.zip.ZipEntry
-import java.util.zip.ZipFile
-import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 
 class EpubExportJob(private val context: Context, workerParams: WorkerParameters) :
@@ -269,7 +266,7 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
                         title = manga.title,
                         author = manga.author,
                         description = manga.description,
-                        language = "en",
+                        language = source.lang.ifBlank { "en" },
                         genres = manga.genre ?: emptyList(),
                         publisher = source.name,
                     )
@@ -442,87 +439,20 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
 
     /**
      * Read original (source) content for a chapter from the download directory or CBZ archive.
+     * Delegates to [ChapterContentReader] (DRY fix 2.2).
      */
     private fun readOriginalContent(
         manga: Manga,
         chapter: tachiyomi.domain.chapter.model.Chapter,
         source: eu.kanade.tachiyomi.source.Source,
     ): String? {
-        try {
-            val chapterDirOrCbz = downloadProvider.findChapterDir(
-                chapter.name,
-                chapter.scanlator,
-                chapter.url,
-                manga.title,
-                source,
-            )
-
-            logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: chapterDir found=${chapterDirOrCbz != null}, exists=${chapterDirOrCbz?.exists()}, name=${chapterDirOrCbz?.name}" }
-
-            if (chapterDirOrCbz != null) {
-                val isCbz = chapterDirOrCbz.name?.endsWith(".cbz") == true
-
-                if (isCbz) {
-                    logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: reading from CBZ archive" }
-                    val content = readContentFromCbz(chapterDirOrCbz.uri)
-                    if (content != null) return content
-                } else {
-                    val allFiles = chapterDirOrCbz.listFiles() ?: emptyArray()
-                    val htmlFiles = allFiles.filter {
-                        it.isFile && it.name?.endsWith(".html") == true
-                    }.sortedBy { it.name }
-
-                    val txtFiles = allFiles.filter {
-                        it.isFile && it.name?.endsWith(".txt") == true
-                    }.sortedBy { it.name }
-
-                    val filesToRead = htmlFiles.ifEmpty { txtFiles }
-
-                    if (filesToRead.isNotEmpty()) {
-                        val sb = StringBuilder()
-                        filesToRead.forEachIndexed { i, file ->
-                            val fileContent = context.contentResolver.openInputStream(file.uri)?.use {
-                                it.bufferedReader().readText()
-                            } ?: ""
-                            sb.append(fileContent)
-                            if (i < filesToRead.size - 1) {
-                                sb.append("\n\n")
-                            }
-                        }
-                        val content = sb.toString()
-                        logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: read content length=${content.length}" }
-                        if (content.isNotBlank()) return content
-                    }
-                }
-            }
-
-            // If no content found, try CBZ archive in manga directory
-            val mangaDir = downloadProvider.findMangaDir(manga.title, source)
-            if (mangaDir != null) {
-                val cbzFiles = mangaDir.listFiles()?.filter {
-                    it.isFile && it.name?.endsWith(".cbz") == true
-                } ?: emptyList()
-
-                val chapterDirNames = downloadProvider.getValidChapterDirNames(
-                    chapter.name,
-                    chapter.scanlator,
-                    chapter.url,
-                )
-
-                val matchingCbz = cbzFiles.find { cbzFile ->
-                    val cbzBaseName = cbzFile.name?.removeSuffix(".cbz") ?: ""
-                    chapterDirNames.any { it == cbzBaseName }
-                }
-
-                if (matchingCbz != null) {
-                    logcat(LogPriority.DEBUG) { "${manga.title} ch ${chapter.name}: found CBZ archive ${matchingCbz.name}" }
-                    return readContentFromCbz(matchingCbz.uri)
-                }
-            }
+        return try {
+            val reader = eu.kanade.tachiyomi.data.download.ChapterContentReader(context, downloadProvider)
+            reader.readDownloadedContent(manga, chapter, source)
         } catch (e: Exception) {
             logcat(LogPriority.ERROR, e) { "Failed to read downloaded chapter: ${chapter.name}" }
+            null
         }
-        return null
     }
 
     private fun updateProgress(current: Int, total: Int, title: String) {
@@ -568,82 +498,6 @@ class EpubExportJob(private val context: Context, workerParams: WorkerParameters
 
     private fun sanitizeFilename(name: String): String {
         return name.replace(Regex("[\\\\/:*?\"<>|]"), "_").take(200)
-    }
-
-    /**
-     * Read HTML/TXT content from a CBZ archive.
-     */
-    private fun readContentFromCbz(cbzUri: Uri): String? {
-        logcat(LogPriority.DEBUG) { "CBZ: attempting to read from $cbzUri" }
-        return try {
-            // Use ParcelFileDescriptor and ArchiveReader (libarchive) for compatibility
-            // with CBZ files created by ZipWriter which also uses libarchive
-            val pfd = context.contentResolver.openFileDescriptor(cbzUri, "r")
-            if (pfd == null) {
-                logcat(LogPriority.WARN) { "CBZ: failed to open file descriptor for $cbzUri" }
-                return null
-            }
-
-            pfd.use { descriptor ->
-                val archiveReader = ArchiveReader(descriptor)
-                archiveReader.use { reader ->
-                    // First pass: collect names of content files
-                    val contentFileNames = mutableListOf<String>()
-                    var entryCount = 0
-
-                    reader.useEntries { sequence ->
-                        sequence.forEach { entry ->
-                            entryCount++
-                            val name = entry.name.lowercase()
-                            logcat(LogPriority.DEBUG) { "CBZ: entry #$entryCount: ${entry.name}, isFile=${entry.isFile}" }
-
-                            if (entry.isFile && (name.endsWith(".html") || name.endsWith(".htm") || name.endsWith(".xhtml") || name.endsWith(".txt"))) {
-                                contentFileNames.add(entry.name)
-                            }
-                        }
-                    }
-
-                    logcat(LogPriority.DEBUG) { "CBZ: found ${contentFileNames.size} content files out of $entryCount entries" }
-
-                    // Second pass: read content from each file using getInputStream
-                    val entries = mutableListOf<Pair<String, String>>()
-                    contentFileNames.forEach { fileName ->
-                        try {
-                            val inputStream = reader.getInputStream(fileName)
-                            if (inputStream != null) {
-                                inputStream.use { stream ->
-                                    val entryContent = stream.bufferedReader().readText()
-                                    entries.add(fileName to entryContent)
-                                    logcat(LogPriority.DEBUG) { "CBZ: read content file $fileName, length=${entryContent.length}" }
-                                }
-                            } else {
-                                logcat(LogPriority.WARN) { "CBZ: could not get input stream for $fileName" }
-                            }
-                        } catch (e: Exception) {
-                            logcat(LogPriority.ERROR, e) { "CBZ: failed to read entry $fileName" }
-                        }
-                    }
-
-                    logcat(LogPriority.DEBUG) { "CBZ: successfully read ${entries.size} content files" }
-
-                    // Sort entries by name and combine
-                    val content = StringBuilder()
-                    entries.sortedBy { it.first }.forEachIndexed { i, (_, text) ->
-                        content.append(text)
-                        if (i < entries.size - 1) {
-                            content.append("\n\n")
-                        }
-                    }
-
-                    val result = content.toString().ifEmpty { null }
-                    logcat(LogPriority.DEBUG) { "CBZ: final content length=${result?.length ?: 0}" }
-                    result
-                }
-            }
-        } catch (e: Exception) {
-            logcat(LogPriority.ERROR, e) { "CBZ: failed to read archive $cbzUri" }
-            null
-        }
     }
 
     companion object {

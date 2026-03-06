@@ -137,6 +137,7 @@ private class DrawableWrapper : Drawable() {
 private class CoilImageGetter(
     private val textView: TextView,
     private val activity: ReaderActivity,
+    private val scope: CoroutineScope,
 ) : Html.ImageGetter {
 
     override fun getDrawable(source: String?): Drawable {
@@ -188,7 +189,6 @@ private class CoilImageGetter(
         // Resolve protocol-relative URLs
         val imageUrl = if (source.startsWith("//")) "https:$source" else source
 
-        val scope = CoroutineScope(Dispatchers.Main + SupervisorJob())
         scope.launch {
             try {
                 val request = ImageRequest.Builder(activity)
@@ -790,6 +790,17 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         (bottomLoadingIndicator?.parent as? ViewGroup)?.removeView(bottomLoadingIndicator)
     }
 
+    private fun reloadContent() {
+        activity.runOnUiThread {
+            currentChapters?.let {
+                contentContainer.removeAllViews()
+                loadedChapters.clear()
+                currentChapterIndex = 0
+                setChapters(it)
+            }
+        }
+    }
+
     private fun observePreferences() {
         // Observe preference changes and refresh content
         scope.launch {
@@ -824,46 +835,18 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             ).drop(7)
                 .collect {
                     // Reload content to apply new formatting
-                    activity.runOnUiThread {
-                        currentChapters?.let {
-                            contentContainer.removeAllViews()
-                            loadedChapters.clear()
-                            currentChapterIndex = 0
-                            setChapters(it)
-                        }
-                    }
+                    reloadContent()
                 }
         }
 
         // Observe force lowercase preference - reload content to reapply transformation
         scope.launch {
-            preferences.novelForceTextLowercase().changes()
-                .drop(1)
+            merge(
+                preferences.novelForceTextLowercase().changes(),
+                preferences.novelHideChapterTitle().changes(),
+            ).drop(2) // Drop initial emissions from both preferences
                 .collectLatest {
-                    activity.runOnUiThread {
-                        currentChapters?.let {
-                            contentContainer.removeAllViews()
-                            loadedChapters.clear()
-                            currentChapterIndex = 0
-                            setChapters(it)
-                        }
-                    }
-                }
-        }
-
-        // Observe hide chapter title preference - reload content
-        scope.launch {
-            preferences.novelHideChapterTitle().changes()
-                .drop(1)
-                .collectLatest {
-                    activity.runOnUiThread {
-                        currentChapters?.let {
-                            contentContainer.removeAllViews()
-                            loadedChapters.clear()
-                            currentChapterIndex = 0
-                            setChapters(it)
-                        }
-                    }
+                    reloadContent()
                 }
         }
 
@@ -1053,16 +1036,11 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
 
     private fun ensureTtsInitialized() {
         if (tts == null) {
-            // Check if TTS data is available first
-            val intent = android.content.Intent(TextToSpeech.Engine.ACTION_CHECK_TTS_DATA)
             try {
                 tts = TextToSpeech(activity, this)
                 logcat(LogPriority.DEBUG) { "TTS: Initialization started" }
             } catch (e: Exception) {
                 logcat(LogPriority.ERROR) { "TTS: Failed to create TextToSpeech instance: ${e.message}" }
-                activity.runOnUiThread {
-                    logcat(LogPriority.DEBUG) { "TTS engine not available. Please install a TTS engine from Google Play." }
-                }
             }
         }
     }
@@ -1691,7 +1669,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
             // Create image getter if media is not blocked
             val blockMedia = preferences.novelBlockMedia().get()
             val imageGetter = if (!blockMedia) {
-                CoilImageGetter(textView, activity)
+                CoilImageGetter(textView, activity, scope)
             } else {
                 null
             }
@@ -1945,15 +1923,16 @@ class NovelViewer(val activity: ReaderActivity) : Viewer, TextToSpeech.OnInitLis
         // For infinite scroll with multiple chapters, scroll within current chapter
         var accumulatedHeight = 0
         for ((index, loadedChapter) in loadedChapters.withIndex()) {
+            val separatorHeight = loadedChapter.separatorView?.height ?: 0
             if (index == currentChapterIndex) {
-                val chapterHeight = loadedChapter.headerView.height + loadedChapter.textView.height
+                val chapterHeight = loadedChapter.headerView.height + loadedChapter.textView.height + separatorHeight
                 val visibleHeight = scrollView.height
                 val effectiveChapterHeight = (chapterHeight - visibleHeight).coerceAtLeast(1)
                 val chapterScrollY = accumulatedHeight + (effectiveChapterHeight * progress).toInt()
                 scrollView.scrollTo(0, chapterScrollY)
                 return
             }
-            accumulatedHeight += loadedChapter.headerView.height + loadedChapter.textView.height
+            accumulatedHeight += loadedChapter.headerView.height + loadedChapter.textView.height + separatorHeight
         }
     }
 

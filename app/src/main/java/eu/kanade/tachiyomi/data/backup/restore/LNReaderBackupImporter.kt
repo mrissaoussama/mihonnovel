@@ -336,7 +336,7 @@ class LNReaderBackupImporter(
         return ExtractedBackup(novels, categories, downloadZipBytes)
     }
 
-    private fun processDownloadZip(zipBytes: ByteArray) {
+    private suspend fun processDownloadZip(zipBytes: ByteArray) {
         try {
             ZipInputStream(zipBytes.inputStream()).use { zip ->
                 var entry = zip.nextEntry
@@ -351,12 +351,10 @@ class LNReaderBackupImporter(
                             try {
                                 val code = zip.bufferedReader().readText()
                                 if (code.isNotBlank()) {
-                                    kotlinx.coroutines.runBlocking {
-                                        val installed = jsPluginManager.installPluginFromCode(pluginId, code)
-                                        if (installed) {
-                                            logcat(LogPriority.INFO) {
-                                                "LNReaderImport: Installed plugin '$pluginId' from backup"
-                                            }
+                                    val installed = jsPluginManager.installPluginFromCode(pluginId, code)
+                                    if (installed) {
+                                        logcat(LogPriority.INFO) {
+                                            "LNReaderImport: Installed plugin '$pluginId' from backup"
                                         }
                                     }
                                 }

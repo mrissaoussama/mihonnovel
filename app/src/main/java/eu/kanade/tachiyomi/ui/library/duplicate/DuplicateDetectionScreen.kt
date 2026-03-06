@@ -735,9 +735,10 @@ class DuplicateDetectionScreen : Screen {
                 count = state.selection.size,
                 onDismiss = { screenModel.closeDeleteDialog() },
                 onConfirm = { deleteManga, deleteChapters ->
+                    val count = state.selection.size
                     scope.launch {
                         screenModel.deleteSelected(deleteManga, deleteChapters)
-                        snackbarHostState.showSnackbar(context.ctxStringResource(MR.strings.duplicate_deleted_count, state.selection.size))
+                        snackbarHostState.showSnackbar(context.ctxStringResource(MR.strings.duplicate_deleted_count, count))
                     }
                 },
             )
@@ -749,9 +750,10 @@ class DuplicateDetectionScreen : Screen {
                 categories = state.categories,
                 onDismiss = { screenModel.closeMoveToCategoryDialog() },
                 onConfirm = { categoryIds ->
+                    val count = state.selection.size
                     scope.launch {
                         screenModel.moveSelectedToCategories(categoryIds)
-                        snackbarHostState.showSnackbar(context.ctxStringResource(MR.strings.duplicate_moved_count, state.selection.size))
+                        snackbarHostState.showSnackbar(context.ctxStringResource(MR.strings.duplicate_moved_count, count))
                     }
                 },
             )

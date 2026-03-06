@@ -36,6 +36,7 @@ import cafe.adriel.voyager.core.screen.Screen
 import cafe.adriel.voyager.navigator.LocalNavigator
 import cafe.adriel.voyager.navigator.currentOrThrow
 import eu.kanade.tachiyomi.jsplugin.source.JsSource
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.source.service.SourceManager
@@ -230,9 +231,9 @@ class SourcePriorityScreenModel(
                 null
             }
         }.toMap()
-        mutableState.value = state.value.copy(
-            typePriorities = DuplicateDetectionScreenModel.SourceType.entries.associateWith { map[it] ?: 0 },
-        )
+        mutableState.update {
+            it.copy(typePriorities = DuplicateDetectionScreenModel.SourceType.entries.associateWith { type -> map[type] ?: 0 })
+        }
     }
 
     private fun loadSourcePriorities() {
@@ -250,7 +251,7 @@ class SourcePriorityScreenModel(
                 null
             }
         }.toMap()
-        mutableState.value = state.value.copy(sourcePriorities = map)
+        mutableState.update { it.copy(sourcePriorities = map) }
     }
 
     private fun loadSourceItems() {
@@ -267,25 +268,29 @@ class SourcePriorityScreenModel(
                         )
                     }
                     .sortedBy { it.displayName.lowercase() }
-                mutableState.value = state.value.copy(sourceItems = items)
+                mutableState.update { it.copy(sourceItems = items) }
             }
         }
     }
 
     fun setTypePriority(type: DuplicateDetectionScreenModel.SourceType, priority: Int) {
-        val newMap = state.value.typePriorities + (type to priority)
-        mutableState.value = state.value.copy(typePriorities = newMap)
-        saveTypePriorities(newMap)
+        mutableState.update { current ->
+            val newMap = current.typePriorities + (type to priority)
+            saveTypePriorities(newMap)
+            current.copy(typePriorities = newMap)
+        }
     }
 
     fun setSourcePriority(sourceId: Long, priority: Int) {
-        val newMap = if (priority == 0) {
-            state.value.sourcePriorities - sourceId
-        } else {
-            state.value.sourcePriorities + (sourceId to priority)
+        mutableState.update { current ->
+            val newMap = if (priority == 0) {
+                current.sourcePriorities - sourceId
+            } else {
+                current.sourcePriorities + (sourceId to priority)
+            }
+            saveSourcePriorities(newMap)
+            current.copy(sourcePriorities = newMap)
         }
-        mutableState.value = state.value.copy(sourcePriorities = newMap)
-        saveSourcePriorities(newMap)
     }
 
     private fun saveTypePriorities(map: Map<DuplicateDetectionScreenModel.SourceType, Int>) {

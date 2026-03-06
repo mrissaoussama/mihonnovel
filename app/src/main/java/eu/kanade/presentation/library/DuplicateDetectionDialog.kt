@@ -32,6 +32,8 @@ import eu.kanade.tachiyomi.ui.library.LibraryScreenModel
 import eu.kanade.tachiyomi.util.system.toast
 import tachiyomi.domain.category.interactor.GetCategories
 import tachiyomi.domain.source.service.SourceManager
+import tachiyomi.i18n.MR
+import tachiyomi.presentation.core.i18n.stringResource
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 
@@ -110,17 +112,17 @@ fun DuplicateDetectionDialog(
             if (duplicates.isNotEmpty()) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     TextButton(onClick = onSelectAllExceptFirst) {
-                        Text("Select All Except First")
+                        Text(stringResource(MR.strings.duplicate_select_all_except_first))
                     }
                     TextButton(onClick = onSelectAll) {
-                        Text("Select All")
+                        Text(stringResource(MR.strings.action_select_all))
                     }
                 }
             }
         },
         dismissButton = {
             TextButton(onClick = onDismissRequest) {
-                Text("Close")
+                Text(stringResource(MR.strings.action_close))
             }
         },
     )

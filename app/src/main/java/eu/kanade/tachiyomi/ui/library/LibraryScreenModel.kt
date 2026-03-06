@@ -25,6 +25,7 @@ import eu.kanade.tachiyomi.data.download.DownloadCache
 import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.data.download.DownloadProvider
 import eu.kanade.tachiyomi.data.epub.EpubExportJob
+import eu.kanade.tachiyomi.data.library.LibraryUpdateJob
 import eu.kanade.tachiyomi.data.track.TrackerManager
 import eu.kanade.tachiyomi.data.translation.TranslationJob
 import eu.kanade.tachiyomi.data.translation.TranslationService
@@ -35,8 +36,6 @@ import eu.kanade.tachiyomi.util.chapter.getNextUnread
 import eu.kanade.tachiyomi.util.removeCovers
 import kotlinx.collections.immutable.ImmutableList
 import kotlinx.collections.immutable.toImmutableList
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -1093,7 +1092,8 @@ class LibraryScreenModel(
     }
 
     /**
-     * Update selected novels by fetching chapters from source
+     * Update selected entries by delegating to [LibraryUpdateJob] so updates respect
+     * extension rate-limits, throttling, semaphores, and show progress notifications.
      */
     fun updateSelected(
         mangaList: List<Manga>,
@@ -1104,70 +1104,26 @@ class LibraryScreenModel(
         if (mangaList.isEmpty()) return
         clearSelection()
 
-        val skipUpdateTime = try {
-            libraryPreferences.skipUpdateTime().get()
-        } catch (e: Exception) {
-            0
-        }
-        val currentTime = System.currentTimeMillis()
-
-        // Use launchNonCancellable so the job survives navigation away
         val context = Injekt.get<android.app.Application>()
+        val started = LibraryUpdateJob.startNow(
+            context = context,
+            mangaIds = mangaList.map { it.id }.toLongArray(),
+            fetchChapters = fetchChapters,
+            fetchDetails = fetchDetails,
+            ignoreSkipRecentlyUpdated = ignoreSkipRecentlyUpdated,
+        )
         screenModelScope.launchNonCancellable {
-            snackbarHostState.showSnackbar(
-                message = context.stringResource(MR.strings.batch_updating_entries, mangaList.size),
-                duration = SnackbarDuration.Short,
-            )
-
-            val results = mangaList.map { manga ->
-                async {
-                    try {
-                        if (!ignoreSkipRecentlyUpdated && skipUpdateTime > 0 && manga.lastUpdate > 0) {
-                            val daysSinceUpdate = (currentTime - manga.lastUpdate) / (1000 * 60 * 60 * 24)
-                            if (daysSinceUpdate < skipUpdateTime) {
-                                return@async false
-                            }
-                        }
-
-                        val source = sourceManager.getOrStub(manga.source)
-                        if (source is StubSource) {
-                            logcat(LogPriority.WARN) { "No source for ${manga.title}" }
-                            return@async false
-                        }
-
-                        if (fetchDetails) {
-                            val networkManga = source.getMangaDetails(manga.toSManga())
-                            updateManga.awaitUpdateFromSource(manga, networkManga, manualFetch = true)
-                            logcat(LogPriority.DEBUG) { "Updated details for ${manga.title}" }
-                        }
-
-                        if (fetchChapters) {
-                            val chapters = withIOContext { source.getChapterList(manga.toSManga()) }
-                            syncChaptersWithSource.await(chapters, manga, source)
-                            logcat(LogPriority.DEBUG) { "Updated ${manga.title}: ${chapters.size} chapters" }
-                        }
-
-                        true
-                    } catch (e: Exception) {
-                        logcat(LogPriority.ERROR, e) { "Failed to update ${manga.title}" }
-                        false
-                    }
-                }
-            }
-            val outcomes = results.awaitAll()
-            val successCount = outcomes.count { it }
-            val failCount = mangaList.size - successCount
-            logcat(LogPriority.INFO) { "Batch update complete: $successCount/${mangaList.size} succeeded" }
-
-            val message = if (failCount > 0) {
-                context.stringResource(MR.strings.batch_update_complete_with_failures, successCount, mangaList.size, failCount)
+            if (started) {
+                snackbarHostState.showSnackbar(
+                    message = context.stringResource(MR.strings.batch_updating_entries, mangaList.size),
+                    duration = SnackbarDuration.Short,
+                )
             } else {
-                context.stringResource(MR.strings.batch_update_complete, successCount)
+                snackbarHostState.showSnackbar(
+                    message = context.stringResource(MR.strings.update_already_running),
+                    duration = SnackbarDuration.Short,
+                )
             }
-            snackbarHostState.showSnackbar(
-                message = message,
-                duration = SnackbarDuration.Short,
-            )
         }
     }
 

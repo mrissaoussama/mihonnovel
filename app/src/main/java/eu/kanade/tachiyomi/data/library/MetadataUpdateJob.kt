@@ -108,8 +108,8 @@ class MetadataUpdateJob(private val context: Context, workerParams: WorkerParame
                 .values
                 .map { mangaInSource ->
                     async {
-                        semaphore.withPermit {
-                            mangaInSource.forEach { libraryManga ->
+                        mangaInSource.forEach { libraryManga ->
+                            semaphore.withPermit {
                                 val manga = libraryManga.manga
                                 ensureActive()
 

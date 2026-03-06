@@ -32,7 +32,7 @@ class FontManager(
     private val json = Json { ignoreUnknownKeys = true }
 
     // Cache for loaded typefaces
-    private val typefaceCache = mutableMapOf<String, Typeface>()
+    private val typefaceCache = java.util.concurrent.ConcurrentHashMap<String, Typeface>()
 
     /**
      * Get the fonts directory, creating it if necessary.

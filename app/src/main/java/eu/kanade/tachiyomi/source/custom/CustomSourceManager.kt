@@ -5,6 +5,7 @@ import eu.kanade.tachiyomi.source.CatalogueSource
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 import logcat.LogPriority
@@ -79,7 +80,7 @@ class CustomSourceManager(
             saveSourceConfig(config)
 
             // Add to list
-            _customSources.value = _customSources.value + source
+            _customSources.update { it + source }
 
             Result.success(source)
         } catch (e: Exception) {
@@ -111,7 +112,7 @@ class CustomSourceManager(
         val source = _customSources.value.find { it.id == sourceId } ?: return false
 
         // Remove from list
-        _customSources.value = _customSources.value.filter { it.id != sourceId }
+        _customSources.update { it.filter { s -> s.id != sourceId } }
 
         // Delete file
         val file = File(customSourcesDir, "${sanitizeFilename(source.name)}.json")

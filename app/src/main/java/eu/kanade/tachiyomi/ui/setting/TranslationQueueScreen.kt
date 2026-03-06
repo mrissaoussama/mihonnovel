@@ -55,6 +55,7 @@ object TranslationQueueScreen : Screen() {
         val progress by translationService.progressState.collectAsState()
         val isPaused by translationService.isPaused.collectAsState()
         val queueItems by translationService.queueState.collectAsState()
+        val currentTranslatingChapterId by translationService.currentTranslatingChapterId.collectAsState()
 
         val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior(rememberTopAppBarState())
 
@@ -166,8 +167,7 @@ object TranslationQueueScreen : Screen() {
                         TranslationQueueItem(
                             task = task,
                             isCurrentlyTranslating = progress.isRunning &&
-                                task.status == tachiyomi.domain.translation.model.TranslationStatus.QUEUED &&
-                                queueItems.indexOf(task) == 0,
+                                task.chapterId == currentTranslatingChapterId,
                             onRemove = { translationService.dequeue(task.chapterId) },
                         )
                     }

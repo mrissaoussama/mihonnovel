@@ -130,8 +130,8 @@ object NovelViewerTextUtils {
         if (text.isEmpty() || chapterName.isEmpty()) return false
         // Exact match
         if (text == chapterName) return true
-        // Chapter name contains the text (e.g., "Chapter 1" contains "1")
-        if (chapterName.contains(text) && text.length > 2) return true
+        // Chapter name contains the text, but only if it covers a significant portion
+        if (chapterName.contains(text) && text.length > chapterName.length * 0.5) return true
         // Text contains chapter name
         if (text.contains(chapterName)) return true
         // Check for common chapter patterns

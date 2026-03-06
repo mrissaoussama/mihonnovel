@@ -217,7 +217,7 @@ class MassImport(
         val cleanUrls = validUrls
 
         if (novelSources.isEmpty()) {
-            urls.forEach { url ->
+            cleanUrls.forEach { url ->
                 currentResult.errored.add(ErroredNovel(url, "No novel sources installed"))
             }
             _result.value = currentResult

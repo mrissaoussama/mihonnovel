@@ -367,18 +367,7 @@ class ReaderViewModel @JvmOverloads constructor(
         }
 
         // Prioritize this chapter for translation if it's a novel and translation is enabled
-        // Manually read chapters get highest priority
-        val currentManga = manga
-        if (currentManga != null &&
-            sourceManager.get(currentManga.source)?.isNovelSource() == true &&
-            translationPreferences.translationEnabled().get()
-        ) {
-            translationService.enqueue(
-                manga = currentManga,
-                chapter = chapter.chapter.toDomainChapter()!!,
-                priority = TranslationService.PRIORITY_MANUAL_READ,
-            )
-        }
+        enqueueTranslationIfNeeded(chapter)
 
         return newChapters
     }
@@ -538,18 +527,26 @@ class ReaderViewModel @JvmOverloads constructor(
                 }
             }
 
-            val currentManga = manga
-            if (
-                currentManga != null &&
-                sourceManager.get(currentManga.source)?.isNovelSource() == true &&
-                translationPreferences.translationEnabled().get()
-            ) {
-                translationService.enqueue(
-                    manga = currentManga,
-                    chapter = chapter.chapter.toDomainChapter()!!,
-                    priority = TranslationService.PRIORITY_MANUAL_READ,
-                )
-            }
+            enqueueTranslationIfNeeded(chapter)
+        }
+    }
+
+    /**
+     * Enqueue a chapter for translation if the manga is a novel source and translation is enabled.
+     * Manually read chapters get [TranslationService.PRIORITY_MANUAL_READ].
+     */
+    private fun enqueueTranslationIfNeeded(chapter: ReaderChapter) {
+        val currentManga = manga ?: return
+        if (
+            sourceManager.get(currentManga.source)?.isNovelSource() == true &&
+            translationPreferences.translationEnabled().get() &&
+            translationPreferences.smartAutoTranslate().get()
+        ) {
+            translationService.enqueue(
+                manga = currentManga,
+                chapter = chapter.chapter.toDomainChapter()!!,
+                priority = TranslationService.PRIORITY_MANUAL_READ,
+            )
         }
     }
 

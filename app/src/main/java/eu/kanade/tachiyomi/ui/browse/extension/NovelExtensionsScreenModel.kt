@@ -110,24 +110,25 @@ class NovelExtensionsScreenModel(
                         val installed = jsInstalled.find { it.plugin.id == plugin.id }
                         val verCode = plugin.version.replace(".", "").toLongOrNull() ?: 0L
                         val instVerCode = installed?.plugin?.version?.replace(".", "")?.toLongOrNull() ?: 0L
+                        val langIso = plugin.langCode()
                         Extension.JsPlugin(
                             name = plugin.name,
                             pkgName = plugin.pkgName(),
                             versionName = plugin.version,
                             versionCode = verCode,
                             libVersion = 0.0,
-                            lang = plugin.lang,
+                            lang = langIso,
                             isNsfw = false,
                             isNovel = true,
                             sources = listOf(
                                 Extension.Available.Source(
                                     id = plugin.sourceId(),
-                                    lang = plugin.lang,
+                                    lang = langIso,
                                     name = plugin.name,
                                     baseUrl = plugin.site,
                                 ),
                             ),
-                            iconUrl = plugin.iconUrl,
+                            iconUrl = jsPluginManager.getIconUrl(plugin),
                             repoUrl = plugin.repositoryUrl ?: "",
                             isInstalled = installed != null,
                             hasUpdate = installed != null && verCode > instVerCode,
@@ -141,24 +142,25 @@ class NovelExtensionsScreenModel(
                         .map { installed ->
                             val plugin = installed.plugin
                             val verCode = plugin.version.replace(".", "").toLongOrNull() ?: 0L
+                            val langIso = plugin.langCode()
                             Extension.JsPlugin(
                                 name = plugin.name,
                                 pkgName = plugin.pkgName(),
                                 versionName = plugin.version,
                                 versionCode = verCode,
                                 libVersion = 0.0,
-                                lang = plugin.lang,
+                                lang = langIso,
                                 isNsfw = false,
                                 isNovel = true,
                                 sources = listOf(
                                     Extension.Available.Source(
                                         id = plugin.sourceId(),
-                                        lang = plugin.lang,
+                                        lang = langIso,
                                         name = plugin.name,
                                         baseUrl = plugin.site,
                                     ),
                                 ),
-                                iconUrl = plugin.iconUrl,
+                                iconUrl = jsPluginManager.getIconUrl(plugin),
                                 repoUrl = installed.repositoryUrl,
                                 isInstalled = true,
                                 hasUpdate = false,
