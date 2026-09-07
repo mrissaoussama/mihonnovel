@@ -15,10 +15,15 @@ object NovelProgress {
     const val DONE_THRESHOLD = 0.99f
 
     /**
-     * After a failed next-chapter append, suppress auto-load for this long so a chapter that keeps
-     * failing at the bottom can't respawn a request every scroll frame. Shared by both renderers.
+     * Minimum non-whitespace length for extracted chapter text to count as real content.
+     * Deliberately low - some real chapters are only a sentence or two; this only catches
+     * near-empty output, not "suspiciously short".
      */
-    const val NEXT_LOAD_RETRY_COOLDOWN_MS = 15_000L
+    const val MIN_USABLE_CONTENT_CHARS = 10
+
+    /** True when [text] has enough extracted (post-pipeline) content to display/append. */
+    fun isUsableChapterText(text: String?): Boolean =
+        text != null && text.count { !it.isWhitespace() } >= MIN_USABLE_CONTENT_CHARS
 
     /** Snap a near-complete ratio to a clean 1f so the stored percent lands on 100. */
     fun snapProgress(progress: Float): Float = if (progress >= DONE_THRESHOLD) 1f else progress

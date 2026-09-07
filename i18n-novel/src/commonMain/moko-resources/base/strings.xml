@@ -967,6 +967,17 @@
     <string name="novel_error_cat_source_unsupported">Source does not support this operation</string>
     <string name="novel_error_cat_out_of_memory">Out of memory — chapter may be too large</string>
     <string name="novel_error_cat_unknown">Error (%s)</string>
+    <string name="novel_error_retry">Retry</string>
+    <string name="novel_inline_tap_to_retry">%1$s (tap to retry)</string>
+    <string name="novel_inline_tap_to_dismiss">%1$s (tap to dismiss)</string>
+    <string name="novel_error_no_anchor_chapter">No chapter to continue from for infinite scroll</string>
+    <string name="novel_error_no_next_chapter_available">No next chapter available</string>
+    <string name="novel_error_chapter_no_id">Next chapter has no id</string>
+    <string name="novel_error_no_page_in_next_chapter">No page found in next chapter</string>
+    <string name="novel_error_no_loader_next_chapter">No loader available for next chapter</string>
+    <string name="novel_error_timeout_next_chapter">Timed out loading next chapter</string>
+    <string name="novel_error_couldnt_load_next_chapter">Couldn\'t load next chapter</string>
+    <string name="novel_error_generic_next_chapter">Error: %1$s</string>
 
     <string name="pref_novel_status_bar">Reading status bar</string>
     <string name="pref_novel_status_bar_show_time">Show current time</string>

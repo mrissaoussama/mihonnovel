@@ -1738,7 +1738,7 @@ class ReaderActivity : BaseActivity() {
                 return@launch
             }
             resetNovelPageInfoIfPaged()
-            viewModel.loadNextChapter()
+            if (!viewModel.loadNextChapter()) return@launch
             (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate("next")
             // Only reset to page 0 if NOT using infinite scroll for novel viewers
             val isNovelViewer = viewModel.state.value.viewer is NovelViewer ||
@@ -1771,7 +1771,7 @@ class ReaderActivity : BaseActivity() {
                 return@launch
             }
             resetNovelPageInfoIfPaged()
-            viewModel.loadPreviousChapter()
+            if (!viewModel.loadPreviousChapter()) return@launch
             (viewModel.state.value.viewer as? NovelWebViewViewer)?.onChapterNavigate("prev")
             // Only reset to page 0 if NOT using infinite scroll for novel viewers
             val isNovelViewer = viewModel.state.value.viewer is NovelViewer ||

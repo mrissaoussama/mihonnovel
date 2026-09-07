@@ -116,6 +116,26 @@ class ChapterQueueTest {
     }
 
     @Test
+    fun `removeLast pops tail without moving cursor`() {
+        val q = queue()
+        q.append(Item(1))
+        q.append(Item(2))
+        q.append(Item(3))
+        q.currentIndex = 0
+        assertEquals(Item(3), q.removeLast())
+        assertEquals(2, q.size)
+        assertEquals(0, q.currentIndex)
+        assertEquals(Item(1), q.current())
+        assertFalse(q.contains(3))
+    }
+
+    @Test
+    fun `removeLast on empty returns null`() {
+        val q = queue()
+        assertNull(q.removeLast())
+    }
+
+    @Test
     fun `removeFirstN drops requested count`() {
         val q = queue()
         for (i in 1L..5L) q.append(Item(i))

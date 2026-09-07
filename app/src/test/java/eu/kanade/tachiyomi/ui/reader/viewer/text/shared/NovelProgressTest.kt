@@ -70,4 +70,32 @@ class NovelProgressTest {
         assertEquals(emptyList<Int>(), NovelProgress.forwardChaptersToMarkRead(-1, 2, 5))
         assertEquals(emptyList<Int>(), NovelProgress.forwardChaptersToMarkRead(9, 12, 4))
     }
+
+    @Test
+    fun `isUsableChapterText rejects null, empty and whitespace-only text`() {
+        assertFalse(NovelProgress.isUsableChapterText(null))
+        assertFalse(NovelProgress.isUsableChapterText(""))
+        assertFalse(NovelProgress.isUsableChapterText("   \n\t  "))
+    }
+
+    @Test
+    fun `isUsableChapterText rejects near-empty content that slipped past a raw-blank check`() {
+        // A source returning a template/interstitial page can extract down to just a few
+        // characters even though the raw HTML wasn't blank.
+        assertFalse(NovelProgress.isUsableChapterText("..."))
+        assertFalse(NovelProgress.isUsableChapterText("N/A"))
+    }
+
+    @Test
+    fun `isUsableChapterText does not count whitespace toward the minimum`() {
+        // 9 non-whitespace chars padded with spaces must still fail (< 10).
+        assertFalse(NovelProgress.isUsableChapterText("a b c d e f g h i"))
+        // 10 non-whitespace chars must pass.
+        assertTrue(NovelProgress.isUsableChapterText("a b c d e f g h i j"))
+    }
+
+    @Test
+    fun `isUsableChapterText accepts a genuinely short real chapter`() {
+        assertTrue(NovelProgress.isUsableChapterText("The end. There was nothing more to say."))
+    }
 }

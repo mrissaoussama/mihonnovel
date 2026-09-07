@@ -44,6 +44,24 @@ class ChapterQueue<T>(private val idOf: (T) -> Long?) {
 
     fun indexOf(chapterId: Long): Int = items.indexOfFirst { idOf(it) == chapterId }
 
+    /** Removes and returns the most recently appended item, leaving `currentIndex` untouched. */
+    fun removeLast(): T? {
+        if (items.isEmpty()) return null
+        val removed = items.removeAt(items.size - 1)
+        idOf(removed)?.let { ids.remove(it) }
+        return removed
+    }
+
+    fun removeById(chapterId: Long?): T? {
+        if (chapterId == null) return null
+        val index = indexOf(chapterId)
+        if (index < 0) return null
+        val removed = items.removeAt(index)
+        ids.remove(chapterId)
+        if (index <= currentIndex) currentIndex = (currentIndex - 1).coerceAtLeast(0)
+        return removed
+    }
+
     fun removeFirst(): T? {
         if (items.isEmpty()) return null
         val removed = items.removeAt(0)

@@ -210,6 +210,12 @@
     window.updateChapterBoundaries = function () {
         var dividers = document.querySelectorAll('.__CHAPTER_DIVIDER_CLASS__');
         var scrollY = window.scrollY || window.pageYOffset || 0;
+        // An inline loading/error banner appended past the last chapter is not chapter content -
+        // it must not inflate the last chapter's height and skew its progress ratio while shown.
+        var trailingBanner = document.getElementById('inline-loading') || document.getElementById('inline-error');
+        var docEnd = trailingBanner
+            ? trailingBanner.getBoundingClientRect().top + scrollY
+            : document.body.scrollHeight;
         var boundaries = [];
         dividers.forEach(function (divider, index) {
             var chapterId = divider.getAttribute('__CHAPTER_ID_ATTR__');
@@ -218,7 +224,7 @@
             var nextDivider = dividers[index + 1];
             var endOffset = nextDivider
                 ? nextDivider.getBoundingClientRect().top + scrollY
-                : document.body.scrollHeight;
+                : docEnd;
             boundaries.push({
                 chapterId: chapterId,
                 startOffset: startOffset,

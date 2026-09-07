@@ -152,9 +152,9 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
     // Latched once the novel has no further chapter to append.
     private var reachedNovelEnd = false
 
-    // Suppresses auto-load for NEXT_LOAD_RETRY_COOLDOWN_MS after a failure so a chapter that keeps
-    // timing out at the bottom can't respawn a request every scroll frame.
-    private var lastNextLoadFailedAt = 0L
+    // Set after a failed infinite-scroll append; blocks auto-append retries until the user taps
+    // the inline error banner (never auto-retries on its own).
+    private var nextLoadRequiresManualRetry = false
 
     // Blocks flushing the backward-entry 1f baseline until a real scroll sample replaces it.
     private var awaitingFirstScrollSample = false
@@ -333,12 +333,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 // chunks and during pause/resume, causing the scroll listener to start a
                 // visible chapter fetch while TTS still owns the chapter transition.
                 val ttsIsDrivingChapterHandoff = ttsController.isTtsAutoPlay
-                val inFailureCooldown =
-                    System.currentTimeMillis() - lastNextLoadFailedAt < NovelProgress.NEXT_LOAD_RETRY_COOLDOWN_MS
                 if (!isRestoringScroll && !ttsIsDrivingChapterHandoff && chapterProgress >= effectiveThreshold &&
                     !isLoadingNext &&
                     !reachedNovelEnd &&
-                    !inFailureCooldown &&
+                    !nextLoadRequiresManualRetry &&
                     onLastLoaded
                 ) {
                     logcat(LogPriority.DEBUG) {
@@ -550,7 +548,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             logcat(LogPriority.ERROR) {
                 "NovelViewer: loadNext failed, no anchor (loadedCount=${loadedChapters.size})"
             }
-            inlineFeedback.showInlineError("No anchor chapter for infinite scroll", isPrepend = false)
+            inlineFeedback.showInlineError(
+                activity.stringResource(TDMR.strings.novel_error_no_anchor_chapter),
+                isPrepend = false,
+            )
             return
         }
 
@@ -564,7 +565,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         }
 
         val retry = {
-            lastNextLoadFailedAt = 0L
+            nextLoadRequiresManualRetry = false
             loadNextChapterIfAvailable()
         }
         var loadFailed = false
@@ -574,7 +575,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                 val preparedChapter = activity.viewModel.prepareNextChapterForInfiniteScroll(anchor) ?: run {
                     logcat(LogPriority.WARN) { "NovelViewer: No next chapter after ${anchor.chapter.name}" }
                     // Surface once, then latch so the scroll listener stops re-triggering.
-                    if (!reachedNovelEnd) inlineFeedback.showInlineError("No next chapter available", isPrepend = false)
+                    if (!reachedNovelEnd) {
+                        inlineFeedback.showInlineError(
+                            activity.stringResource(TDMR.strings.novel_error_no_next_chapter_available),
+                            isPrepend = false,
+                        )
+                    }
                     reachedNovelEnd = true
                     return@launch
                 }
@@ -589,15 +595,28 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     return@launch
                 }
                 val page = preparedChapter.pages?.firstOrNull() ?: run {
-                    logcat(LogPriority.ERROR) { "NovelViewer: No page in prepared next chapter" }
+                    val prepareError = (preparedChapter.state as? ReaderChapter.State.Error)?.error
+                    logcat(LogPriority.ERROR) { "NovelViewer: No page in prepared next chapter, prepareError=$prepareError" }
                     loadFailed = true
-                    inlineFeedback.showInlineError("No page in next chapter", isPrepend = false, onRetry = retry)
+                    if (prepareError != null) {
+                        inlineFeedback.showInlineError(prepareError, isPrepend = false, onRetry = retry)
+                    } else {
+                        inlineFeedback.showInlineError(
+                            activity.stringResource(TDMR.strings.novel_error_no_page_in_next_chapter),
+                            isPrepend = false,
+                            onRetry = retry,
+                        )
+                    }
                     return@launch
                 }
                 val loader = page.chapter.pageLoader ?: run {
                     logcat(LogPriority.ERROR) { "NovelViewer: No loader for next chapter" }
                     loadFailed = true
-                    inlineFeedback.showInlineError("No loader for next chapter", isPrepend = false, onRetry = retry)
+                    inlineFeedback.showInlineError(
+                        activity.stringResource(TDMR.strings.novel_error_no_loader_next_chapter),
+                        isPrepend = false,
+                        onRetry = retry,
+                    )
                     return@launch
                 }
 
@@ -606,38 +625,47 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     "NovelViewer: loading page for next ${preparedChapter.chapter.id}, state=${page.status}"
                 }
 
-                val loaded = try {
-                    awaitPageText(page = page, loader = loader, timeoutMs = 30_000)
+                val loadError: Throwable? = try {
+                    val loaded = awaitPageText(page = page, loader = loader, timeoutMs = 30_000)
+                    if (loaded) {
+                        null
+                    } else {
+                        (page.status as? Page.State.Error)?.error
+                            ?: Exception(activity.stringResource(TDMR.strings.novel_error_couldnt_load_next_chapter))
+                    }
                 } catch (_: TimeoutCancellationException) {
                     logcat(LogPriority.ERROR) { "NovelViewer: Timed out loading next chapter page after 30s" }
-                    false
+                    java.util.concurrent.TimeoutException(
+                        activity.stringResource(TDMR.strings.novel_error_timeout_next_chapter),
+                    )
                 } catch (_: CancellationException) {
-                    // Reader was closed/navigated away; don't surface as an error or latch a cooldown.
                     logcat(LogPriority.DEBUG) { "NovelViewer: loadNext cancelled" }
                     return@launch
                 } catch (e: Exception) {
                     logcat(LogPriority.ERROR) { "NovelViewer: Error loading next chapter page: ${e.message}" }
-                    false
+                    e
                 }
 
-                // Covers both a thrown failure and a page cached in Error state (returns false
-                // without throwing), so a chapter that keeps failing always latches the cooldown.
-                if (!loaded) {
+                if (loadError != null) {
                     loadFailed = true
-                    inlineFeedback.showInlineError("Couldn't load next chapter", isPrepend = false, onRetry = retry)
+                    inlineFeedback.showInlineError(
+                        loadError,
+                        isPrepend = false,
+                        onRetry = retry,
+                    )
                     return@launch
                 }
 
                 logcat(LogPriority.DEBUG) { "NovelViewer: appending chapter ${preparedChapter.chapter.id}" }
                 displayChapter(preparedChapter, page)
-                lastNextLoadFailedAt = 0L
                 logcat(LogPriority.INFO) {
                     "NovelViewer: Successfully appended next chapter ${preparedChapter.chapter.name}"
                 }
             } finally {
                 inlineFeedback.hideInlineLoading()
                 isLoadingNext = false
-                if (loadFailed) lastNextLoadFailedAt = System.currentTimeMillis()
+                // displayChapter's own usability check can still set this back to true afterward.
+                nextLoadRequiresManualRetry = loadFailed
             }
         }
     }
@@ -1385,6 +1413,15 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
 
     override fun setChapters(chapters: ViewerChapters) {
         renderGeneration++
+        // A getPageList failure leaves the chapter in Error state with no pages - must be checked
+        // before the null-pages early return below, which would otherwise swallow it silently.
+        val chapterLoadError = (chapters.currChapter.state as? ReaderChapter.State.Error)?.error
+        if (chapterLoadError != null) {
+            hideLoadingIndicator()
+            abortPendingTtsOnLoadFailure()
+            displayError(chapterLoadError)
+            return
+        }
         val page = chapters.currChapter.pages?.firstOrNull() ?: return
 
         loadJob?.cancel()
@@ -1533,7 +1570,7 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         )
         scope.launch {
             val pre = withContext(Dispatchers.Default) { contentPipeline.preTranslate(rawContent, cfg) }
-            if (activity.isTranslationEnabled() && !preferences.novelShowRawHtml.get()) {
+            val finalProcessed = if (activity.isTranslationEnabled() && !preferences.novelShowRawHtml.get()) {
                 val chapterId = chapter.chapter.id
                 val labelRes = if (activity.hasCachedTranslation(chapterId)) {
                     TDMR.strings.novel_chapter_translating_from_cache
@@ -1541,14 +1578,41 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
                     TDMR.strings.novel_chapter_translating_from_api
                 }
                 block.showPlaceholder(activity.stringResource(labelRes))
-                val translated = withContext(Dispatchers.Default) {
+                withContext(Dispatchers.Default) {
                     contentPipeline.finalize(pre, cfg) { activity.translateContentIfEnabled(it, chapterId) }
                 }
-                setChapterContent(loadedChapter, translated)
             } else {
-                val processed = withContext(Dispatchers.Default) { contentPipeline.finalize(pre, cfg) }
-                setChapterContent(loadedChapter, processed)
+                withContext(Dispatchers.Default) { contentPipeline.finalize(pre, cfg) }
             }
+
+            // Raw HTML wasn't blank, but the pipeline's selectors can still extract it to nothing;
+            // header/block were already attached above, so undo that instead of displaying it empty.
+            if (!NovelProgress.isUsableChapterText(finalProcessed.text)) {
+                logcat(LogPriority.ERROR) {
+                    "NovelViewer: Chapter ${chapter.chapter.name} extracted to unusable content"
+                }
+                contentContainer.removeView(headerView)
+                contentContainer.removeView(block.container)
+                loadedChapter.separatorView?.let { contentContainer.removeView(it) }
+                chapterQueue.removeById(chapter.chapter.id)
+                if (!isAppend) {
+                    currentChapterIndex = (loadedChapters.size - 1).coerceAtLeast(0)
+                }
+                if (isAppend) {
+                    nextLoadRequiresManualRetry = true
+                    inlineFeedback.showInlineError(
+                        activity.stringResource(TDMR.strings.novel_error_empty_chapter),
+                        isPrepend = false,
+                        onRetry = { nextLoadRequiresManualRetry = false; loadNextChapterIfAvailable() },
+                    )
+                } else {
+                    abortPendingTtsOnLoadFailure()
+                    displayError(Exception(activity.stringResource(TDMR.strings.novel_error_empty_chapter)))
+                }
+                return@launch
+            }
+
+            setChapterContent(loadedChapter, finalProcessed)
         }
 
         applyBackgroundColor()
@@ -1878,6 +1942,23 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             ).apply { bottomMargin = 32 }
         }
 
+        val buttonRow = LinearLayout(activity).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+
+        val retryButton = android.widget.Button(activity).apply {
+            text = activity.stringResource(TDMR.strings.novel_error_retry)
+            isAllCaps = false
+            textSize = 14f
+            setTextColor(0xFF4A90D9.toInt())
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { marginEnd = 16 }
+            setOnClickListener { activity.viewModel.reloadChapter(fromSource = false) }
+        }
+
         val copyButton = android.widget.Button(activity).apply {
             text = activity.stringResource(TDMR.strings.novel_error_copy_details)
             isAllCaps = false
@@ -1893,9 +1974,12 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
             }
         }
 
+        buttonRow.addView(retryButton)
+        buttonRow.addView(copyButton)
+
         errorContainer.addView(categoryView)
         errorContainer.addView(summaryView)
-        errorContainer.addView(copyButton)
+        errorContainer.addView(buttonRow)
 
         contentContainer.removeAllViews()
         contentContainer.addView(errorContainer)
