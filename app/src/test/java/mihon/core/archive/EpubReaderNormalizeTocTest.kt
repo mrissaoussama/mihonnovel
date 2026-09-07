@@ -108,9 +108,20 @@ class EpubReaderNormalizeTocTest {
             "Erster Teil" to 0,
             "Kapitel 1" to 1,
             "第1章" to 1,
+            "Zweiter Teil" to 0,
+            "Kapitel 2" to 1,
         )
 
-        assertEquals(listOf("Erster Teil", "Erster Teil - Kapitel 1", "Erster Teil - 第1章"), result)
+        assertEquals(
+            listOf(
+                "Erster Teil",
+                "Erster Teil - Kapitel 1",
+                "Erster Teil - 第1章",
+                "Zweiter Teil",
+                "Zweiter Teil - Kapitel 2",
+            ),
+            result,
+        )
     }
 
     @Test
@@ -119,9 +130,20 @@ class EpubReaderNormalizeTocTest {
             "Book I" to 0,
             "Part A" to 1,
             "Chapter 1" to 2,
+            "Part B" to 1,
+            "Book II" to 0,
         )
 
-        assertEquals(listOf("Book I", "Book I - Part A", "Book I - Part A - Chapter 1"), result)
+        assertEquals(
+            listOf(
+                "Book I",
+                "Book I - Part A",
+                "Book I - Part A - Chapter 1",
+                "Book I - Part B",
+                "Book II",
+            ),
+            result,
+        )
     }
 
     @Test
@@ -130,8 +152,46 @@ class EpubReaderNormalizeTocTest {
         val result = normalize(
             "Volume 1" to 0,
             "Chapter 1: The Beginning" to 1,
+            "Volume 2" to 0,
+            "Chapter 1: The Sequel" to 1,
         )
 
-        assertEquals(listOf("Volume 1", "Volume 1 - Chapter 1: The Beginning"), result)
+        assertEquals(
+            listOf(
+                "Volume 1",
+                "Volume 1 - Chapter 1: The Beginning",
+                "Volume 2",
+                "Volume 2 - Chapter 1: The Sequel",
+            ),
+            result,
+        )
+    }
+
+
+    @Test
+    fun `a lone root with no sibling is not used as an ancestor prefix for its descendants`() {
+        val result = normalize(
+            "Some Book Title" to 0,
+            "Synopsis" to 1,
+            "Chapter 1: Foo" to 1,
+            "Chapter 2: Bar" to 1,
+            "Chapter 3: Baz" to 1,
+        )
+
+        assertEquals(
+            listOf("Some Book Title", "Synopsis", "Chapter 1: Foo", "Chapter 2: Bar", "Chapter 3: Baz"),
+            result,
+        )
+    }
+
+    @Test
+    fun `a lone root nested several levels deep is still not prefixed when no level has a sibling`() {
+        val result = normalize(
+            "Some Book Title" to 0,
+            "Front Matter" to 1,
+            "Chapter 1: Foo" to 2,
+        )
+
+        assertEquals(listOf("Some Book Title", "Front Matter", "Chapter 1: Foo"), result)
     }
 }

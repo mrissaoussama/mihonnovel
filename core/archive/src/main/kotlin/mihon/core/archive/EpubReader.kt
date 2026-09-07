@@ -651,6 +651,8 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
         }
 
         private fun normalizeByDepth(toc: List<EpubChapter>): List<EpubChapter> {
+
+            val hasSibling = computeSiblingPresence(toc)
             val ancestors = mutableListOf<String>()
 
             return toc.mapIndexed { index, chapter ->
@@ -668,9 +670,28 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
                     else -> rawTitle
                 }
 
-                ancestors.add(rawTitle)
+                ancestors.add(if (hasSibling[index]) rawTitle else "")
                 chapter.copy(title = normalizedTitle)
             }
+        }
+
+        /**
+         * For each TOC entry, returns whether it has at least one sibling under the same parent
+         * (same nesting depth, same ancestor chain), based on [EpubChapter.depth].
+         */
+        private fun computeSiblingPresence(toc: List<EpubChapter>): BooleanArray {
+            val parentIndexOf = IntArray(toc.size)
+            val stack = mutableListOf<Int>()
+
+            toc.forEachIndexed { index, chapter ->
+                val depth = chapter.depth.coerceAtLeast(0)
+                if (stack.size > depth) stack.subList(depth, stack.size).clear()
+                parentIndexOf[index] = if (depth == 0) -1 else stack.getOrElse(depth - 1) { -1 }
+                if (stack.size == depth) stack.add(index) else stack[depth] = index
+            }
+
+            val childCountByParent = parentIndexOf.toList().groupingBy { it }.eachCount()
+            return BooleanArray(toc.size) { index -> (childCountByParent[parentIndexOf[index]] ?: 0) > 1 }
         }
 
         private fun normalizeByHeuristic(toc: List<EpubChapter>): List<EpubChapter> {
