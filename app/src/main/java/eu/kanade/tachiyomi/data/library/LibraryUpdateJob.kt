@@ -74,6 +74,7 @@ import tachiyomi.i18n.MR
 import uy.kohesive.injekt.Injekt
 import uy.kohesive.injekt.api.get
 import java.io.File
+import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.CopyOnWriteArrayList
 import java.util.concurrent.TimeUnit
 import kotlin.concurrent.atomics.AtomicBoolean
@@ -328,6 +329,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         val newUpdates = CopyOnWriteArrayList<Pair<Manga, Array<Chapter>>>()
         val failedUpdates = CopyOnWriteArrayList<Pair<Manga, String?>>()
         val hasDownloads = AtomicBoolean(false)
+        val libraryCacheUpdates = ConcurrentHashMap<Long, (Manga) -> Manga>()
         val timeZone = TimeZone.currentSystemDefault()
         val fetchWindow = fetchInterval.getWindow(Clock.System.now().toLocalDateTime(timeZone).date, timeZone)
         val globalUpdateThrottlingMs = libraryPreferences.autoUpdateThrottle.get().toLong()
@@ -393,7 +395,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
                                     // requests right now.
                                     BackgroundRateLimitGuard.active(host) {
                                         try {
-                                            val newChapters = updateManga(manga, fetchWindow)
+                                            val newChapters = updateManga(manga, fetchWindow, libraryCacheUpdates)
                                                 .sortedByDescending { it.sourceOrder }
 
                                             if (newChapters.isNotEmpty()) {
@@ -433,6 +435,10 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
         }
 
         notifier.cancelProgressNotification()
+
+        if (libraryCacheUpdates.isNotEmpty()) {
+            getLibraryManga.applyBatchMangaDetailUpdates(libraryCacheUpdates)
+        }
 
         // Update the in-memory library state so badges (unread/total) reflect the new chapters
         // discovered during this update run — without this, users need a full app restart to
@@ -474,7 +480,11 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
      * @param manga the manga to update.
      * @return a pair of the inserted and removed chapters.
      */
-    private suspend fun updateManga(manga: Manga, fetchWindow: Pair<Long, Long>): List<Chapter> {
+    private suspend fun updateManga(
+        manga: Manga,
+        fetchWindow: Pair<Long, Long>,
+        libraryCacheUpdates: ConcurrentHashMap<Long, (Manga) -> Manga>,
+    ): List<Chapter> {
         val source = sourceManager.getOrStub(manga.source)
 
         val update = updateMangaFromRemote(
@@ -484,6 +494,7 @@ class LibraryUpdateJob(private val context: Context, workerParams: WorkerParamet
             fetchChapters = !skipChapterFetch,
             manualFetch = forceFetchDetails,
             fetchWindow = fetchWindow,
+            onLibraryCacheUpdate = { id, updater -> libraryCacheUpdates[id] = updater },
         )
             .getOrThrow()
 
