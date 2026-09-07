@@ -79,7 +79,7 @@ class UpdateMangaFromRemoteTest {
         )
 
         coVerify(exactly = 1) {
-            updateManga.awaitUpdateFromSource(localManga, remoteManga, true, any(), any(), any())
+            updateManga.awaitUpdateFromSource(localManga, remoteManga, true, any(), any(), any(), null)
         }
     }
 
@@ -97,7 +97,7 @@ class UpdateMangaFromRemoteTest {
         )
 
         coVerify(exactly = 0) {
-            updateManga.awaitUpdateFromSource(any(), any(), any(), any(), any(), any())
+            updateManga.awaitUpdateFromSource(any(), any(), any(), any(), any(), any(), any())
         }
     }
 }

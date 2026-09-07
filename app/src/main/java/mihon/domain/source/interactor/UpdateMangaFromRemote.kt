@@ -4,6 +4,8 @@ import eu.kanade.domain.chapter.interactor.SyncChaptersWithSource
 import eu.kanade.domain.chapter.model.toSChapter
 import eu.kanade.domain.manga.interactor.UpdateManga
 import eu.kanade.domain.manga.model.toSManga
+import eu.kanade.tachiyomi.data.cache.CoverCache
+import eu.kanade.tachiyomi.data.download.DownloadManager
 import eu.kanade.tachiyomi.source.Source
 import kotlinx.coroutines.CancellationException
 import logcat.LogPriority
@@ -12,6 +14,7 @@ import tachiyomi.core.common.util.lang.withIOContext
 import tachiyomi.core.common.util.system.logcat
 import tachiyomi.domain.chapter.model.Chapter
 import tachiyomi.domain.chapter.repository.ChapterRepository
+import tachiyomi.domain.library.service.LibraryPreferences
 import tachiyomi.domain.manga.model.Manga
 import tachiyomi.domain.manga.repository.MangaRepository
 import tachiyomi.domain.source.service.SourceManager
@@ -22,6 +25,9 @@ class UpdateMangaFromRemote(
     private val mangaRepository: MangaRepository,
     private val syncChaptersWithSource: SyncChaptersWithSource,
     private val updateManga: UpdateManga,
+    private val coverCache: CoverCache,
+    private val libraryPreferences: LibraryPreferences,
+    private val downloadManager: DownloadManager,
 ) {
     suspend operator fun invoke(
         manga: Manga,
@@ -71,7 +77,10 @@ class UpdateMangaFromRemote(
                     manga,
                     update.manga,
                     manualFetch,
-                    onLibraryCacheUpdate = onLibraryCacheUpdate,
+                    coverCache,
+                    libraryPreferences,
+                    downloadManager,
+                    onLibraryCacheUpdate,
                 )
             }
             val newChapters = if (fetchChapters) {
