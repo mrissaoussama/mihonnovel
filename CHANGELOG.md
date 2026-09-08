@@ -11,6 +11,10 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 - `Other` - for technical stuff.
 
 ## [Unreleased]
+### Added
+- Webview paged reader [@mrissaoussama](https://github.com/mrissaoussama) [#420](https://github.com/tsundoku-otaku/tsundoku/pull/420)
+
+
 ### Improved
 - TTS media notification for pause/resume with headset buttons. Old notification available in advanced settings. [@mrissaoussama](https://github.com/mrissaoussama) [#421](https://github.com/tsundoku-otaku/tsundoku/pull/421)
 
