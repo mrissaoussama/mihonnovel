@@ -194,4 +194,28 @@ class EpubReaderNormalizeTocTest {
 
         assertEquals(listOf("Some Book Title", "Front Matter", "Chapter 1: Foo"), result)
     }
+
+    // Depth gaps: an NCX/nav grouping node with no <navLabel>/<content> is skipped as an entry but its
+    // children still get emitted at depth+1, so the first entry can start at depth > 0, or a jump can
+    // skip a level. normalizeByDepth pads these gaps; computeSiblingPresence must not crash on them.
+
+    @Test
+    fun `toc whose first entry starts below depth zero does not crash`() {
+        val result = normalize(
+            "Orphan Chapter 1" to 1,
+            "Orphan Chapter 2" to 1,
+        )
+
+        assertEquals(listOf("Orphan Chapter 1", "Orphan Chapter 2"), result)
+    }
+
+    @Test
+    fun `toc with a mid-list jump of two depth levels does not crash`() {
+        val result = normalize(
+            "Book" to 0,
+            "Deep Chapter" to 2,
+        )
+
+        assertEquals(listOf("Book", "Book - Deep Chapter"), result)
+    }
 }
