@@ -1530,6 +1530,10 @@ class NovelViewer(val activity: ReaderActivity) : Viewer {
         val isAppend = loadedChapters.isNotEmpty() && preferences.novelInfiniteScroll.get()
 
         reachedNovelEnd = false
+        // A fresh chapter load (toolbar next/prev) clears a prior auto-append failure latch that
+        // would otherwise stick forever once its inline retry banner is destroyed. On an append the
+        // caller's finally block owns this flag.
+        if (!isAppend) nextLoadRequiresManualRetry = false
 
         chapterQueue.append(loadedChapter)
 

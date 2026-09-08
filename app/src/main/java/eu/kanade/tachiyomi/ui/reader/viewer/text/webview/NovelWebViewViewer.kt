@@ -1600,6 +1600,10 @@ class NovelWebViewViewer(val activity: ReaderActivity) : Viewer {
         lastSavedProgress = 0f
         lastPersistedPercent = -1
         reachedNovelEnd = false
+        // Fresh document: a prior auto-append failure latch is stale. Without this, switching
+        // chapters via the toolbar (instead of tapping the inline retry banner) destroys the banner
+        // DOM but leaves the flag set, permanently disabling infinite-scroll auto-append.
+        nextLoadRequiresManualRetry = false
         webView.loadDataWithBaseURL(resolveWebViewBaseUrl(chapterPath), html, "text/html", "UTF-8", null)
     }
 
