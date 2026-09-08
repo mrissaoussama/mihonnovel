@@ -651,7 +651,6 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
         }
 
         private fun normalizeByDepth(toc: List<EpubChapter>): List<EpubChapter> {
-
             val hasSibling = computeSiblingPresence(toc)
             val ancestors = mutableListOf<String>()
 
@@ -677,17 +676,23 @@ class EpubReader(private val reader: ArchiveReader) : Closeable by reader {
 
         /**
          * For each TOC entry, returns whether it has at least one sibling under the same parent
-         * (same nesting depth, same ancestor chain), based on [EpubChapter.depth].
+         * (same ancestor chain), based on [EpubChapter.depth]. Tolerates gaps in the depth sequence
+         * (an entry that is 2+ levels deeper than the previous one, or a first entry at depth > 0) —
+         * these occur when [buildTocFromNcxNavMap] skips a label-only grouping navPoint but still
+         * emits its children at depth + 1.
          */
         private fun computeSiblingPresence(toc: List<EpubChapter>): BooleanArray {
             val parentIndexOf = IntArray(toc.size)
-            val stack = mutableListOf<Int>()
+            // Monotonic stack of ancestor indices with strictly increasing depth; parent is the top.
+            val ancestors = mutableListOf<Int>()
 
             toc.forEachIndexed { index, chapter ->
                 val depth = chapter.depth.coerceAtLeast(0)
-                if (stack.size > depth) stack.subList(depth, stack.size).clear()
-                parentIndexOf[index] = if (depth == 0) -1 else stack.getOrElse(depth - 1) { -1 }
-                if (stack.size == depth) stack.add(index) else stack[depth] = index
+                while (ancestors.isNotEmpty() && toc[ancestors.last()].depth.coerceAtLeast(0) >= depth) {
+                    ancestors.removeAt(ancestors.lastIndex)
+                }
+                parentIndexOf[index] = ancestors.lastOrNull() ?: -1
+                ancestors.add(index)
             }
 
             val childCountByParent = parentIndexOf.toList().groupingBy { it }.eachCount()

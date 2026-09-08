@@ -167,7 +167,6 @@ class EpubReaderNormalizeTocTest {
         )
     }
 
-
     @Test
     fun `a lone root with no sibling is not used as an ancestor prefix for its descendants`() {
         val result = normalize(
@@ -216,6 +215,7 @@ class EpubReaderNormalizeTocTest {
             "Deep Chapter" to 2,
         )
 
-        assertEquals(listOf("Book", "Book - Deep Chapter"), result)
+        // "Book" is a lone root (no sibling), so it must not become an ancestor prefix.
+        assertEquals(listOf("Book", "Deep Chapter"), result)
     }
 }

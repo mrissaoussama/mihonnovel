@@ -81,7 +81,6 @@ class EpubReaderTocParseTest {
 
     @Test
     fun `ncx root navPoint wrapping the entire toc is not prefixed onto every chapter`() {
-
         val navMap = ncx(
             """
             <ncx><navMap>
@@ -104,6 +103,31 @@ class EpubReaderTocParseTest {
             listOf("Some Book Title", "Synopsis", "Copyright", "Chapter 1: Foo", "Chapter 2: Bar"),
             names,
         )
+    }
+
+    @Test
+    fun `ncx grouping navPoint with no content is skipped but its children still normalize`() {
+        // The outer navPoint carries a <navLabel> but no <content>, so it is not emitted as an entry
+        // while its children are still walked at depth + 1. The TOC then starts at depth 1 with no
+        // depth-0 entry; normalization must handle that gap instead of throwing.
+        val navMap = ncx(
+            """
+            <ncx><navMap>
+              <navPoint><navLabel><text>Untitled Group</text></navLabel>
+                <navPoint><navLabel><text>Chapter 1</text></navLabel><content src="c1.xhtml"/></navPoint>
+                <navPoint><navLabel><text>Chapter 2</text></navLabel><content src="c2.xhtml"/></navPoint>
+              </navPoint>
+            </navMap></ncx>
+            """.trimIndent(),
+        )
+
+        val toc = EpubReader.buildTocFromNcxNavMap(navMap, "toc.ncx", identityResolve)
+
+        assertEquals(listOf("Chapter 1", "Chapter 2"), toc.map { it.title })
+        assertEquals(listOf(1, 1), toc.map { it.depth })
+
+        val names = EpubReader.normalizeTableOfContents(toc).map { it.title }
+        assertEquals(listOf("Chapter 1", "Chapter 2"), names)
     }
 
     @Test
