@@ -16,6 +16,7 @@ The format is a modified version of [Keep a Changelog](https://keepachangelog.co
 
 ### Fixed
 - Fix extension restoring from cold state [@mrissaoussama](https://github.com/mrissaoussama) [#422](https://github.com/tsundoku-otaku/tsundoku/pull/422)
+- Fix manga custom metadata reset on refresh [@mrissaoussama](https://github.com/mrissaoussama) [#423](https://github.com/tsundoku-otaku/tsundoku/pull/423)
 
 
 ## [v0.3.3] - 2026-08-30
